@@ -1,0 +1,47 @@
+import(
+  "time"
+)
+
+{{ $decorator := (printf "%sWithRetry" .Interface.Name) }}
+
+// {{$decorator}} implements {{.Interface.Type}} interface instrumented with retries
+type {{$decorator}} struct {
+  {{.Interface.Type}}
+  _retryCount int
+  _retryInterval time.Duration
+}
+
+// New{{$decorator}} returns {{$decorator}}
+func New{{$decorator}} (base {{.Interface.Type}}, retryCount int, retryInterval time.Duration) {{$decorator}} {
+  return {{$decorator}} {
+    {{.Interface.Name}}: base,
+    _retryCount: retryCount + 1,
+    _retryInterval: retryInterval,
+  }
+}
+
+{{range $method := .Interface.Methods}}
+  {{if $method.ReturnsError}}
+    // {{$method.Name}} implements {{$.Interface.Type}}
+    func (_d {{$decorator}}) {{$method.Declaration}} {
+      for _i := 0; _i < _d._retryCount; _i++ {
+        {{$method.ResultsNames}} = _d.{{$method.Call}}
+        if err == nil {
+          break  
+        }
+        if _d._retryCount > 1 {
+          {{- if $method.AcceptsContext}}
+            select {
+            case <-ctx.Done():
+              return {{$method.ResultsNames}}
+            case <-time.After(_d._retryInterval):
+            }
+          {{else}}
+            time.Sleep(_d._retryInterval)
+          {{end -}}
+        }
+      }
+      return {{$method.ResultsNames}}
+    }
+  {{end}}
+{{end}}

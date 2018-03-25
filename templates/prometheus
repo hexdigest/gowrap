@@ -1,0 +1,49 @@
+import (
+  "time"
+  "github.com/prometheus/client_golang/prometheus"
+)
+
+{{ $decorator := (printf "%sWithPrometheus" .Interface.Name) }}
+
+// {{$decorator}} implements {{.Interface.Type}} interface with all methods wrapped
+// with Prometheus metrics
+type {{$decorator}} struct {
+  base {{.Interface.Type}}
+  instanceName string
+}
+
+var {{down .Interface.Name}}DurationSummaryVec = prometheus.NewSummaryVec(
+  prometheus.SummaryOpts{
+    Name: "{{down .Interface.Name}}_duration_seconds",
+    Help: "{{down .Interface.Name}} runtime duration and result",
+    MaxAge: time.Minute,
+  }, 
+  []string{"instance_name", "method", "result"})
+
+// New{{.Interface.Name}}WithPrometheus returns an instance of {{.Interface.Type}} decorated with prometheus metrics
+func New{{$decorator}}(base {{.Interface.Type}}, instanceName string) {{$decorator}} {
+  return {{$decorator}} {
+    base: base,
+    instanceName: instanceName,
+  }
+}
+
+{{range $method := .Interface.Methods}}
+  // {{$method.Name}} implements {{$.Interface.Type}}
+  func (_d {{$decorator}}) {{$method.Declaration}} {
+      _since := time.Now()
+      {{- if $method.ReturnsError}}
+        defer func() {
+          result := "ok"
+          if err != nil {
+            result = "error"
+          }
+
+				  {{down $.Interface.Name}}DurationSummaryVec.WithLabelValues(_d.instance, "{{$method.Name}}", result).Observe(time.Since(_since).Seconds())
+        }()
+      {{else}}
+				defer {{down $.Interface.Name}}DurationSummaryVec.WithLabelValues(_d.instance, "{{$method.Name}}", "ok").Observe(time.Since(_since).Seconds())
+      {{end}}
+    {{$method.Pass "_d.base."}}
+  }
+{{end}}

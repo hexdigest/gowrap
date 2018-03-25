@@ -1,0 +1,13 @@
+language: go
+sudo: false
+go:
+  - 1.x
+before_install:
+  - go get github.com/mattn/goveralls
+  - go get golang.org/x/tools/imports
+  - if ! go get github.com/golang/tools/cmd/cover; then go get golang.org/x/tools/cmd/cover; fi
+script:
+  - go test -race ./...
+  - go test -c -covermode=count -coverpkg=github.com/hexdigest/gowrap,github.com/hexdigest/gowrap/pkg,github.com/hexdigest/gowrap/loader,github.com/hexdigest/gowrap/printer,github.com/hexdigest/gowrap/generator
+  - ./gowrap.test -test.coverprofile coverage.cov
+  - $HOME/gopath/bin/goveralls -service=travis-ci -coverprofile=coverage.cov

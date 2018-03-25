@@ -1,0 +1,41 @@
+import (
+	"sync/atomic"
+	"errors"
+)
+
+{{ $decorator := (printf "%sRoundRobinPool" .Interface.Name) }}
+
+// {{$decorator}} implements {{.Interface.Type}} that uses pool of {{.Interface.Type}}
+type {{$decorator}} struct {
+  pool []{{.Interface.Type}}
+  poolSize uint32
+  counter uint32
+}
+
+// New{{$decorator}} takes several implementations of the {{.Interface.Type}} and returns an instance of the {{.Interface.Type}} 
+// that picks one of the given implementations using Round-robin algorithm and delegates method call to it
+func New{{$decorator}}(pool ...{{.Interface.Type}}) (*{{$decorator}}, error) {
+  if len(pool) == 0 {
+    return nil, errors.New("empty pool")
+  }
+  
+  return &{{$decorator}}{pool: pool, poolSize: uint32(len(pool))}, nil
+}
+
+// MustNew{{$decorator}} takes several implementations of the {{.Interface.Type}} and returns an instance of the {{.Interface.Type}} 
+// that picks one of the given implementations using Round-robin algorithm and delegates method call to it.
+func MustNew{{$decorator}}(pool ...{{.Interface.Type}}) *{{$decorator}} {
+  if len(pool) == 0 {
+    panic("empty pool")
+  }
+  
+  return &{{$decorator}}{pool: pool, poolSize: uint32(len(pool))}
+}
+
+{{range $method := .Interface.Methods}}
+  // {{$method.Name}} implements {{$.Interface.Type}}
+  func (_d *{{$decorator}}) {{$method.Declaration}} {
+    _counter := atomic.AddUint32(&_d.counter, 1)
+    {{ $method.Pass "_d.pool[_counter % _d.poolSize]." }}
+  }
+{{end}}

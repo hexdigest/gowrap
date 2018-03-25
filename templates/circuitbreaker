@@ -1,0 +1,62 @@
+import (
+	"errors"
+	"sync"
+	"time"
+)
+
+{{ $decorator := (printf "%sWithCircuitBreaker" .Interface.Name) }}
+
+// {{$decorator}} implements {{.Interface.Type}} instrumented with circuit breaker
+type {{$decorator}} struct {
+  {{.Interface.Type}}
+
+  _lock sync.RWMutex
+  _maxConsecutiveErrors int
+  _consecutiveErrors int
+  _openInterval time.Duration
+  _opensAt *time.Time
+}
+
+// New{{$decorator}} breakes a circuit after consecutiveErrors of errors and opens the circuit again after openInterval of time.
+// If after openInterval first method call results in error we close open again.
+func New{{$decorator}}(base {{.Interface.Type}}, consecutiveErrors int, openInterval time.Duration) (*{{$decorator}}) {
+  return &{{$decorator}}{
+    {{.Interface.Name}}: base, 
+    _maxConsecutiveErrors: consecutiveErrors,
+    _openInterval: openInterval,
+  }
+}
+
+{{range $method := .Interface.Methods}}
+  // {{$method.Name}} implements {{$.Interface.Type}}
+  {{if $method.ReturnsError}}
+    func (_d *{{$decorator}}) {{$method.Declaration}} {
+      _d._lock.RLock()
+
+      if _d._opensAt != nil && _d._opensAt.After(time.Now()) {
+        err = errors.New("{{$decorator}}: circuit is open")
+        _d._lock.RUnlock()
+        return
+      }
+
+      {{$method.ResultsNames}} = _d.{{$.Interface.Name}}.{{$method.Call}}
+      _d._lock.Lock()
+      defer _d._lock.Unlock()
+
+      if err == nil {
+        _d._consecutiveErrors = 0
+        _d._opensAt = nil
+        return
+      } 
+
+      _d._consecutiveErrors++
+
+      if _d._consecutiveErrors > _d._maxConsecutiveErrors {
+        opensAt := time.Now().Add(_d._openInterval)
+        _d._opensAt = &opensAt
+      }
+
+      return 
+    }
+  {{end}}
+{{end}}

@@ -1,0 +1,60 @@
+import (
+	"fmt"
+	"strings"
+	"time"
+)
+
+{{ $decorator := (printf "%sWithFallback" .Interface.Name) }}
+
+// {{$decorator}} implements {{.Interface.Type}} interface wrapped with Prometheus metrics
+type {{$decorator}} struct {
+  implementations []{{.Interface.Type}}
+  interval time.Duration
+}
+
+// New{{$decorator}} takes several implementations of the {{.Interface.Type}} and returns an instance of {{.Interface.Type}} 
+// which calls all implementations concurrently with given interval and returns first non-error response.
+func New{{$decorator}}(interval time.Duration, impls ...{{.Interface.Type}}) {{$decorator}} {
+  return {{$decorator}}{implementations: impls, interval: interval}
+}
+
+{{range $method := .Interface.Methods}}
+  // {{$method.Name}} implements {{$.Interface.Type}}
+  func (_d {{$decorator}}) {{$method.Declaration}} {
+      type _resultStruct {{$method.ResultsStruct}}
+      var _res _resultStruct
+      var _ch = make(chan _resultStruct, 0)
+      {{if $method.ReturnsError}}var _errorsList []string{{end}}
+      var _ticker = time.NewTicker(_d.interval)
+      defer _ticker.Stop()
+      {{- if $method.AcceptsContext}}
+        ctx, _cancelFunc := context.WithCancel(ctx)
+        defer _cancelFunc()
+      {{end}}
+      for _i :=0; _i < len(_d.implementations); _i++ {
+        go func(_impl {{$.Interface.Type}}) {
+          {{$method.ResultsNames}} := _impl.{{$method.Call}}
+          {{- if $method.ReturnsError}}
+            if err != nil {
+              err = fmt.Errorf("%T: %v", _impl, err)
+            }
+          {{end -}}
+          _ch <- _resultStruct{ {{$method.ResultsNames}} }
+        }(_d.implementations[_i])
+        select {
+        case _res = <- _ch:
+          {{- if $method.ReturnsError}}
+            if _res.err == nil {
+              {{ $method.ReturnStruct "_res" }}
+            }
+            _errorsList = append(_errorsList, _res.err.Error())
+          {{else}}
+            {{ $method.ReturnStruct "_res" }}
+          {{end -}}
+        case <-_ticker.C:
+        }
+      }
+      {{if $method.ReturnsError}}err = fmt.Errorf(strings.Join(_errorsList, ";")){{end}}
+      return
+  }
+{{end}}
