@@ -11,9 +11,9 @@ import (
 )
 
 const (
-	urlFormatCommits = "https://api.github.com/repos/hexdigest/gounit/commits?path=templates/%s&per_page=1"
-	urlFormatRaw     = "https://raw.githubusercontent.com/hexdigest/gounit/%s/templates/%s"
-	urlTree          = "https://api.github.com/repos/hexdigest/gounit/git/trees/master?recursive=1"
+	urlFormatCommits = "https://api.github.com/repos/hexdigest/gowrap/commits?path=templates/%s&per_page=1"
+	urlFormatRaw     = "https://raw.githubusercontent.com/hexdigest/gowrap/%s/templates/%s"
+	urlTree          = "https://api.github.com/repos/hexdigest/gowrap/git/trees/master?recursive=1"
 
 	templatesPathPrefix = "templates/"
 )

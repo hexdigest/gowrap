@@ -344,7 +344,7 @@ func TestLoader_fetchFromGithub(t *testing.T) {
 				return Loader{client: client}
 			},
 			want1: []byte("template body"),
-			want2: "https://raw.githubusercontent.com/hexdigest/gounit/hash/templates/opentracing",
+			want2: "https://raw.githubusercontent.com/hexdigest/gowrap/hash/templates/opentracing",
 		},
 	}
 
