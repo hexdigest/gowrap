@@ -58,7 +58,7 @@ List of available templates:
   - [opentracing](https://github.com/hexdigest/gowrap/tree/master/templates/opentracing) instruments source interface with opentracing spans
   - [prometheus](https://github.com/hexdigest/gowrap/tree/master/templates/prometheus) instruments source interface with prometheus metrics
   - [retry](https://github.com/hexdigest/gowrap/tree/master/templates/retry) instruments source interface with retries
-  - [robinpool](https://github.com/hexdigest/gowrap/tree/master/templates/retry) puts several implementations of the source interface to the slice, for every method call picks one implementation from the slice using Round-robin algorithm
+  - [robinpool](https://github.com/hexdigest/gowrap/tree/master/templates/robinpool) puts several implementations of the source interface to the slice, for every method call picks one implementation from the slice using Round-robin algorithm
   - [syncpool](https://github.com/hexdigest/gowrap/tree/master/templates/syncpool) puts several implementations of the source interface to the sync.Pool, for every method call gets one implementation from the pool and puts it back once finished
 
 By default GoWrap places the `//go:generate` instruction into the generated code. 
