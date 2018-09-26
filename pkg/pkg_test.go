@@ -34,7 +34,7 @@ func TestFromImport(t *testing.T) {
 		assert.Nil(t, res)
 	})
 
-	t.Run("sucess", func(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
 		abs = filepath.Abs
 		res, err := FromImport(fs, "io")
 		assert.NoError(t, err)

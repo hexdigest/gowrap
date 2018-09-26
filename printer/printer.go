@@ -20,7 +20,7 @@ type Printer struct {
 
 // New returns Printer
 // If srcPackageName is not empty Printer assumes that printed node goes to the package
-// different from the srcPackageName and all references to the types listend in typeSpecs
+// different from the srcPackageName and all references to the types listed in typeSpecs
 // should be prepended with the source package name selector
 func New(fs *token.FileSet, typeSpecs []*ast.TypeSpec, typesPrefix string) *Printer {
 	return &Printer{
