@@ -14,7 +14,7 @@ type {{$decorator}} struct {
   _maxConsecutiveErrors int
   _consecutiveErrors int
   _openInterval time.Duration
-  _opensAt *time.Time
+  _closesAt *time.Time
 }
 
 // New{{$decorator}} breakes a circuit after consecutiveErrors of errors and opens the circuit again after openInterval of time.
@@ -33,11 +33,12 @@ func New{{$decorator}}(base {{.Interface.Type}}, consecutiveErrors int, openInte
     func (_d *{{$decorator}}) {{$method.Declaration}} {
       _d._lock.RLock()
 
-      if _d._opensAt != nil && _d._opensAt.After(time.Now()) {
-        err = errors.New("{{$decorator}}: circuit is open")
+      if _d._closesAt != nil && _d._closesAt.After(time.Now()) {
         _d._lock.RUnlock()
+        err = errors.New("{{$decorator}}: circuit is open")
         return
       }
+      _d._lock.RUnlock()
 
       {{$method.ResultsNames}} = _d.{{$.Interface.Name}}.{{$method.Call}}
       _d._lock.Lock()
@@ -45,15 +46,15 @@ func New{{$decorator}}(base {{.Interface.Type}}, consecutiveErrors int, openInte
 
       if err == nil {
         _d._consecutiveErrors = 0
-        _d._opensAt = nil
+        _d._closesAt = nil
         return
       } 
 
       _d._consecutiveErrors++
 
       if _d._consecutiveErrors > _d._maxConsecutiveErrors {
-        opensAt := time.Now().Add(_d._openInterval)
-        _d._opensAt = &opensAt
+        closesAt := time.Now().Add(_d._openInterval)
+        _d._closesAt = &closesAt
       }
 
       return 

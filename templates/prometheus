@@ -20,7 +20,7 @@ var {{down .Interface.Name}}DurationSummaryVec = prometheus.NewSummaryVec(
   }, 
   []string{"instance_name", "method", "result"})
 
-// New{{.Interface.Name}}WithPrometheus returns an instance of {{.Interface.Type}} decorated with prometheus metrics
+// New{{.Interface.Name}}WithPrometheus returns an instance of the {{.Interface.Type}} decorated with prometheus metrics
 func New{{$decorator}}(base {{.Interface.Type}}, instanceName string) {{$decorator}} {
   return {{$decorator}} {
     base: base,
@@ -39,10 +39,10 @@ func New{{$decorator}}(base {{.Interface.Type}}, instanceName string) {{$decorat
             result = "error"
           }
 
-				  {{down $.Interface.Name}}DurationSummaryVec.WithLabelValues(_d.instance, "{{$method.Name}}", result).Observe(time.Since(_since).Seconds())
+				  {{down $.Interface.Name}}DurationSummaryVec.WithLabelValues(_d.instanceName, "{{$method.Name}}", result).Observe(time.Since(_since).Seconds())
         }()
       {{else}}
-				defer {{down $.Interface.Name}}DurationSummaryVec.WithLabelValues(_d.instance, "{{$method.Name}}", "ok").Observe(time.Since(_since).Seconds())
+				defer {{down $.Interface.Name}}DurationSummaryVec.WithLabelValues(_d.instanceName, "{{$method.Name}}", "ok").Observe(time.Since(_since).Seconds())
       {{end}}
     {{$method.Pass "_d.base."}}
   }

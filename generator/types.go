@@ -181,6 +181,15 @@ func (m Method) Pass(prefix string) string {
 	return prefix + m.Call() + "\nreturn"
 }
 
+// ParamsNames returns a list of method params names
+func (m Method) ParamsNames() string {
+	ss := []string{}
+	for _, p := range m.Params {
+		ss = append(ss, p.Name)
+	}
+	return strings.Join(ss, ", ")
+}
+
 // ResultsNames returns a list of method results names
 func (m Method) ResultsNames() string {
 	ss := []string{}

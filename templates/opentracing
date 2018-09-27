@@ -27,11 +27,13 @@ func New{{$decorator}} (base {{.Interface.Type}}, instance string) {{$decorator}
       _span, ctx := opentracing.StartSpanFromContext(ctx, _d._instance + ".{{$.Interface.Type}}.{{$method.Name}}")
       {{- if $method.ReturnsError}}
         defer func() {
-          _ext.Error.Set(_span, err != nil)
-          _span.LogFields(
-					  _log.String("event", "error"),
-						_log.String("message", err.Error()),
-			    )
+          if err != nil {
+            _ext.Error.Set(_span, true)
+            _span.LogFields(
+              _log.String("event", "error"),
+              _log.String("message", err.Error()),
+            )
+			    }
           _span.Finish()
         }()
       {{else}}
