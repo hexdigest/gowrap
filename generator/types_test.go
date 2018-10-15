@@ -14,7 +14,7 @@ func TestMethod_Declaration(t *testing.T) {
 func TestMethod_Signature(t *testing.T) {
 	m := Method{
 		Name:    "method",
-		Params:  []Param{{Name: "args", Type: "string", Variadic: true}},
+		Params:  []Param{{Name: "args", Type: "...string"}},
 		Results: []Param{{Name: "err", Type: "error"}},
 	}
 	assert.Equal(t, "(args ...string) (err error)", m.Signature())

@@ -238,12 +238,7 @@ func (m Method) ReturnStruct(structName string) string {
 func (m Method) Signature() string {
 	params := []string{}
 	for _, p := range m.Params {
-		param := p.Name + " "
-		if p.Variadic {
-			param += "..."
-		}
-		param += p.Type
-		params = append(params, param)
+		params = append(params, p.Name+" "+p.Type)
 	}
 
 	results := []string{}

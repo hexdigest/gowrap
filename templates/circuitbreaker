@@ -29,7 +29,7 @@ func New{{$decorator}}(base {{.Interface.Type}}, consecutiveErrors int, openInte
 
 {{range $method := .Interface.Methods}}
   // {{$method.Name}} implements {{$.Interface.Type}}
-  {{if $method.ReturnsError}}
+  {{- if $method.ReturnsError}}
     func (_d *{{$decorator}}) {{$method.Declaration}} {
       _d._lock.RLock()
 
