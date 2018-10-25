@@ -1,19 +1,16 @@
 package templatestests
 
+import "context"
+
 // DO NOT EDIT!
 // This code is generated with http://github.com/hexdigest/gowrap tool
 // using ../templates/syncpool template
 
 //go:generate gowrap gen -d . -i TestInterface -t ../templates/syncpool -o interface_with_syncpool.go
 
-import (
-	"context"
-	"sync"
-)
-
 // TestInterfacePool implements TestInterface that uses pool of TestInterface
 type TestInterfacePool struct {
-	pool *sync.Pool
+	pool chan TestInterface
 }
 
 // NewTestInterfacePool takes several implementations of the TestInterface and returns an instance of the TestInterface
@@ -23,9 +20,9 @@ func NewTestInterfacePool(impls ...TestInterface) TestInterfacePool {
 		panic("empty pool")
 	}
 
-	pool := new(sync.Pool)
+	pool := make(chan TestInterface, len(impls))
 	for _, i := range impls {
-		pool.Put(i)
+		pool <- i
 	}
 
 	return TestInterfacePool{pool: pool}
@@ -33,7 +30,9 @@ func NewTestInterfacePool(impls ...TestInterface) TestInterfacePool {
 
 // F implements TestInterface
 func (_d TestInterfacePool) F(ctx context.Context, a1 string, a2 ...string) (result1 string, result2 string, err error) {
-	_impl := _d.pool.Get().(TestInterface)
-	defer _d.pool.Put(_impl)
+	_impl := <-_d.pool
+	defer func() {
+		_d.pool <- _impl
+	}()
 	return _impl.F(ctx, a1, a2...)
 }

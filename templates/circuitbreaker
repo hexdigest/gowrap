@@ -52,7 +52,7 @@ func New{{$decorator}}(base {{.Interface.Type}}, consecutiveErrors int, openInte
 
       _d._consecutiveErrors++
 
-      if _d._consecutiveErrors > _d._maxConsecutiveErrors {
+      if _d._consecutiveErrors >= _d._maxConsecutiveErrors {
         closesAt := time.Now().Add(_d._openInterval)
         _d._closesAt = &closesAt
       }

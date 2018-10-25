@@ -1,12 +1,8 @@
-import (
-	"sync"
-)
-
 {{ $decorator := (printf "%sPool" .Interface.Name) }}
 
 // {{$decorator}} implements {{.Interface.Type}} that uses pool of {{.Interface.Type}}
 type {{$decorator}} struct {
-  pool *sync.Pool
+  pool chan {{.Interface.Type}}
 }
 
 // New{{$decorator}} takes several implementations of the {{.Interface.Type}} and returns an instance of the {{.Interface.Type}} 
@@ -16,9 +12,9 @@ func New{{$decorator}}(impls ...{{.Interface.Type}}) {{$decorator}} {
     panic("empty pool")
   }
 
-  pool := new(sync.Pool)
+  pool := make(chan {{.Interface.Type}}, len(impls))
   for _, i := range impls {
-    pool.Put(i)
+    pool <- i
   }
   
   return {{$decorator}}{pool: pool}
@@ -27,8 +23,10 @@ func New{{$decorator}}(impls ...{{.Interface.Type}}) {{$decorator}} {
 {{range $method := .Interface.Methods}}
   // {{$method.Name}} implements {{$.Interface.Type}}
   func (_d {{$decorator}}) {{$method.Declaration}} {
-      _impl := _d.pool.Get().({{$.Interface.Type}})
-      defer _d.pool.Put(_impl)
+      _impl := <-_d.pool
+      defer func() {
+        _d.pool <- _impl
+      }()
       {{ $method.Pass "_impl." }}
   }
 {{end}}

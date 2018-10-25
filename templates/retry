@@ -25,7 +25,7 @@ func New{{$decorator}} (base {{.Interface.Type}}, retryCount int, retryInterval 
     // {{$method.Name}} implements {{$.Interface.Type}}
     func (_d {{$decorator}}) {{$method.Declaration}} {
       for _i := 0; _i < _d._retryCount; _i++ {
-        {{$method.ResultsNames}} = _d.{{$method.Call}}
+        {{$method.ResultsNames}} = _d.{{$.Interface.Name}}.{{$method.Call}}
         if err == nil {
           break  
         }

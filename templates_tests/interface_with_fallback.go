@@ -55,6 +55,7 @@ func (_d TestInterfaceWithFallback) F(ctx context.Context, a1 string, a2 ...stri
 			}
 			_errorsList = append(_errorsList, _res.err.Error())
 		case <-_ticker.C:
+			_errorsList = append(_errorsList, fmt.Sprintf("%T: timeout", _d.implementations[_i]))
 		}
 	}
 	err = fmt.Errorf(strings.Join(_errorsList, ";"))

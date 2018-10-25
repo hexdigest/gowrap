@@ -30,7 +30,7 @@ func NewTestInterfaceWithRetry(base TestInterface, retryCount int, retryInterval
 // F implements TestInterface
 func (_d TestInterfaceWithRetry) F(ctx context.Context, a1 string, a2 ...string) (result1 string, result2 string, err error) {
 	for _i := 0; _i < _d._retryCount; _i++ {
-		result1, result2, err = _d.F(ctx, a1, a2...)
+		result1, result2, err = _d.TestInterface.F(ctx, a1, a2...)
 		if err == nil {
 			break
 		}

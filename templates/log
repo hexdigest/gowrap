@@ -1,0 +1,49 @@
+import (
+  "io"
+	"log"
+)
+
+{{ $decorator := (printf "%sWithLog" .Interface.Name) }}
+
+// {{$decorator}} implements {{.Interface.Type}} that is instrumented with logging
+type {{$decorator}} struct {
+  _stdlog, _errlog *log.Logger
+  _base {{.Interface.Type}}
+}
+
+// New{{$decorator}} takes several implementations of the {{.Interface.Type}} and returns an instance of the {{.Interface.Type}} 
+// that uses sync.Pool of given implemetations
+func New{{$decorator}}(base {{.Interface.Type}}, stdout, stderr io.Writer) {{$decorator}} {
+  return {{$decorator}}{
+    _base: base, 
+    _stdlog: log.New(stdout, "", log.LstdFlags),
+    _errlog: log.New(stderr, "", log.LstdFlags),
+  }
+}
+
+{{range $method := .Interface.Methods}}
+  // {{$method.Name}} implements {{$.Interface.Type}}
+  func (_d {{$decorator}}) {{$method.Declaration}} {
+      {{- if $method.HasParams}}
+        _params := []interface{}{"{{$decorator}}: calling {{$method.Name}} with params:", {{$method.ParamsNames}} }
+        _d._stdlog.Println(_params...)
+      {{else}}
+        _d._stdlog.Println("{{$decorator}}: calling {{$method.Name}}")
+      {{end -}}
+      defer func() {
+        {{- if $method.HasResults}}
+          _results := []interface{}{"{{$decorator}}: {{$method.Name}} returned results:", {{$method.ResultsNames}} }
+          {{- if $method.ReturnsError}}
+            if err != nil {
+              _d._errlog.Println(_results...)
+            } else {
+              _d._stdlog.Println(_results...)
+            }
+          {{end -}}
+        {{else}}
+          _d._stdlog.Println(""{{$decorator}}: {{$method.Name}} finished")
+        {{end -}}
+      }()
+      {{ $method.Pass "_d._base." }}
+  }
+{{end}}
