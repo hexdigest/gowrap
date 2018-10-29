@@ -451,7 +451,7 @@ func Test_findInterface(t *testing.T) {
 			name: "found",
 			args: args{
 				p: &ast.Package{Files: map[string]*ast.File{
-					"file.go": &ast.File{
+					"file.go": {
 						Decls: []ast.Decl{&ast.GenDecl{Tok: token.TYPE, Specs: []ast.Spec{&ast.TypeSpec{
 							Name: &ast.Ident{Name: "Interface"},
 							Type: &ast.InterfaceType{},
