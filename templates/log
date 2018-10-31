@@ -39,6 +39,8 @@ func New{{$decorator}}(base {{.Interface.Type}}, stdout, stderr io.Writer) {{$de
             } else {
               _d._stdlog.Println(_results...)
             }
+          {{else}}   
+            _d._stdlog.Println(_results...)
           {{end -}}
         {{else}}
           _d._stdlog.Println(""{{$decorator}}: {{$method.Name}} finished")

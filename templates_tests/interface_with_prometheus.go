@@ -50,3 +50,11 @@ func (_d TestInterfaceWithPrometheus) F(ctx context.Context, a1 string, a2 ...st
 
 	return _d.base.F(ctx, a1, a2...)
 }
+
+// NoError implements TestInterface
+func (_d TestInterfaceWithPrometheus) NoError(s1 string) (s2 string) {
+	_since := time.Now()
+	defer testinterfaceDurationSummaryVec.WithLabelValues(_d.instanceName, "NoError", "ok").Observe(time.Since(_since).Seconds())
+
+	return _d.base.NoError(s1)
+}

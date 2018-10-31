@@ -43,4 +43,20 @@ func TestTestInterfaceWithLog_F(t *testing.T) {
 		assert.Contains(t, stdLog.String(), "TestInterfaceWithLog: calling F with params: context.Background p1 [p2 p3]")
 		assert.Contains(t, errLog.String(), "")
 	})
+
+	t.Run("func that returns no error", func(t *testing.T) {
+		impl := &testImpl{}
+
+		errLog := bytes.NewBuffer([]byte{})
+		stdLog := bytes.NewBuffer([]byte{})
+
+		wrapped := NewTestInterfaceWithLog(impl, stdLog, errLog)
+		result := wrapped.NoError("param")
+		assert.Equal(t, "param", result)
+
+		assert.Contains(t, stdLog.String(), "TestInterfaceWithLog: calling NoError with params: param")
+		assert.Contains(t, stdLog.String(), "TestInterfaceWithLog: NoError returned results: param")
+		assert.Contains(t, errLog.String(), "")
+	})
+
 }

@@ -33,6 +33,10 @@ func (c *consecutiveErrorsImpl) F(ctx context.Context, a1 string, a2 ...string) 
 	return "", "", errConsecutive
 }
 
+func (c *consecutiveErrorsImpl) NoError(string) string {
+	return ""
+}
+
 func TestTestInterfaceWithCircuitBreaker_F(t *testing.T) {
 	ctx := context.Background()
 

@@ -42,3 +42,14 @@ func (_d TestInterfaceWithLog) F(ctx context.Context, a1 string, a2 ...string) (
 	}()
 	return _d._base.F(ctx, a1, a2...)
 }
+
+// NoError implements TestInterface
+func (_d TestInterfaceWithLog) NoError(s1 string) (s2 string) {
+	_params := []interface{}{"TestInterfaceWithLog: calling NoError with params:", s1}
+	_d._stdlog.Println(_params...)
+	defer func() {
+		_results := []interface{}{"TestInterfaceWithLog: NoError returned results:", s2}
+		_d._stdlog.Println(_results...)
+	}()
+	return _d._base.NoError(s1)
+}

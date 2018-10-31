@@ -39,6 +39,10 @@ func (f *testImpl) F(ctx context.Context, a1 string, a2 ...string) (r1, r2 strin
 	return
 }
 
+func (f *testImpl) NoError(s string) string {
+	return s
+}
+
 func TestTestInterfaceWithFallback_F(t *testing.T) {
 	t.Run("one implementation success", func(t *testing.T) {
 		impl := &testImpl{r1: "1", r2: "2"}

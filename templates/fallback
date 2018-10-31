@@ -38,7 +38,7 @@ func New{{$decorator}}(interval time.Duration, impls ...{{.Interface.Type}}) {{$
             if err != nil {
               err = fmt.Errorf("%T: %v", _impl, err)
             }
-          {{end -}}
+          {{end}}
           _ch <- _resultStruct{ {{$method.ResultsNames}} }
         }(_d.implementations[_i])
         select {
@@ -52,7 +52,9 @@ func New{{$decorator}}(interval time.Duration, impls ...{{.Interface.Type}}) {{$
             {{ $method.ReturnStruct "_res" }}
           {{end -}}
         case <-_ticker.C:
+          {{- if $method.ReturnsError}}
 			    _errorsList = append(_errorsList, fmt.Sprintf("%T: timeout", _d.implementations[_i]))
+			    {{end}}
         }
       }
       {{if $method.ReturnsError}}err = fmt.Errorf(strings.Join(_errorsList, ";")){{end}}

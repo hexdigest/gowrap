@@ -46,6 +46,7 @@ func (_d TestInterfaceWithFallback) F(ctx context.Context, a1 string, a2 ...stri
 			if err != nil {
 				err = fmt.Errorf("%T: %v", _impl, err)
 			}
+
 			_ch <- _resultStruct{result1, result2, err}
 		}(_d.implementations[_i])
 		select {
@@ -56,8 +57,34 @@ func (_d TestInterfaceWithFallback) F(ctx context.Context, a1 string, a2 ...stri
 			_errorsList = append(_errorsList, _res.err.Error())
 		case <-_ticker.C:
 			_errorsList = append(_errorsList, fmt.Sprintf("%T: timeout", _d.implementations[_i]))
+
 		}
 	}
 	err = fmt.Errorf(strings.Join(_errorsList, ";"))
+	return
+}
+
+// NoError implements TestInterface
+func (_d TestInterfaceWithFallback) NoError(s1 string) (s2 string) {
+	type _resultStruct struct {
+		s2 string
+	}
+	var _res _resultStruct
+	var _ch = make(chan _resultStruct, 0)
+
+	var _ticker = time.NewTicker(_d.interval)
+	defer _ticker.Stop()
+	for _i := 0; _i < len(_d.implementations); _i++ {
+		go func(_impl TestInterface) {
+			s2 := _impl.NoError(s1)
+			_ch <- _resultStruct{s2}
+		}(_d.implementations[_i])
+		select {
+		case _res = <-_ch:
+			return _res.s2
+		case <-_ticker.C:
+		}
+	}
+
 	return
 }

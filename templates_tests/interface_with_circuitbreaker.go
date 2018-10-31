@@ -64,3 +64,5 @@ func (_d *TestInterfaceWithCircuitBreaker) F(ctx context.Context, a1 string, a2 
 
 	return
 }
+
+// NoError implements TestInterface

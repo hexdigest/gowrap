@@ -44,3 +44,9 @@ func (_d *TestInterfaceRoundRobinPool) F(ctx context.Context, a1 string, a2 ...s
 	_counter := atomic.AddUint32(&_d.counter, 1)
 	return _d.pool[_counter%_d.poolSize].F(ctx, a1, a2...)
 }
+
+// NoError implements TestInterface
+func (_d *TestInterfaceRoundRobinPool) NoError(s1 string) (s2 string) {
+	_counter := atomic.AddUint32(&_d.counter, 1)
+	return _d.pool[_counter%_d.poolSize].NoError(s1)
+}

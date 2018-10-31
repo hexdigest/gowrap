@@ -36,3 +36,12 @@ func (_d TestInterfacePool) F(ctx context.Context, a1 string, a2 ...string) (res
 	}()
 	return _impl.F(ctx, a1, a2...)
 }
+
+// NoError implements TestInterface
+func (_d TestInterfacePool) NoError(s1 string) (s2 string) {
+	_impl := <-_d.pool
+	defer func() {
+		_d.pool <- _impl
+	}()
+	return _impl.NoError(s1)
+}
