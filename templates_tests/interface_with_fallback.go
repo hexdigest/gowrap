@@ -88,3 +88,27 @@ func (_d TestInterfaceWithFallback) NoError(s1 string) (s2 string) {
 
 	return
 }
+
+// NoParamsOrResults implements TestInterface
+func (_d TestInterfaceWithFallback) NoParamsOrResults() {
+	type _resultStruct struct {
+	}
+
+	var _ch = make(chan _resultStruct, 0)
+
+	var _ticker = time.NewTicker(_d.interval)
+	defer _ticker.Stop()
+	for _i := 0; _i < len(_d.implementations); _i++ {
+		go func(_impl TestInterface) {
+			_impl.NoParamsOrResults()
+			_ch <- _resultStruct{}
+		}(_d.implementations[_i])
+		select {
+		case <-_ch:
+			return
+		case <-_ticker.C:
+		}
+	}
+
+	return
+}

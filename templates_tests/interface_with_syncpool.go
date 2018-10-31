@@ -45,3 +45,13 @@ func (_d TestInterfacePool) NoError(s1 string) (s2 string) {
 	}()
 	return _impl.NoError(s1)
 }
+
+// NoParamsOrResults implements TestInterface
+func (_d TestInterfacePool) NoParamsOrResults() {
+	_impl := <-_d.pool
+	defer func() {
+		_d.pool <- _impl
+	}()
+	_impl.NoParamsOrResults()
+	return
+}

@@ -22,7 +22,7 @@ func New{{$decorator}}(interval time.Duration, impls ...{{.Interface.Type}}) {{$
   // {{$method.Name}} implements {{$.Interface.Type}}
   func (_d {{$decorator}}) {{$method.Declaration}} {
       type _resultStruct {{$method.ResultsStruct}}
-      var _res _resultStruct
+      {{if $method.HasResults}}var _res _resultStruct{{end}}
       var _ch = make(chan _resultStruct, 0)
       {{if $method.ReturnsError}}var _errorsList []string{{end}}
       var _ticker = time.NewTicker(_d.interval)
@@ -33,7 +33,7 @@ func New{{$decorator}}(interval time.Duration, impls ...{{.Interface.Type}}) {{$
       {{end}}
       for _i :=0; _i < len(_d.implementations); _i++ {
         go func(_impl {{$.Interface.Type}}) {
-          {{$method.ResultsNames}} := _impl.{{$method.Call}}
+          {{if $method.HasResults}}{{$method.ResultsNames}} := {{end}}_impl.{{$method.Call}}
           {{- if $method.ReturnsError}}
             if err != nil {
               err = fmt.Errorf("%T: %v", _impl, err)
@@ -42,7 +42,7 @@ func New{{$decorator}}(interval time.Duration, impls ...{{.Interface.Type}}) {{$
           _ch <- _resultStruct{ {{$method.ResultsNames}} }
         }(_d.implementations[_i])
         select {
-        case _res = <- _ch:
+        case {{if $method.HasResults}}_res = {{end}}<- _ch:
           {{- if $method.ReturnsError}}
             if _res.err == nil {
               {{ $method.ReturnStruct "_res" }}

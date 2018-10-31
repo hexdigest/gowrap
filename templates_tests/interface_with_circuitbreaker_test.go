@@ -37,6 +37,9 @@ func (c *consecutiveErrorsImpl) NoError(string) string {
 	return ""
 }
 
+func (c *consecutiveErrorsImpl) NoParamsOrResults() {
+}
+
 func TestTestInterfaceWithCircuitBreaker_F(t *testing.T) {
 	ctx := context.Background()
 

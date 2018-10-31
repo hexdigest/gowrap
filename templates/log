@@ -43,7 +43,7 @@ func New{{$decorator}}(base {{.Interface.Type}}, stdout, stderr io.Writer) {{$de
             _d._stdlog.Println(_results...)
           {{end -}}
         {{else}}
-          _d._stdlog.Println(""{{$decorator}}: {{$method.Name}} finished")
+          _d._stdlog.Println("{{$decorator}}: {{$method.Name}} finished")
         {{end -}}
       }()
       {{ $method.Pass "_d._base." }}

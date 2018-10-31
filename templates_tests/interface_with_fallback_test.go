@@ -43,6 +43,8 @@ func (f *testImpl) NoError(s string) string {
 	return s
 }
 
+func (f *testImpl) NoParamsOrResults() {}
+
 func TestTestInterfaceWithFallback_F(t *testing.T) {
 	t.Run("one implementation success", func(t *testing.T) {
 		impl := &testImpl{r1: "1", r2: "2"}

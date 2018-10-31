@@ -50,3 +50,10 @@ func (_d *TestInterfaceRoundRobinPool) NoError(s1 string) (s2 string) {
 	_counter := atomic.AddUint32(&_d.counter, 1)
 	return _d.pool[_counter%_d.poolSize].NoError(s1)
 }
+
+// NoParamsOrResults implements TestInterface
+func (_d *TestInterfaceRoundRobinPool) NoParamsOrResults() {
+	_counter := atomic.AddUint32(&_d.counter, 1)
+	_d.pool[_counter%_d.poolSize].NoParamsOrResults()
+	return
+}

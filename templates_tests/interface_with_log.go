@@ -53,3 +53,13 @@ func (_d TestInterfaceWithLog) NoError(s1 string) (s2 string) {
 	}()
 	return _d._base.NoError(s1)
 }
+
+// NoParamsOrResults implements TestInterface
+func (_d TestInterfaceWithLog) NoParamsOrResults() {
+	_d._stdlog.Println("TestInterfaceWithLog: calling NoParamsOrResults")
+	defer func() {
+		_d._stdlog.Println("TestInterfaceWithLog: NoParamsOrResults finished")
+	}()
+	_d._base.NoParamsOrResults()
+	return
+}

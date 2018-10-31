@@ -58,3 +58,12 @@ func (_d TestInterfaceWithPrometheus) NoError(s1 string) (s2 string) {
 
 	return _d.base.NoError(s1)
 }
+
+// NoParamsOrResults implements TestInterface
+func (_d TestInterfaceWithPrometheus) NoParamsOrResults() {
+	_since := time.Now()
+	defer testinterfaceDurationSummaryVec.WithLabelValues(_d.instanceName, "NoParamsOrResults", "ok").Observe(time.Since(_since).Seconds())
+
+	_d.base.NoParamsOrResults()
+	return
+}
