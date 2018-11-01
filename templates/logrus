@@ -1,0 +1,38 @@
+import (
+  "github.com/sirupsen/logrus"
+)
+
+{{ $decorator := (printf "%sWithLogrus" .Interface.Name) }}
+
+// {{$decorator}} implements {{.Interface.Type}} that is instrumented with logging
+type {{$decorator}} struct {
+  _log *logrus.Entry
+  _base {{.Interface.Type}}
+}
+
+// New{{$decorator}} takes several implementations of the {{.Interface.Type}} and returns an instance of the {{.Interface.Type}}
+// that uses sync.Pool of given implemetations
+func New{{$decorator}}(base {{.Interface.Type}}) {{$decorator}} {
+  return {{$decorator}}{
+    _base: base,
+    _log: logrus.WithField("component","{{.Interface.Type}}"),
+  }
+}
+
+{{range $method := .Interface.Methods}}
+  // {{$method.Name}} implements {{$.Interface.Type}}
+  func (_d {{$decorator}}) {{$method.Declaration}} {
+    log := _d._log.WithField("method", "{{$method.Name}}")
+    {{- if $method.HasParams}}
+      log = _d._log.WithField("params", []interface{}{ {{$method.ParamsNames}} })
+    {{end -}}
+    log.Info("calling {{$method.Name}}")
+    defer func() {
+      {{- if $method.HasResults}}
+        log = log.WithField("results", []interface{}{ {{$method.ResultsNames}} })
+      {{end -}}
+      log.Info("finished {{$method.Name}}")
+    }()
+    {{ $method.Pass "_d._base." }}
+  }
+{{end}}
