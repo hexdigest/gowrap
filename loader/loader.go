@@ -39,8 +39,12 @@ func New(client httpClient) Loader {
 //Load returns template contents and template URL or error
 //path can be either any HTTPs URL or reference to the template on a project's github page
 func (l Loader) Load(path string) (tmpl []byte, url string, err error) {
-	if strings.HasPrefix(path, "https://") {
+	if strings.HasPrefix(path, "https://") || strings.HasPrefix(path, "http://") {
 		body, err := l.get(path)
+		return body, path, err
+	}
+	if strings.HasPrefix(path, "file://") {
+		body, err := ioutil.ReadFile(path[len("file://"):])
 		return body, path, err
 	}
 
