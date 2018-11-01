@@ -18,8 +18,7 @@ type TestInterfaceWithLog struct {
 	_base            TestInterface
 }
 
-// NewTestInterfaceWithLog takes several implementations of the TestInterface and returns an instance of the TestInterface
-// that uses sync.Pool of given implemetations
+// NewTestInterfaceWithLog instruments an implementation of the TestInterface with simple logging
 func NewTestInterfaceWithLog(base TestInterface, stdout, stderr io.Writer) TestInterfaceWithLog {
 	return TestInterfaceWithLog{
 		_base:   base,

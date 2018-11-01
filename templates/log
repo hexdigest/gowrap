@@ -1,6 +1,6 @@
 import (
   "io"
-	"log"
+  "log"
 )
 
 {{ $decorator := (printf "%sWithLog" .Interface.Name) }}
@@ -11,8 +11,7 @@ type {{$decorator}} struct {
   _base {{.Interface.Type}}
 }
 
-// New{{$decorator}} takes several implementations of the {{.Interface.Type}} and returns an instance of the {{.Interface.Type}} 
-// that uses sync.Pool of given implemetations
+// New{{$decorator}} instruments an implementation of the {{.Interface.Type}} with simple logging
 func New{{$decorator}}(base {{.Interface.Type}}, stdout, stderr io.Writer) {{$decorator}} {
   return {{$decorator}}{
     _base: base, 
