@@ -28,6 +28,23 @@ type Generator struct {
 	interfaceType  string
 }
 
+// TemplateInputs information passed to template for generation
+type TemplateInputs struct {
+	// Interface information for template
+	Interface TemplateInputInterface
+	// Vars additional vars to pass to the template, see Options.Vars
+	Vars map[string]interface{}
+}
+
+// TemplateInputInterface subset of interface information used for template generation
+type TemplateInputInterface struct {
+	Name string
+	// Type of the interface, with package name qualifier (e.g. sort.Interface)
+	Type string
+	// Methods name keyed map of method information
+	Methods map[string]Method
+}
+
 type methodsList map[string]Method
 
 //Options of the NewGenerator constructor
@@ -129,13 +146,13 @@ func (g Generator) Generate(w io.Writer) error {
 		return err
 	}
 
-	err = g.bodyTemplate.Execute(buf, map[string]interface{}{
-		"Interface": map[string]interface{}{
-			"Name":    g.Options.InterfaceName,
-			"Type":    g.interfaceType,
-			"Methods": g.methods,
+	err = g.bodyTemplate.Execute(buf, TemplateInputs{
+		Interface: TemplateInputInterface{
+			Name:    g.Options.InterfaceName,
+			Type:    g.interfaceType,
+			Methods: g.methods,
 		},
-		"Vars": g.Options.Vars,
+		Vars: g.Options.Vars,
 	})
 	if err != nil {
 		return err
