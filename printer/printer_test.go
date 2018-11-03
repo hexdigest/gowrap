@@ -99,9 +99,10 @@ func TestPrinter_fieldList(t *testing.T) {
 			},
 			init: func(t minimock.Tester) *Printer {
 				return &Printer{
-					fs:    token.NewFileSet(),
-					buf:   bytes.NewBuffer([]byte{}),
-					types: []*ast.TypeSpec{{Name: &ast.Ident{Name: "unexported"}}},
+					fs:          token.NewFileSet(),
+					buf:         bytes.NewBuffer([]byte{}),
+					types:       []*ast.TypeSpec{{Name: &ast.Ident{Name: "unexported"}}},
+					typesPrefix: "otherPackage",
 				}
 			},
 			want1:   nil,
@@ -174,9 +175,10 @@ func TestPrinter_printArray(t *testing.T) {
 			array: &ast.ArrayType{Elt: &ast.Ident{Name: "unexported"}},
 			init: func(t minimock.Tester) *Printer {
 				return &Printer{
-					fs:    token.NewFileSet(),
-					buf:   bytes.NewBuffer([]byte{}),
-					types: []*ast.TypeSpec{{Name: &ast.Ident{Name: "unexported"}}},
+					fs:          token.NewFileSet(),
+					buf:         bytes.NewBuffer([]byte{}),
+					types:       []*ast.TypeSpec{{Name: &ast.Ident{Name: "unexported"}}},
+					typesPrefix: "otherPackage",
 				}
 			},
 			wantErr: true,
@@ -243,9 +245,10 @@ func TestPrinter_printChan(t *testing.T) {
 			ch:   &ast.ChanType{Value: &ast.Ident{Name: "unexported"}},
 			init: func(t minimock.Tester) *Printer {
 				return &Printer{
-					fs:    token.NewFileSet(),
-					buf:   bytes.NewBuffer([]byte{}),
-					types: []*ast.TypeSpec{{Name: &ast.Ident{Name: "unexported"}}},
+					fs:          token.NewFileSet(),
+					buf:         bytes.NewBuffer([]byte{}),
+					types:       []*ast.TypeSpec{{Name: &ast.Ident{Name: "unexported"}}},
+					typesPrefix: "otherPackage",
 				}
 			},
 			wantErr: true,
@@ -312,9 +315,10 @@ func TestPrinter_printFunc(t *testing.T) {
 			f:    &ast.FuncType{Params: &ast.FieldList{List: []*ast.Field{{Type: &ast.Ident{Name: "unexported"}}}}},
 			init: func(t minimock.Tester) *Printer {
 				return &Printer{
-					fs:    token.NewFileSet(),
-					buf:   bytes.NewBuffer([]byte{}),
-					types: []*ast.TypeSpec{{Name: &ast.Ident{Name: "unexported"}}},
+					fs:          token.NewFileSet(),
+					buf:         bytes.NewBuffer([]byte{}),
+					types:       []*ast.TypeSpec{{Name: &ast.Ident{Name: "unexported"}}},
+					typesPrefix: "otherPackage",
 				}
 			},
 			wantErr: true,
@@ -327,9 +331,10 @@ func TestPrinter_printFunc(t *testing.T) {
 			f:    &ast.FuncType{Results: &ast.FieldList{List: []*ast.Field{{Type: &ast.Ident{Name: "unexported"}}}}},
 			init: func(t minimock.Tester) *Printer {
 				return &Printer{
-					fs:    token.NewFileSet(),
-					buf:   bytes.NewBuffer([]byte{}),
-					types: []*ast.TypeSpec{{Name: &ast.Ident{Name: "unexported"}}},
+					fs:          token.NewFileSet(),
+					buf:         bytes.NewBuffer([]byte{}),
+					types:       []*ast.TypeSpec{{Name: &ast.Ident{Name: "unexported"}}},
+					typesPrefix: "otherPackage",
 				}
 			},
 			wantErr: true,
@@ -396,9 +401,10 @@ func TestPrinter_printMap(t *testing.T) {
 			m:    &ast.MapType{Key: &ast.Ident{Name: "unexported"}, Value: &ast.Ident{Name: "Exported"}},
 			init: func(t minimock.Tester) *Printer {
 				return &Printer{
-					fs:    token.NewFileSet(),
-					buf:   bytes.NewBuffer([]byte{}),
-					types: []*ast.TypeSpec{{Name: &ast.Ident{Name: "unexported"}}},
+					fs:          token.NewFileSet(),
+					buf:         bytes.NewBuffer([]byte{}),
+					types:       []*ast.TypeSpec{{Name: &ast.Ident{Name: "unexported"}}},
+					typesPrefix: "otherPackage",
 				}
 			},
 			wantErr: true,
@@ -411,9 +417,10 @@ func TestPrinter_printMap(t *testing.T) {
 			m:    &ast.MapType{Key: &ast.Ident{Name: "Exported"}, Value: &ast.Ident{Name: "unexported"}},
 			init: func(t minimock.Tester) *Printer {
 				return &Printer{
-					fs:    token.NewFileSet(),
-					buf:   bytes.NewBuffer([]byte{}),
-					types: []*ast.TypeSpec{{Name: &ast.Ident{Name: "unexported"}}},
+					fs:          token.NewFileSet(),
+					buf:         bytes.NewBuffer([]byte{}),
+					types:       []*ast.TypeSpec{{Name: &ast.Ident{Name: "unexported"}}},
+					typesPrefix: "otherPackage",
 				}
 			},
 			wantErr: true,
@@ -480,9 +487,10 @@ func TestPrinter_printPointer(t *testing.T) {
 			p:    &ast.StarExpr{X: &ast.Ident{Name: "unexported"}},
 			init: func(t minimock.Tester) *Printer {
 				return &Printer{
-					fs:    token.NewFileSet(),
-					buf:   bytes.NewBuffer([]byte{}),
-					types: []*ast.TypeSpec{{Name: &ast.Ident{Name: "unexported"}}},
+					fs:          token.NewFileSet(),
+					buf:         bytes.NewBuffer([]byte{}),
+					types:       []*ast.TypeSpec{{Name: &ast.Ident{Name: "unexported"}}},
+					typesPrefix: "otherPackage",
 				}
 			},
 			wantErr: true,
@@ -549,9 +557,10 @@ func TestPrinter_printStruct(t *testing.T) {
 			s:    &ast.StructType{Fields: &ast.FieldList{List: []*ast.Field{{Type: &ast.Ident{Name: "unexported"}}}}},
 			init: func(t minimock.Tester) *Printer {
 				return &Printer{
-					fs:    token.NewFileSet(),
-					buf:   bytes.NewBuffer([]byte{}),
-					types: []*ast.TypeSpec{{Name: &ast.Ident{Name: "unexported"}}},
+					fs:          token.NewFileSet(),
+					buf:         bytes.NewBuffer([]byte{}),
+					types:       []*ast.TypeSpec{{Name: &ast.Ident{Name: "unexported"}}},
+					typesPrefix: "otherPackage",
 				}
 			},
 			wantErr: true,
@@ -617,9 +626,10 @@ func TestPrinter_printVariadicParam(t *testing.T) {
 			vp:   &ast.Ellipsis{Elt: &ast.Ident{Name: "unexported"}},
 			init: func(t minimock.Tester) *Printer {
 				return &Printer{
-					fs:    token.NewFileSet(),
-					buf:   bytes.NewBuffer([]byte{}),
-					types: []*ast.TypeSpec{{Name: &ast.Ident{Name: "unexported"}}},
+					fs:          token.NewFileSet(),
+					buf:         bytes.NewBuffer([]byte{}),
+					types:       []*ast.TypeSpec{{Name: &ast.Ident{Name: "unexported"}}},
+					typesPrefix: "otherPackage",
 				}
 			},
 			wantErr: true,
@@ -686,9 +696,10 @@ func TestPrinter_printIdent(t *testing.T) {
 			ident: &ast.Ident{Name: "unexported"},
 			init: func(t minimock.Tester) *Printer {
 				return &Printer{
-					fs:    token.NewFileSet(),
-					buf:   bytes.NewBuffer([]byte{}),
-					types: []*ast.TypeSpec{{Name: &ast.Ident{Name: "unexported"}}},
+					fs:          token.NewFileSet(),
+					buf:         bytes.NewBuffer([]byte{}),
+					types:       []*ast.TypeSpec{{Name: &ast.Ident{Name: "unexported"}}},
+					typesPrefix: "otherpackage",
 				}
 			},
 			wantErr: true,

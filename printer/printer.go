@@ -131,14 +131,15 @@ var errUnexportableType = errors.New("unexportable type")
 
 func (p *Printer) printIdent(i *ast.Ident) (string, error) {
 	for _, ts := range p.types {
-		//if the found type matches one of the types declared in a source package and
-		//this type is unexported
-		if i.Name == ts.Name.Name {
-			if []rune(ts.Name.Name)[0] == []rune(strings.ToLower(ts.Name.Name))[0] {
-				return "", errors.Wrap(errUnexportableType, ts.Name.Name)
-			}
 
+		if i.Name == ts.Name.Name {
 			if len(p.typesPrefix) > 0 {
+				//destination file is in another package
+				//if the found type matches one of the types declared in a source package and
+				//this type is unexported
+				if []rune(ts.Name.Name)[0] == []rune(strings.ToLower(ts.Name.Name))[0] {
+					return "", errors.Wrap(errUnexportableType, ts.Name.Name)
+				}
 				return p.typesPrefix + "." + i.Name, nil
 			}
 
