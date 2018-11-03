@@ -81,3 +81,5 @@ $ gowrap gen -p io -i Reader -t templates/fallback reader_with_fallback.go
 
 You can always write your own template that will provide the desired functionality to your interfaces.
 If you think that your template might be useful to others, please consider adding it to our [template repository](https://github.com/hexdigest/gowrap/tree/master/templates).
+
+The structure of information passed to templates is documented with the [TemplateInputs](https://godoc.org/github.com/hexdigest/gowrap/generator#TemplateInputs) struct.
