@@ -9,7 +9,7 @@ package templatestests
 import (
 	"context"
 
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 )
 
 // TestInterfaceWithLogrus implements TestInterface that is instrumented with logrus logger

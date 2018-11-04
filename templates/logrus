@@ -1,6 +1,6 @@
 import (
   "io"
-  "github.com/Sirupsen/logrus"
+  "github.com/sirupsen/logrus"
 )
 
 {{ $decorator := (printf "%sWithLogrus" .Interface.Name) }}
