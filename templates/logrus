@@ -1,0 +1,47 @@
+import (
+  "io"
+  "github.com/Sirupsen/logrus"
+)
+
+{{ $decorator := (printf "%sWithLogrus" .Interface.Name) }}
+
+// {{$decorator}} implements {{.Interface.Type}} that is instrumented with logrus logger
+type {{$decorator}} struct {
+  _log *logrus.Entry
+  _base {{.Interface.Type}}
+}
+
+// New{{$decorator}} instruments an implementation of the {{.Interface.Type}} with simple logging
+func New{{$decorator}}(base {{.Interface.Type}}, log *logrus.Entry) {{$decorator}} {
+  return {{$decorator}}{
+    _base: base,
+    _log: log,
+  }
+}
+
+{{range $method := .Interface.Methods}}
+  // {{$method.Name}} implements {{$.Interface.Type}}
+  func (_d {{$decorator}}) {{$method.Declaration}} {
+      {{- if $method.HasParams}}
+        _d._log.WithFields(logrus.Fields({{$method.ParamsMap}})).Debug("{{$decorator}}: calling {{$method.Name}}")
+      {{else}}
+        _d._log.Debug("{{$decorator}}: calling {{$method.Name}}")
+      {{end -}}
+      defer func() {
+        {{- if $method.HasResults}}
+          {{- if $method.ReturnsError}}
+            if err != nil {
+              _d._log.WithFields(logrus.Fields({{$method.ResultsMap}})).Error("{{$decorator}}: method {{$method.Name}} returned an error" )
+            } else {
+              _d._log.WithFields(logrus.Fields({{$method.ResultsMap}})).Debug("{{$decorator}}: method {{$method.Name}} finished")
+            }
+          {{else}}
+            _d._log.WithFields(logrus.Fields({{$method.ResultsMap}})).Debug("{{$decorator}}: method {{$method.Name}} finished")
+          {{end -}}
+        {{else}}
+          _d._log.Debug("{{$decorator}}: {{$method.Name}} finished")
+        {{end -}}
+      }()
+      {{ $method.Pass "_d._base." }}
+  }
+{{end}}

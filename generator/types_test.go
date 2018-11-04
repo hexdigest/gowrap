@@ -113,3 +113,19 @@ func TestMethod_Call(t *testing.T) {
 	}
 	assert.Equal(t, "method(s, t)", m.Call())
 }
+
+func TestMethod_ParamsMap(t *testing.T) {
+	m := Method{
+		Name:   "method",
+		Params: []Param{{Name: "s", Type: "string"}},
+	}
+	assert.Equal(t, "map[string]interface{}{\n\"s\": s}", m.ParamsMap())
+}
+
+func TestMethod_ResultsMap(t *testing.T) {
+	m := Method{
+		Name:    "method",
+		Results: []Param{{Name: "s", Type: "string"}},
+	}
+	assert.Equal(t, "map[string]interface{}{\n\"s\": s}", m.ResultsMap())
+}

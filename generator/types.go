@@ -209,6 +209,26 @@ func (m Method) ResultsStruct() string {
 	return "struct{\n" + strings.Join(ss, "\n ") + "}"
 }
 
+// ParamsMap returns a string representation of the map[string]interface{}
+// filled with method's params
+func (m Method) ParamsMap() string {
+	ss := []string{}
+	for _, p := range m.Params {
+		ss = append(ss, `"`+p.Name+`": `+p.Name)
+	}
+	return "map[string]interface{}{\n" + strings.Join(ss, ",\n ") + "}"
+}
+
+// ResultsMap returns a string representation of the map[string]interface{}
+// filled with method's results
+func (m Method) ResultsMap() string {
+	ss := []string{}
+	for _, r := range m.Results {
+		ss = append(ss, `"`+r.Name+`": `+r.Name)
+	}
+	return "map[string]interface{}{\n" + strings.Join(ss, ",\n ") + "}"
+}
+
 // HasParams returns true if method has params
 func (m Method) HasParams() bool {
 	return len(m.Params) > 0
