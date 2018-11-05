@@ -392,6 +392,48 @@ func Test_processInterface(t *testing.T) {
 			want1:   methodsList{},
 			wantErr: false,
 		},
+		{
+			name: "method with valid doc",
+			args: args{
+				fs: token.NewFileSet(),
+				it: &ast.InterfaceType{Methods: &ast.FieldList{List: []*ast.Field{
+					{
+						Names: []*ast.Ident{{Name: "methodName"}},
+						Type: &ast.FuncType{Params: &ast.FieldList{}},
+						Doc: &ast.CommentGroup{
+							List: []*ast.Comment{
+								{
+									Text: `// Non-tag comment`,
+								},
+								{
+									Text: `//+gowrap: {"Key":"Value"}`,
+								},
+							},
+						},
+				}}}},
+			},
+			want1:   methodsList{"methodName": Method{Name: "methodName", Params: []Param{}, Docs:map[string]interface{}{"Key":"Value"}}},
+			wantErr: false,
+		},
+		{
+			name: "method with invalid doc",
+			args: args{
+				fs: token.NewFileSet(),
+				it: &ast.InterfaceType{Methods: &ast.FieldList{List: []*ast.Field{
+					{
+						Names: []*ast.Ident{{Name: "methodName"}},
+						Type: &ast.FuncType{Params: &ast.FieldList{}},
+						Doc: &ast.CommentGroup{
+							List: []*ast.Comment{
+								{
+									Text: `//+gowrap: {"Key":"BadJson..."`,
+								},
+							},
+						},
+					}}}},
+			},
+			wantErr: true,
+		},
 	}
 
 	for _, tt := range tests {

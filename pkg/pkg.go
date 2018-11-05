@@ -74,7 +74,7 @@ func FromDir(fs *token.FileSet, dir string, filter filterFunc) (*ast.Package, er
 		filter = NoTests
 	}
 
-	pkgs, err := parseDir(fs, dir, filter, parser.DeclarationErrors)
+	pkgs, err := parseDir(fs, dir, filter, parser.DeclarationErrors | parser.ParseComments)
 	if err != nil {
 		return nil, err
 	}

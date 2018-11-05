@@ -244,7 +244,8 @@ func processInterface(fs *token.FileSet, it *ast.InterfaceType, types []*ast.Typ
 		switch v := field.Type.(type) {
 		case *ast.FuncType:
 			var method *Method
-			method, err = NewMethod(field.Names[0].Name, v, printer.New(fs, types, typesPrefix))
+
+			method, err = NewMethod(field, v, printer.New(fs, types, typesPrefix))
 			if err == nil {
 				methods[field.Names[0].Name] = *method
 				continue

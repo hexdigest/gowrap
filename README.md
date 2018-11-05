@@ -90,3 +90,18 @@ You can always write your own template that will provide the desired functionali
 If you think that your template might be useful to others, please consider adding it to our [template repository](https://github.com/hexdigest/gowrap/tree/master/templates).
 
 The structure of information passed to templates is documented with the [TemplateInputs](https://godoc.org/github.com/hexdigest/gowrap/generator#TemplateInputs) struct.
+
+## Documentation Tags
+
+Interface methods can be preceded by documentation comments with gowrap tags to define a map that a template can use to modify its code generation.  
+For example, this might be used to indicate to a template generating logging decorators that password values should not be logged:
+```
+//+gowrap: {"Log":{"pass":"xxxxx"}}
+Login(user string, pass string) (err error)
+```
+A template could access the map via the Docs property of the method node, for example:
+```
+{{$loghints := $method.Docs.Log}}
+...
+{{$logval := index $loghints $param.Name}}
+```

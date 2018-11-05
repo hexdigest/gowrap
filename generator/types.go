@@ -1,8 +1,11 @@
 package generator
 
 import (
+	"encoding/json"
 	"fmt"
+	"github.com/pkg/errors"
 	"go/ast"
+	"regexp"
 	"strings"
 )
 
@@ -15,6 +18,7 @@ type Method struct {
 	Name    string
 	Params  []Param
 	Results []Param
+	Docs    map[string]interface{}
 
 	ReturnsError   bool
 	AcceptsContext bool
@@ -37,7 +41,8 @@ func (p Param) Pass() string {
 }
 
 // NewMethod returns pointer to Signature struct or error
-func NewMethod(name string, f *ast.FuncType, printer typePrinter) (*Method, error) {
+func NewMethod(field *ast.Field, f *ast.FuncType, printer typePrinter) (*Method, error) {
+	name := field.Names[0].Name
 	m := Method{Name: name}
 	usedNames := map[string]bool{}
 
@@ -62,6 +67,11 @@ func NewMethod(name string, f *ast.FuncType, printer typePrinter) (*Method, erro
 		return nil, err
 	}
 	m.Results, err = makeParams(f.Results, usedNames, printer)
+	if err != nil {
+		return nil, err
+	}
+
+	m.Docs, err = captureDocs(field)
 	if err != nil {
 		return nil, err
 	}
@@ -272,4 +282,25 @@ func (m Method) Signature() string {
 // Declaration returns a method name followed by it's signature
 func (m Method) Declaration() string {
 	return m.Name + m.Signature()
+}
+
+
+func captureDocs(field *ast.Field) (docmap map[string]interface{}, err error) {
+	var re = regexp.MustCompile("// *\\+gowrap: *(.*)")
+
+	// TODO Handle multiple doc tags, merging result.
+	if field.Doc != nil {
+		for _,c := range field.Doc.List {
+			p := re.FindAllStringSubmatch(c.Text, -1)
+			if len(p) == 1 {
+				m := make(map[string]interface{})
+				err = json.Unmarshal([]byte(p[0][1]), &m)
+				if err != nil {
+					err = errors.Wrapf(err, "could not parse doc tag:%s", p[0][1])
+				}
+				return m, err
+			}
+		}
+	}
+	return nil, nil
 }
