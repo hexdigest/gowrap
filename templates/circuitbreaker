@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-{{ $decorator := (printf "%sWithCircuitBreaker" .Interface.Name) }}
+{{ $decorator := (or .Vars.DecoratorName (printf "%sWithCircuitBreaker" .Interface.Name)) }}
 
 // {{$decorator}} implements {{.Interface.Type}} instrumented with circuit breaker
 type {{$decorator}} struct {

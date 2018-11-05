@@ -3,7 +3,7 @@ import (
   "github.com/sirupsen/logrus"
 )
 
-{{ $decorator := (printf "%sWithLogrus" .Interface.Name) }}
+{{ $decorator := (or .Vars.DecoratorName (printf "%sWithLogrus" .Interface.Name)) }}
 
 // {{$decorator}} implements {{.Interface.Type}} that is instrumented with logrus logger
 type {{$decorator}} struct {

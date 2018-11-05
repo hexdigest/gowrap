@@ -3,6 +3,7 @@ package gowrap
 import (
 	"bytes"
 	"flag"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -25,6 +26,7 @@ type GenerateCommand struct {
 	sourceDir     string
 	sourcePkg     string
 	noGenerate    bool
+	vars          vars
 
 	loader   templateLoader
 	filepath fs
@@ -51,6 +53,7 @@ func NewGenerateCommand(l remoteTemplateLoader) *GenerateCommand {
 	fs.StringVar(&gc.outputFile, "o", "", "output file name")
 	fs.StringVar(&gc.template, "t", "", "template to use, it can be an HTTPS URL, local file or a\nreference to a template in gowrap repository,\n"+
 		"run `gowrap template list` for details")
+	fs.Var(&gc.vars, "v", "a key-value pair to parametrize the template,\narguments without an equal sign are treated as a bool values,\ni.e. -v foo=bar -v disableChecks")
 
 	gc.BaseCommand = BaseCommand{
 		Short: "generate decorators",
@@ -122,10 +125,12 @@ func (gc *GenerateCommand) getOptions() (*generator.Options, error) {
 		OutputFile:     gc.outputFile,
 		Funcs:          helperFuncs,
 		HeaderTemplate: headerTemplate,
-		Vars: map[string]interface{}{
-			"OutputFile":        filepath.Base(gc.outputFile),
+		HeaderVars: map[string]interface{}{
 			"DisableGoGenerate": gc.noGenerate,
+			"OutputFileName":    filepath.Base(gc.outputFile),
+			"VarsArgs":          varsToArgs(gc.vars),
 		},
+		Vars: gc.vars.toMap(),
 	}
 
 	outputFileDir, err := gc.filepath.Abs(gc.filepath.Dir(gc.outputFile))
@@ -139,7 +144,7 @@ func (gc *GenerateCommand) getOptions() (*generator.Options, error) {
 			return nil, err
 		}
 
-		options.Vars["SourcePkg"] = gc.sourcePkg
+		options.HeaderVars["SourcePkg"] = gc.sourcePkg
 	} else {
 		if gc.sourceDir == "" {
 			gc.sourceDir = "."
@@ -151,7 +156,7 @@ func (gc *GenerateCommand) getOptions() (*generator.Options, error) {
 			return nil, err
 		}
 
-		options.Vars["SourceDir"], err = gc.filepath.Rel(outputFileDir, sourceAbsPath)
+		options.HeaderVars["SourceDir"], err = gc.filepath.Rel(outputFileDir, sourceAbsPath)
 		if err != nil {
 			return nil, err
 		}
@@ -159,7 +164,7 @@ func (gc *GenerateCommand) getOptions() (*generator.Options, error) {
 		options.SourcePackageDir = gc.sourceDir
 	}
 
-	options.BodyTemplate, options.Vars["Template"], err = gc.loadTemplate(outputFileDir)
+	options.BodyTemplate, options.HeaderVars["Template"], err = gc.loadTemplate(outputFileDir)
 
 	return &options, err
 }
@@ -217,6 +222,59 @@ type fs struct {
 	WriteFile func(string, []byte, os.FileMode) error
 }
 
+type varFlag struct {
+	name  string
+	value interface{}
+}
+
+//vars is a helper type that implements flag.Value to read multiple vars from the command line
+type vars []varFlag
+
+//String implements flag.Value
+func (v vars) String() string {
+	return fmt.Sprintf("%#v", v)
+}
+
+func (v *vars) Set(s string) error {
+	chunks := strings.SplitN(s, "=", 2)
+	switch len(chunks) {
+	case 1:
+		*v = append(*v, varFlag{name: chunks[0], value: true})
+	case 2:
+		*v = append(*v, varFlag{name: chunks[0], value: chunks[1]})
+	}
+
+	return nil
+}
+
+func (v vars) toMap() map[string]interface{} {
+	m := make(map[string]interface{}, len(v))
+	for _, vf := range v {
+		m[vf.name] = vf.value
+	}
+
+	return m
+}
+
+func varsToArgs(v vars) string {
+	if len(v) == 0 {
+		return ""
+	}
+
+	var ss []string
+
+	for _, vf := range v {
+		switch typedValue := vf.value.(type) {
+		case string:
+			ss = append(ss, vf.name+"="+typedValue)
+		case bool:
+			ss = append(ss, vf.name)
+		}
+	}
+
+	return " -v " + strings.Join(ss, " -v ")
+}
+
 var helperFuncs = template.FuncMap{
 	"up":   strings.ToUpper,
 	"down": strings.ToLower,
@@ -226,13 +284,13 @@ const headerTemplate = `package {{.Package.Name}}
 
 // DO NOT EDIT!
 // This code is generated with http://github.com/hexdigest/gowrap tool
-// using {{.Vars.Template}} template
+// using {{.Options.HeaderVars.Template}} template
 
-{{if (not .Vars.DisableGoGenerate)}}
-{{if .Vars.SourceDir}}
-//{{"go:generate"}} gowrap gen -d {{.Vars.SourceDir}} -i {{.Options.InterfaceName}} -t {{.Vars.Template}} -o {{.Vars.OutputFile}}
+{{if (not .Options.HeaderVars.DisableGoGenerate)}}
+{{if .Options.HeaderVars.SourceDir}}
+//{{"go:generate"}} gowrap gen -d {{.Options.HeaderVars.SourceDir}} -i {{.Options.InterfaceName}} -t {{.Options.HeaderVars.Template}} -o {{.Options.HeaderVars.OutputFileName}}{{.Options.HeaderVars.VarsArgs}}
 {{else}}
-//{{"go:generate"}} gowrap gen -p {{.Vars.SourcePkg}} -i {{.Options.InterfaceName}} -t {{.Vars.Template}} -o {{.Vars.OutputFile}}
+//{{"go:generate"}} gowrap gen -p {{.Options.HeaderVars.SourcePkg}} -i {{.Options.InterfaceName}} -t {{.Options.HeaderVars.Template}} -o {{.Options.HeaderVars.OutputFileName}}{{.Options.HeaderVars.VarsArgs}}
 {{end}}
 {{end}}
 

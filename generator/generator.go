@@ -64,8 +64,11 @@ type Options struct {
 	//BodyTemplate generates import section, decorator constructor and methods
 	BodyTemplate string
 
-	//Vars additional vars that are passed to the templates
+	//Vars additional vars that are passed to the templates from the command line
 	Vars map[string]interface{}
+
+	//HeaderVars header specific variables
+	HeaderVars map[string]interface{}
 
 	//Funcs is a map of helper functions that can be used within a template
 	Funcs template.FuncMap

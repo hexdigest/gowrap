@@ -3,7 +3,7 @@ import (
 	"errors"
 )
 
-{{ $decorator := (printf "%sRoundRobinPool" .Interface.Name) }}
+{{ $decorator := (or .Vars.DecoratorName (printf "%sRoundRobinPool" .Interface.Name)) }}
 
 // {{$decorator}} implements {{.Interface.Type}} that uses pool of {{.Interface.Type}}
 type {{$decorator}} struct {

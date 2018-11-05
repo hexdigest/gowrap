@@ -2,7 +2,7 @@ import(
   "time"
 )
 
-{{ $decorator := (printf "%sWithRetry" .Interface.Name) }}
+{{ $decorator := (or .Vars.DecoratorName (printf "%sWithRetry" .Interface.Name)) }}
 
 // {{$decorator}} implements {{.Interface.Type}} interface instrumented with retries
 type {{$decorator}} struct {

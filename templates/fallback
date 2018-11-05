@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-{{ $decorator := (printf "%sWithFallback" .Interface.Name) }}
+{{ $decorator := (or .Vars.DecoratorName (printf "%sWithFallback" .Interface.Name)) }}
 
 // {{$decorator}} implements {{.Interface.Type}} interface wrapped with Prometheus metrics
 type {{$decorator}} struct {

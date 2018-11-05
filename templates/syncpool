@@ -1,4 +1,4 @@
-{{ $decorator := (printf "%sPool" .Interface.Name) }}
+{{ $decorator := (or .Vars.DecoratorName (printf "%sPool" .Interface.Name)) }}
 
 // {{$decorator}} implements {{.Interface.Type}} that uses pool of {{.Interface.Type}}
 type {{$decorator}} struct {

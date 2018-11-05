@@ -3,7 +3,7 @@ import (
   "log"
 )
 
-{{ $decorator := (printf "%sWithLog" .Interface.Name) }}
+{{ $decorator := (or .Vars.DecoratorName (printf "%sWithLog" .Interface.Name)) }}
 
 // {{$decorator}} implements {{.Interface.Type}} that is instrumented with logging
 type {{$decorator}} struct {

@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/gojuno/minimock"
 	"github.com/hexdigest/gowrap/generator"
@@ -253,6 +254,98 @@ func TestGenerateCommand_Run(t *testing.T) {
 				assert.NoError(t, err)
 			}
 
+		})
+	}
+}
+
+func Test_varsToArgs(t *testing.T) {
+	type args struct {
+		v vars
+	}
+	tests := []struct {
+		name  string
+		v     vars
+		want1 string
+	}{
+		{
+			name:  "no vars",
+			v:     nil,
+			want1: "",
+		},
+		{
+			name:  "two vars",
+			v:     vars{varFlag{name: "key", value: "value"}, varFlag{name: "booleanKey", value: true}},
+			want1: " -v key=value -v booleanKey",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mc := minimock.NewController(t)
+			defer mc.Wait(time.Second)
+
+			got1 := varsToArgs(tt.v)
+
+			assert.Equal(t, tt.want1, got1, "varsToArgs returned unexpected result")
+		})
+	}
+}
+
+func TestVars_toMap(t *testing.T) {
+	tests := []struct {
+		name  string
+		vars  vars
+		want1 map[string]interface{}
+	}{
+		{
+			name: "success",
+			vars: vars{{name: "key", value: "value"}, {name: "boolFlag", value: true}},
+			want1: map[string]interface{}{
+				"key":      "value",
+				"boolFlag": true,
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got1 := tt.vars.toMap()
+
+			assert.Equal(t, tt.want1, got1, "vars.toMap returned unexpected result")
+		})
+	}
+}
+
+func TestVars_Set(t *testing.T) {
+	tests := []struct {
+		name    string
+		inspect func(r vars, t *testing.T) //inspects vars after execution of Set
+		s       string
+	}{
+		{
+			name: "bool var",
+			s:    "boolVar",
+			inspect: func(v vars, t *testing.T) {
+				assert.Equal(t, vars{varFlag{name: "boolVar", value: true}}, v)
+			},
+		},
+
+		{
+			name: "string var",
+			s:    "key=value",
+			inspect: func(v vars, t *testing.T) {
+				assert.Equal(t, vars{varFlag{name: "key", value: "value"}}, v)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			v := vars{}
+			err := v.Set(tt.s)
+			assert.NoError(t, err)
+
+			tt.inspect(v, t)
 		})
 	}
 }

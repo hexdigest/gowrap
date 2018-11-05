@@ -3,7 +3,7 @@ import (
   "github.com/prometheus/client_golang/prometheus"
 )
 
-{{ $decorator := (printf "%sWithPrometheus" .Interface.Name) }}
+{{ $decorator := (or .Vars.DecoratorName (printf "%sWithPrometheus" .Interface.Name)) }}
 
 // {{$decorator}} implements {{.Interface.Type}} interface with all methods wrapped
 // with Prometheus metrics
