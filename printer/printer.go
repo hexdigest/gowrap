@@ -127,7 +127,7 @@ func (p *Printer) printMap(mt *ast.MapType) (string, error) {
 	return "map[" + keyType + "]" + valueType, nil
 }
 
-var errUnexportableType = errors.New("unexportable type")
+var errUnexportedType = errors.New("unexported type")
 
 func (p *Printer) printIdent(i *ast.Ident) (string, error) {
 	for _, ts := range p.types {
@@ -138,7 +138,7 @@ func (p *Printer) printIdent(i *ast.Ident) (string, error) {
 				//if the found type matches one of the types declared in a source package and
 				//this type is unexported
 				if []rune(ts.Name.Name)[0] == []rune(strings.ToLower(ts.Name.Name))[0] {
-					return "", errors.Wrap(errUnexportableType, ts.Name.Name)
+					return "", errors.Wrap(errUnexportedType, ts.Name.Name)
 				}
 				return p.typesPrefix + "." + i.Name, nil
 			}

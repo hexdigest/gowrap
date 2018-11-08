@@ -686,18 +686,38 @@ func TestNewGenerator(t *testing.T) {
 		})
 	}
 
-	path, err := pkg.Path("io")
-	require.NoError(t, err)
+	t.Run("unexported interface", func(t *testing.T) {
+		path, err := pkg.Path("testing")
+		require.NoError(t, err)
 
-	options := Options{
-		HeaderTemplate:   "",
-		BodyTemplate:     "",
-		SourcePackageDir: path,
-		OutputFile:       "./out.go",
-		InterfaceName:    "Closer",
-	}
+		options := Options{
+			HeaderTemplate:   "",
+			BodyTemplate:     "",
+			SourcePackageDir: path,
+			OutputFile:       "./out.go",
+			InterfaceName:    "TB",
+		}
 
-	g, err := NewGenerator(options)
-	assert.NoError(t, err)
-	assert.NotNil(t, g)
+		g, err := NewGenerator(options)
+		require.Error(t, err)
+		assert.Equal(t, errUnexportedMethod, errors.Cause(err))
+		assert.Nil(t, g)
+	})
+
+	t.Run("success", func(t *testing.T) {
+		path, err := pkg.Path("io")
+		require.NoError(t, err)
+
+		options := Options{
+			HeaderTemplate:   "",
+			BodyTemplate:     "",
+			SourcePackageDir: path,
+			OutputFile:       "./out.go",
+			InterfaceName:    "Closer",
+		}
+
+		g, err := NewGenerator(options)
+		assert.NoError(t, err)
+		assert.NotNil(t, g)
+	})
 }

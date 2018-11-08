@@ -108,7 +108,7 @@ func TestPrinter_fieldList(t *testing.T) {
 			want1:   nil,
 			wantErr: true,
 			inspectErr: func(err error, t *testing.T) {
-				assert.Equal(t, errUnexportableType, errors.Cause(err))
+				assert.Equal(t, errUnexportedType, errors.Cause(err))
 			},
 		},
 		{
@@ -183,7 +183,7 @@ func TestPrinter_printArray(t *testing.T) {
 			},
 			wantErr: true,
 			inspectErr: func(err error, t *testing.T) {
-				assert.Equal(t, errUnexportableType, errors.Cause(err))
+				assert.Equal(t, errUnexportedType, errors.Cause(err))
 			},
 		},
 		{
@@ -253,7 +253,7 @@ func TestPrinter_printChan(t *testing.T) {
 			},
 			wantErr: true,
 			inspectErr: func(err error, t *testing.T) {
-				assert.Equal(t, errUnexportableType, errors.Cause(err))
+				assert.Equal(t, errUnexportedType, errors.Cause(err))
 			},
 		},
 		{
@@ -323,7 +323,7 @@ func TestPrinter_printFunc(t *testing.T) {
 			},
 			wantErr: true,
 			inspectErr: func(err error, t *testing.T) {
-				assert.Equal(t, errUnexportableType, errors.Cause(err))
+				assert.Equal(t, errUnexportedType, errors.Cause(err))
 			},
 		},
 		{
@@ -339,7 +339,7 @@ func TestPrinter_printFunc(t *testing.T) {
 			},
 			wantErr: true,
 			inspectErr: func(err error, t *testing.T) {
-				assert.Equal(t, errUnexportableType, errors.Cause(err))
+				assert.Equal(t, errUnexportedType, errors.Cause(err))
 			},
 		},
 		{
@@ -409,7 +409,7 @@ func TestPrinter_printMap(t *testing.T) {
 			},
 			wantErr: true,
 			inspectErr: func(err error, t *testing.T) {
-				assert.Equal(t, errUnexportableType, errors.Cause(err))
+				assert.Equal(t, errUnexportedType, errors.Cause(err))
 			},
 		},
 		{
@@ -425,7 +425,7 @@ func TestPrinter_printMap(t *testing.T) {
 			},
 			wantErr: true,
 			inspectErr: func(err error, t *testing.T) {
-				assert.Equal(t, errUnexportableType, errors.Cause(err))
+				assert.Equal(t, errUnexportedType, errors.Cause(err))
 			},
 		},
 		{
@@ -495,7 +495,7 @@ func TestPrinter_printPointer(t *testing.T) {
 			},
 			wantErr: true,
 			inspectErr: func(err error, t *testing.T) {
-				assert.Equal(t, errUnexportableType, errors.Cause(err))
+				assert.Equal(t, errUnexportedType, errors.Cause(err))
 			},
 		},
 		{
@@ -565,7 +565,7 @@ func TestPrinter_printStruct(t *testing.T) {
 			},
 			wantErr: true,
 			inspectErr: func(err error, t *testing.T) {
-				assert.Equal(t, errUnexportableType, errors.Cause(err))
+				assert.Equal(t, errUnexportedType, errors.Cause(err))
 			},
 		},
 		{
@@ -634,7 +634,7 @@ func TestPrinter_printVariadicParam(t *testing.T) {
 			},
 			wantErr: true,
 			inspectErr: func(err error, t *testing.T) {
-				assert.Equal(t, errUnexportableType, errors.Cause(err))
+				assert.Equal(t, errUnexportedType, errors.Cause(err))
 			},
 		},
 		{
@@ -704,7 +704,7 @@ func TestPrinter_printIdent(t *testing.T) {
 			},
 			wantErr: true,
 			inspectErr: func(err error, t *testing.T) {
-				assert.Equal(t, errUnexportableType, errors.Cause(err))
+				assert.Equal(t, errUnexportedType, errors.Cause(err))
 			},
 		},
 		{

@@ -2,6 +2,7 @@ package generator
 
 import (
 	"bytes"
+	"strings"
 
 	"go/ast"
 	"go/token"
@@ -75,6 +76,7 @@ type Options struct {
 }
 
 var errEmptyInterface = errors.New("interface has no methods")
+var errUnexportedMethod = errors.New("unexported method")
 
 //NewGenerator returns Generator initialized with options
 func NewGenerator(options Options) (*Generator, error) {
@@ -122,6 +124,12 @@ func NewGenerator(options Options) (*Generator, error) {
 
 	if len(methods) == 0 {
 		return nil, errEmptyInterface
+	}
+
+	for _, m := range methods {
+		if srcPackage.Name != "" && []rune(m.Name)[0] == []rune(strings.ToLower(m.Name))[0] {
+			return nil, errors.Wrap(errUnexportedMethod, m.Name)
+		}
 	}
 
 	return &Generator{
