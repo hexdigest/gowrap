@@ -1,0 +1,51 @@
+{{ $decorator := (or .Vars.DecoratorName (printf "%sWithRateLimit" .Interface.Name)) }}
+
+import (
+  "time"
+)
+
+// {{$decorator}} implements {{.Interface.Type}}
+type {{$decorator}} struct {
+  _base {{.Interface.Type}}
+  _ticks chan time.Time
+}
+
+// New{{$decorator}} instruments an implementation of the {{.Interface.Type}} with with rate limiting
+func New{{$decorator}}(base {{.Interface.Type}}, concurrentRequests int, rps float64) *{{$decorator}} {
+  d := &{{$decorator}}{
+    _base: base,
+    _ticks: make(chan time.Time, concurrentRequests),
+  }
+
+  now := time.Now()
+  for i := 0; i < concurrentRequests; i++ {
+    d._ticks <- now 
+  }
+
+  delay := time.Duration(float64(time.Second) / rps)
+
+  go func() {
+    for t := range time.Tick(delay) {
+      d._ticks <- t
+    }
+  }()
+
+  return d
+}
+
+{{range $method := .Interface.Methods}}
+  // {{$method.Name}} implements {{$.Interface.Type}}
+  func (_d *{{$decorator}}) {{$method.Declaration}} {
+    {{- if (and $method.AcceptsContext $method.ReturnsError)}}
+      select {
+      case <-ctx.Done():
+        err = ctx.Err()
+        return
+      case <-_d._ticks:
+      }
+    {{else}}
+      <-_d._ticks
+    {{end}}
+    {{ $method.Pass "_d._base." }}
+  }
+{{end}}

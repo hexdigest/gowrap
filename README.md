@@ -31,6 +31,10 @@ Usage: gowrap gen -p package -i interfaceName -t template -o output_file.go
   -t template
     	the template to use, it can be an HTTPS URL a local file or a
     	reference to one of the templates in the gowrap repository
+  -v value
+    	a key-value pair to parametrize the template,
+    	arguments without an equal sign are treated as a bool values,
+    	i.e. -v DecoratorName=MyDecorator -v disableChecks
 ```
 
 This will generate an implementation of the io.Reader interface wrapped with prometheus metrics
@@ -55,8 +59,11 @@ If the file is not found, gowrap will look for the template [here](https://githu
 List of available templates:
   - [circuitbreaker](https://github.com/hexdigest/gowrap/tree/master/templates/circuitbreaker) stops executing methods of the wrapped interface after the specified number of consecutive errors and resumes execution after the specified delay
   - [fallback](https://github.com/hexdigest/gowrap/tree/master/templates/fallback) takes several implementations of the source interface and concurrently runs each implementation if the previous attempt didn't return the result in a specified period of time, it returns the first non-error result
+  - [log](https://github.com/hexdigest/gowrap/tree/master/templates/log) instruments the source interface with logging using standard logger from the "log" package
+  - [logrus](https://github.com/hexdigest/gowrap/tree/master/templates/logrus) instruments the source interface with logging using popular [sirupsen/logrus](https://github.com/sirupsen/logrus) logger
   - [opentracing](https://github.com/hexdigest/gowrap/tree/master/templates/opentracing) instruments the source interface with opentracing spans
   - [prometheus](https://github.com/hexdigest/gowrap/tree/master/templates/prometheus) instruments the source interface with prometheus metrics
+  - [ratelimit](https://github.com/hexdigest/gowrap/tree/master/templates/ratelimit) instruments the source interface with RPS limit and concurrent calls limit
   - [retry](https://github.com/hexdigest/gowrap/tree/master/templates/retry) instruments the source interface with retries
   - [robinpool](https://github.com/hexdigest/gowrap/tree/master/templates/robinpool) puts several implementations of the source interface to the slice and for every method call it picks one implementation from the slice using the Round-robin algorithm
   - [syncpool](https://github.com/hexdigest/gowrap/tree/master/templates/syncpool) puts several implementations of the source interface to the sync.Pool and for every method call it gets one implementation from the pool and puts it back once finished
