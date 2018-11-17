@@ -10,14 +10,21 @@ import (
 type {{$decorator}} struct {
   {{.Interface.Type}}
   _instance string
+  _spanDecorator func(span opentracing.Span, params, results map[string]interface{})
 }
 
 // New{{$decorator}} returns {{$decorator}}
-func New{{$decorator}} (base {{.Interface.Type}}, instance string) {{$decorator}} {
-  return {{$decorator}} {
+func New{{$decorator}} (base {{.Interface.Type}}, instance string, spanDecorator ...func(span opentracing.Span, params, results map[string]interface{})) {{$decorator}} {
+  d := {{$decorator}} {
     {{.Interface.Name}}: base,
     _instance: instance,
   }
+
+  if len(spanDecorator) > 0 && spanDecorator[0] != nil {
+    d._spanDecorator = spanDecorator[0]
+  }
+
+  return d
 }
 
 {{range $method := .Interface.Methods}}
@@ -25,20 +32,19 @@ func New{{$decorator}} (base {{.Interface.Type}}, instance string) {{$decorator}
     // {{$method.Name}} implements {{$.Interface.Type}}
     func (_d {{$decorator}}) {{$method.Declaration}} {
       _span, ctx := opentracing.StartSpanFromContext(ctx, _d._instance + ".{{$.Interface.Type}}.{{$method.Name}}")
-      {{- if $method.ReturnsError}}
-        defer func() {
-          if err != nil {
-            _ext.Error.Set(_span, true)
-            _span.LogFields(
-              _log.String("event", "error"),
-              _log.String("message", err.Error()),
-            )
-			    }
-          _span.Finish()
-        }()
-      {{else}}
-        defer _span.Finish()
-      {{end}}
+      defer func() { 
+        if _d._spanDecorator != nil {
+          _d._spanDecorator(_span, {{$method.ParamsMap}}, {{$method.ResultsMap}})
+        }{{- if $method.ReturnsError}} else if err != nil {
+          _ext.Error.Set(_span, true)
+          _span.LogFields(
+            _log.String("event", "error"),
+            _log.String("message", err.Error()),
+          )
+        }
+        {{end}}
+        _span.Finish()
+      }()
       {{$method.Pass (printf "_d.%s." $.Interface.Name) }}
     }
   {{end}}
