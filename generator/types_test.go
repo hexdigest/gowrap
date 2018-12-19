@@ -71,6 +71,14 @@ func TestMethod_HasParams(t *testing.T) {
 	})
 }
 
+func TestMethod_ParamsStruct(t *testing.T) {
+	m := Method{
+		Name:   "method",
+		Params: []Param{{Name: "s", Type: "...string", Variadic: true}},
+	}
+	assert.Equal(t, "struct{\ns []string}", m.ParamsStruct())
+}
+
 func TestMethod_ResultsStruct(t *testing.T) {
 	m := Method{
 		Name:    "method",

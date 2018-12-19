@@ -13,8 +13,8 @@ type typePrinter interface {
 // Method represents a method's signature
 type Method struct {
 	Name    string
-	Params  []Param
-	Results []Param
+	Params  ParamsSlice
+	Results ParamsSlice
 
 	ReturnsError   bool
 	AcceptsContext bool
@@ -25,6 +25,26 @@ type Param struct {
 	Name     string
 	Type     string
 	Variadic bool
+}
+
+type ParamsSlice []Param
+
+func (ps ParamsSlice) String() string {
+	ss := []string{}
+	for _, p := range ps {
+		ss = append(ss, p.Name+" "+p.Type)
+	}
+
+	return strings.Join(ss, ", ")
+}
+
+func (ps ParamsSlice) Pass() string {
+	params := []string{}
+	for _, p := range ps {
+		params = append(params, p.Pass())
+	}
+
+	return strings.Join(params, ", ")
 }
 
 // Pass returns a name of the parameter
@@ -98,7 +118,7 @@ func NewParam(name string, typ ast.Expr, usedNames map[string]bool, printer type
 	}, nil
 }
 
-func makeParams(params *ast.FieldList, usedNames map[string]bool, printer typePrinter) ([]Param, error) {
+func makeParams(params *ast.FieldList, usedNames map[string]bool, printer typePrinter) (ParamsSlice, error) {
 	if params == nil {
 		return nil, nil
 	}
@@ -199,8 +219,22 @@ func (m Method) ResultsNames() string {
 	return strings.Join(ss, ", ")
 }
 
-// ResultsStruct returns a struct type with fields corresponding
+// ParamsStruct returns a struct type with fields corresponding
 // to the method params
+func (m Method) ParamsStruct() string {
+	ss := []string{}
+	for _, p := range m.Params {
+		if p.Variadic {
+			ss = append(ss, p.Name+" "+strings.Replace(p.Type, "...", "[]", 1))
+		} else {
+			ss = append(ss, p.Name+" "+p.Type)
+		}
+	}
+	return "struct{\n" + strings.Join(ss, "\n ") + "}"
+}
+
+// ResultsStruct returns a struct type with fields corresponding
+// to the method results
 func (m Method) ResultsStruct() string {
 	ss := []string{}
 	for _, r := range m.Results {
