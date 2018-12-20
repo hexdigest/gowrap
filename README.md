@@ -18,16 +18,14 @@ go get -u github.com/hexdigest/gowrap/cmd/gowrap
 
 ```
 Usage: gowrap gen -p package -i interfaceName -t template -o output_file.go
-  -d string
-    	the source package dir is where to look for the interface declaration,
-    	the default is the current directory
   -g	don't put //go:generate instruction into the generated code
   -i string
     	the source interface name, i.e. "Reader"
   -o string
     	the output file name
   -p string
-    	the source package import path, i.e. "io" or "github.com/hexdigest/gowrap"
+    	the source package import path, i.e. "io", "github.com/hexdigest/gowrap" or
+    	a relative import path like "./generator"
   -t template
     	the template to use, it can be an HTTPS URL a local file or a
     	reference to one of the templates in the gowrap repository

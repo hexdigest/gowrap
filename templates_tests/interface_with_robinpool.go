@@ -4,7 +4,7 @@ package templatestests
 // This code is generated with http://github.com/hexdigest/gowrap tool
 // using ../templates/robinpool template
 
-//go:generate gowrap gen -d . -i TestInterface -t ../templates/robinpool -o interface_with_robinpool.go
+//go:generate gowrap gen -p github.com/hexdigest/gowrap/templates_tests -i TestInterface -t ../templates/robinpool -o interface_with_robinpool.go
 
 import (
 	"context"

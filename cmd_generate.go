@@ -23,7 +23,6 @@ type GenerateCommand struct {
 	interfaceName string
 	template      string
 	outputFile    string
-	sourceDir     string
 	sourcePkg     string
 	noGenerate    bool
 	vars          vars
@@ -47,11 +46,10 @@ func NewGenerateCommand(l remoteTemplateLoader) *GenerateCommand {
 	//this flagset loads flags values to the command fields
 	fs := &flag.FlagSet{}
 	fs.BoolVar(&gc.noGenerate, "g", false, "don't put //go:generate instruction to the generated code")
-	fs.StringVar(&gc.interfaceName, "i", "", `interface name, i.e. "Reader"`)
-	fs.StringVar(&gc.sourcePkg, "p", "", `source package import path, i.e. "io" or "github.com/hexdigest/gowrap"`)
-	fs.StringVar(&gc.sourceDir, "d", "", "source package dir where to look for the interface declaration,\ndefault is a current directory")
-	fs.StringVar(&gc.outputFile, "o", "", "output file name")
-	fs.StringVar(&gc.template, "t", "", "template to use, it can be an HTTPS URL, local file or a\nreference to a template in gowrap repository,\n"+
+	fs.StringVar(&gc.interfaceName, "i", "", `the source interface name, i.e. "Reader"`)
+	fs.StringVar(&gc.sourcePkg, "p", "", "the source package import path, i.e. \"io\", \"github.com/hexdigest/gowrap\" or\na relative import path like \"./generator\"")
+	fs.StringVar(&gc.outputFile, "o", "", "the output file name")
+	fs.StringVar(&gc.template, "t", "", "the template to use, it can be an HTTPS URL, local file or a\nreference to a template in gowrap repository,\n"+
 		"run `gowrap template list` for details")
 	fs.Var(&gc.vars, "v", "a key-value pair to parametrize the template,\narguments without an equal sign are treated as a bool values,\ni.e. -v foo=bar -v disableChecks")
 
@@ -94,10 +92,10 @@ func (gc *GenerateCommand) Run(args []string, stdout io.Writer) error {
 }
 
 var (
-	errNoOutputFile                  = CommandLineError("output file is not specified")
-	errNoInterfaceName               = CommandLineError("interface name is not specified")
-	errNoTemplate                    = CommandLineError("no template specified")
-	errEitherDirOrImportPathRequired = CommandLineError("either -d or -p option is expected")
+	errNoOutputFile    = CommandLineError("output file is not specified")
+	errNoInterfaceName = CommandLineError("interface name is not specified")
+	errNoTemplate      = CommandLineError("no template specified")
+	errNoSourcePackage = CommandLineError("no source package specified")
 )
 
 func (gc *GenerateCommand) checkFlags() error {
@@ -113,9 +111,6 @@ func (gc *GenerateCommand) checkFlags() error {
 		return errNoTemplate
 	}
 
-	if gc.sourcePkg != "" && gc.sourceDir != "" {
-		return errEitherDirOrImportPathRequired
-	}
 	return nil
 }
 
@@ -138,32 +133,16 @@ func (gc *GenerateCommand) getOptions() (*generator.Options, error) {
 		return nil, err
 	}
 
-	if gc.sourcePkg != "" {
-		options.SourcePackageDir, err = pkg.Path(gc.sourcePkg)
-		if err != nil {
-			return nil, err
-		}
-
-		options.HeaderVars["SourcePkg"] = gc.sourcePkg
-	} else {
-		if gc.sourceDir == "" {
-			gc.sourceDir = "."
-		}
-
-		var sourceAbsPath string
-		sourceAbsPath, err = gc.filepath.Abs(gc.sourceDir)
-		if err != nil {
-			return nil, err
-		}
-
-		options.HeaderVars["SourceDir"], err = gc.filepath.Rel(outputFileDir, sourceAbsPath)
-		if err != nil {
-			return nil, err
-		}
-
-		options.SourcePackageDir = gc.sourceDir
+	if gc.sourcePkg == "" {
+		gc.sourcePkg = "./"
 	}
 
+	sourcePackage, err := pkg.Load(gc.sourcePkg)
+	if err != nil {
+		return nil, err
+	}
+
+	options.SourcePackage = sourcePackage.PkgPath
 	options.BodyTemplate, options.HeaderVars["Template"], err = gc.loadTemplate(outputFileDir)
 
 	return &options, err
@@ -287,11 +266,7 @@ const headerTemplate = `package {{.Package.Name}}
 // using {{.Options.HeaderVars.Template}} template
 
 {{if (not .Options.HeaderVars.DisableGoGenerate)}}
-{{if .Options.HeaderVars.SourceDir}}
-//{{"go:generate"}} gowrap gen -d {{.Options.HeaderVars.SourceDir}} -i {{.Options.InterfaceName}} -t {{.Options.HeaderVars.Template}} -o {{.Options.HeaderVars.OutputFileName}}{{.Options.HeaderVars.VarsArgs}}
-{{else}}
-//{{"go:generate"}} gowrap gen -p {{.Options.HeaderVars.SourcePkg}} -i {{.Options.InterfaceName}} -t {{.Options.HeaderVars.Template}} -o {{.Options.HeaderVars.OutputFileName}}{{.Options.HeaderVars.VarsArgs}}
-{{end}}
+//{{"go:generate"}} gowrap gen -p {{.SourcePackage.PkgPath}} -i {{.Options.InterfaceName}} -t {{.Options.HeaderVars.Template}} -o {{.Options.HeaderVars.OutputFileName}}{{.Options.HeaderVars.VarsArgs}}
 {{end}}
 
 `

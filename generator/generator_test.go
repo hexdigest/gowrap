@@ -10,16 +10,10 @@ import (
 	"time"
 
 	"github.com/gojuno/minimock"
-	"github.com/hexdigest/gowrap/pkg"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-func Test_samePath(t *testing.T) {
-	assert.True(t, samePath("file", "file"))
-	assert.True(t, samePath("../", "./.."))
-}
 
 func Test_unquote(t *testing.T) {
 	tests := []struct {
@@ -617,9 +611,9 @@ func TestNewGenerator(t *testing.T) {
 			name: "failed to load source package",
 			options: func(t minimock.Tester) Options {
 				return Options{
-					HeaderTemplate:   "",
-					BodyTemplate:     "",
-					SourcePackageDir: "not-exist",
+					HeaderTemplate: "",
+					BodyTemplate:   "",
+					SourcePackage:  "not-exist",
 				}
 			},
 			wantErr: true,
@@ -628,10 +622,10 @@ func TestNewGenerator(t *testing.T) {
 			name: "failed to load destination package",
 			options: func(t minimock.Tester) Options {
 				return Options{
-					HeaderTemplate:   "",
-					BodyTemplate:     "",
-					SourcePackageDir: "./",
-					OutputFile:       "not-exist/out.go",
+					HeaderTemplate: "",
+					BodyTemplate:   "",
+					SourcePackage:  "./",
+					OutputFile:     "not-exist/out.go",
 				}
 			},
 			wantErr: true,
@@ -640,11 +634,11 @@ func TestNewGenerator(t *testing.T) {
 			name: "failed to find interface",
 			options: func(t minimock.Tester) Options {
 				return Options{
-					HeaderTemplate:   "",
-					BodyTemplate:     "",
-					SourcePackageDir: "./",
-					OutputFile:       "./out.go",
-					InterfaceName:    "NotExist",
+					HeaderTemplate: "",
+					BodyTemplate:   "",
+					SourcePackage:  "./",
+					OutputFile:     "./out.go",
+					InterfaceName:  "NotExist",
 				}
 			},
 			wantErr: true,
@@ -653,11 +647,11 @@ func TestNewGenerator(t *testing.T) {
 			name: "failed to find interface",
 			options: func(t minimock.Tester) Options {
 				return Options{
-					HeaderTemplate:   "",
-					BodyTemplate:     "",
-					SourcePackageDir: "./",
-					OutputFile:       "./out.go",
-					InterfaceName:    "NotExist",
+					HeaderTemplate: "",
+					BodyTemplate:   "",
+					SourcePackage:  "./",
+					OutputFile:     "./out.go",
+					InterfaceName:  "NotExist",
 				}
 			},
 			wantErr: true,
@@ -687,15 +681,12 @@ func TestNewGenerator(t *testing.T) {
 	}
 
 	t.Run("unexported interface", func(t *testing.T) {
-		path, err := pkg.Path("testing")
-		require.NoError(t, err)
-
 		options := Options{
-			HeaderTemplate:   "",
-			BodyTemplate:     "",
-			SourcePackageDir: path,
-			OutputFile:       "./out.go",
-			InterfaceName:    "TB",
+			HeaderTemplate: "",
+			BodyTemplate:   "",
+			SourcePackage:  "testing",
+			OutputFile:     "./out.go",
+			InterfaceName:  "TB",
 		}
 
 		g, err := NewGenerator(options)
@@ -705,15 +696,12 @@ func TestNewGenerator(t *testing.T) {
 	})
 
 	t.Run("success", func(t *testing.T) {
-		path, err := pkg.Path("io")
-		require.NoError(t, err)
-
 		options := Options{
-			HeaderTemplate:   "",
-			BodyTemplate:     "",
-			SourcePackageDir: path,
-			OutputFile:       "./out.go",
-			InterfaceName:    "Closer",
+			HeaderTemplate: "",
+			BodyTemplate:   "",
+			SourcePackage:  "io",
+			OutputFile:     "./out.go",
+			InterfaceName:  "Closer",
 		}
 
 		g, err := NewGenerator(options)

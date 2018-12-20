@@ -2,15 +2,16 @@ package generator
 
 import (
 	"bytes"
+	"path/filepath"
 	"strings"
 
 	"go/ast"
 	"go/token"
 	"io"
-	"path/filepath"
 	"text/template"
 
 	"github.com/pkg/errors"
+	"golang.org/x/tools/go/packages"
 
 	"github.com/hexdigest/gowrap/pkg"
 	"github.com/hexdigest/gowrap/printer"
@@ -25,8 +26,8 @@ type Generator struct {
 
 	headerTemplate *template.Template
 	bodyTemplate   *template.Template
-	srcPackage     ast.Package
-	dstPackage     ast.Package
+	srcPackage     *packages.Package
+	dstPackage     *packages.Package
 	methods        methodsList
 	interfaceType  string
 }
@@ -55,8 +56,8 @@ type Options struct {
 	//InterfaceName is a name of interface type
 	InterfaceName string
 
-	//SourcePackageDir is a real path of the package that contains source interface
-	SourcePackageDir string
+	//SourcePackage is an import path or a relative path of the package that contains the source interface
+	SourcePackage string
 
 	//OutputFile name which is used to detect destination package name and also to fix imports in the resulting source
 	OutputFile string
@@ -102,24 +103,33 @@ func NewGenerator(options Options) (*Generator, error) {
 
 	fs := token.NewFileSet()
 
-	srcPackage, err := pkg.FromDir(fs, options.SourcePackageDir, pkg.NoTests)
+	srcPackage, err := pkg.Load(options.SourcePackage)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to load source package")
 	}
 
-	dstPath := filepath.Dir(options.OutputFile)
-	dstPackage, err := pkg.FromDir(fs, dstPath, pkg.NoTests)
+	dstPackagePath := filepath.Dir(options.OutputFile)
+	if !strings.HasPrefix(dstPackagePath, "/") && !strings.HasPrefix(dstPackagePath, "./") {
+		dstPackagePath = "./" + dstPackagePath
+	}
+
+	dstPackage, err := pkg.Load(dstPackagePath)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to load destination package")
+		return nil, errors.Wrapf(err, "failed to load destination package: %s", dstPackagePath)
+	}
+
+	srcPackageAST, err := pkg.AST(fs, srcPackage)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to parse source package")
 	}
 
 	interfaceType := srcPackage.Name + "." + options.InterfaceName
-	if samePath(options.SourcePackageDir, dstPath) {
+	if srcPackage.PkgPath == dstPackage.PkgPath {
 		interfaceType = options.InterfaceName
-		srcPackage.Name = ""
+		srcPackageAST.Name = ""
 	}
 
-	methods, err := findInterface(fs, srcPackage, options.InterfaceName)
+	methods, err := findInterface(fs, srcPackageAST, options.InterfaceName)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse interface declaration")
 	}
@@ -129,7 +139,7 @@ func NewGenerator(options Options) (*Generator, error) {
 	}
 
 	for _, m := range methods {
-		if srcPackage.Name != "" && []rune(m.Name)[0] == []rune(strings.ToLower(m.Name))[0] {
+		if srcPackageAST.Name != "" && []rune(m.Name)[0] == []rune(strings.ToLower(m.Name))[0] {
 			return nil, errors.Wrap(errUnexportedMethod, m.Name)
 		}
 	}
@@ -138,8 +148,8 @@ func NewGenerator(options Options) (*Generator, error) {
 		Options:        options,
 		headerTemplate: headerTemplate,
 		bodyTemplate:   bodyTemplate,
-		srcPackage:     *srcPackage,
-		dstPackage:     *dstPackage,
+		srcPackage:     srcPackage,
+		dstPackage:     dstPackage,
 		interfaceType:  interfaceType,
 		methods:        methods,
 	}, nil
@@ -279,7 +289,12 @@ func processSelector(fs *token.FileSet, se *ast.SelectorExpr, imports []*ast.Imp
 		return nil, errors.Wrapf(err, "unable to load %s.%s", packageSelector, interfaceName)
 	}
 
-	astPkg, err := pkg.FromImport(fs, importPath)
+	p, err := pkg.Load(importPath)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to load imported package")
+	}
+
+	astPkg, err := pkg.AST(fs, p)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to import package")
 	}
@@ -346,14 +361,9 @@ func importPathByPrefix(imports []*ast.ImportSpec, prefix string) (string, error
 	}
 
 	for _, i := range imports {
-		importPath := unquote(i.Path.Value)
-		packageName, err := pkg.Name(importPath)
-		if err != nil {
-			return "", errors.Wrapf(err, "unable to load package: %s", importPath)
-		}
-
-		if packageName == prefix {
-			return importPath, nil
+		p, err := pkg.Load(unquote(i.Path.Value))
+		if err == nil && p.Name == prefix {
+			return p.PkgPath, nil
 		}
 	}
 
@@ -370,16 +380,4 @@ func unquote(s string) string {
 	}
 
 	return s
-
-}
-
-func samePath(path1, path2 string) bool {
-	if path1 == path2 {
-		return true
-	}
-
-	abs1, err1 := filepath.Abs(path1)
-	abs2, err2 := filepath.Abs(path2)
-
-	return abs1 == abs2 && err1 == nil && err2 == nil
 }

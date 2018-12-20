@@ -4,7 +4,7 @@ package templatestests
 // This code is generated with http://github.com/hexdigest/gowrap tool
 // using ../templates/fallback template
 
-//go:generate gowrap gen -d . -i TestInterface -t ../templates/fallback -o interface_with_fallback.go
+//go:generate gowrap gen -p github.com/hexdigest/gowrap/templates_tests -i TestInterface -t ../templates/fallback -o interface_with_fallback.go
 
 import (
 	"context"

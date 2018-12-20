@@ -204,7 +204,7 @@ func TestGenerateCommand_Run(t *testing.T) {
 		},
 		{
 			name: "failed to create generator",
-			args: []string{"-o", "pkg/out.file", "-i", "interface", "-t", "template/template", "-d", "pkg"},
+			args: []string{"-o", "pkg/out.file", "-i", "interface", "-t", "template/template"},
 			init: func(t minimock.Tester) *GenerateCommand {
 				loader := newRemoteTemplateLoaderMock(t).LoadMock.Return([]byte("{{."), "local/file", nil)
 				return NewGenerateCommand(loader)
@@ -247,6 +247,7 @@ func TestGenerateCommand_Run(t *testing.T) {
 			}
 
 			if tt.wantErr {
+				t.Logf("!!!\n\n%T: %v\n\n!!!", err, err)
 				if assert.Error(t, err) && tt.inspectErr != nil {
 					tt.inspectErr(err, t)
 				}

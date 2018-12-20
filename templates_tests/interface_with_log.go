@@ -4,7 +4,7 @@ package templatestests
 // This code is generated with http://github.com/hexdigest/gowrap tool
 // using ../templates/log template
 
-//go:generate gowrap gen -d . -i TestInterface -t ../templates/log -o interface_with_log.go -v DecoratorName=TestInterfaceWithLogger
+//go:generate gowrap gen -p github.com/hexdigest/gowrap/templates_tests -i TestInterface -t ../templates/log -o interface_with_log.go -v DecoratorName=TestInterfaceWithLogger
 
 import (
 	"context"

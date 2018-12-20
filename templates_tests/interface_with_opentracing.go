@@ -4,7 +4,7 @@ package templatestests
 // This code is generated with http://github.com/hexdigest/gowrap tool
 // using ../templates/opentracing template
 
-//go:generate gowrap gen -d . -i TestInterface -t ../templates/opentracing -o interface_with_opentracing.go
+//go:generate gowrap gen -p github.com/hexdigest/gowrap/templates_tests -i TestInterface -t ../templates/opentracing -o interface_with_opentracing.go
 
 import (
 	"context"
