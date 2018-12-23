@@ -41,10 +41,10 @@ This will generate an implementation of the io.Reader interface wrapped with pro
   $ gowrap gen -p io -i Reader -t prometheus -o reader_with_metrics.go
 ```
 
-This will generate a fallback decorator for the Connector interface that can be found in the ./connector directory:
+This will generate a fallback decorator for the Connector interface that can be found in the ./connector subpackage:
 
 ```
-  $ gowrap gen -d ./connector -i Connector -t fallback -o ./connector/with_metrics.go
+  $ gowrap gen -p ./connector -i Connector -t fallback -o ./connector/with_metrics.go
 ```
 
 Run `gowrap help` for more options
