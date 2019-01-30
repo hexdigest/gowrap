@@ -27,8 +27,10 @@ type Param struct {
 	Variadic bool
 }
 
+// ParamsSlice slice of parameters
 type ParamsSlice []Param
 
+// String implements fmt.Stringer
 func (ps ParamsSlice) String() string {
 	ss := []string{}
 	for _, p := range ps {
@@ -38,6 +40,9 @@ func (ps ParamsSlice) String() string {
 	return strings.Join(ss, ", ")
 }
 
+// Pass returns comma separated params names to
+// be passed to a function call with respect to
+// variadic functions
 func (ps ParamsSlice) Pass() string {
 	params := []string{}
 	for _, p := range ps {

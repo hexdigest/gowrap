@@ -12,6 +12,7 @@ import (
 
 var errPackageNotFound = errors.New("package not found")
 
+// Load loads package by its import path
 func Load(path string) (*packages.Package, error) {
 	cfg := &packages.Config{Mode: packages.LoadFiles}
 	pkgs, err := packages.Load(cfg, path)
@@ -30,6 +31,7 @@ func Load(path string) (*packages.Package, error) {
 	return pkgs[0], nil
 }
 
+// AST returns package's abstract syntax tree
 func AST(fs *token.FileSet, p *packages.Package) (*ast.Package, error) {
 	dir := Dir(p)
 
@@ -45,6 +47,7 @@ func AST(fs *token.FileSet, p *packages.Package) (*ast.Package, error) {
 	return &ast.Package{Name: p.Name}, nil
 }
 
+// Dir returns absolute path of the package in a filesystem
 func Dir(p *packages.Package) string {
 	files := append(p.GoFiles, p.OtherFiles...)
 	if len(files) < 1 {
