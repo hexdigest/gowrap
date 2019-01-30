@@ -39,7 +39,7 @@ func (_d TestInterfaceWithFallback) F(ctx context.Context, a1 string, a2 ...stri
 	defer _ticker.Stop()
 	ctx, _cancelFunc := context.WithCancel(ctx)
 	defer _cancelFunc()
-
+_loop:
 	for _i := 0; _i < len(_d.implementations); _i++ {
 		go func(_impl TestInterface) {
 			result1, result2, err := _impl.F(ctx, a1, a2...)
@@ -55,6 +55,9 @@ func (_d TestInterfaceWithFallback) F(ctx context.Context, a1 string, a2 ...stri
 				return _res.result1, _res.result2, _res.err
 			}
 			_errorsList = append(_errorsList, _res.err.Error())
+		case <-ctx.Done():
+			_errorsList = append(_errorsList, ctx.Err().Error())
+			break _loop
 		case <-_ticker.C:
 			_errorsList = append(_errorsList, fmt.Sprintf("%T: timeout", _d.implementations[_i]))
 

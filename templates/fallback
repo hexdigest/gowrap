@@ -30,7 +30,7 @@ func New{{$decorator}}(interval time.Duration, impls ...{{.Interface.Type}}) {{$
       {{- if $method.AcceptsContext}}
         ctx, _cancelFunc := context.WithCancel(ctx)
         defer _cancelFunc()
-      {{end}}
+    _loop:{{end}}
       for _i :=0; _i < len(_d.implementations); _i++ {
         go func(_impl {{$.Interface.Type}}) {
           {{if $method.HasResults}}{{$method.ResultsNames}} := {{end}}_impl.{{$method.Call}}
@@ -51,6 +51,10 @@ func New{{$decorator}}(interval time.Duration, impls ...{{.Interface.Type}}) {{$
           {{else}}
             {{ $method.ReturnStruct "_res" }}
           {{end -}}
+        {{if $method.AcceptsContext}}case <-ctx.Done():
+			    _errorsList = append(_errorsList, ctx.Err().Error())
+			    break _loop
+        {{end -}}
         case <-_ticker.C:
           {{- if $method.ReturnsError}}
 			    _errorsList = append(_errorsList, fmt.Sprintf("%T: timeout", _d.implementations[_i]))
