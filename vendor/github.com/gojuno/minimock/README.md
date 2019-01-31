@@ -1,8 +1,9 @@
 ![logo](https://rawgit.com/gojuno/minimock/master/logo.svg)
-[![GoDoc](https://godoc.org/github.com/gojuno/minimock?status.svg)](http://godoc.org/github.com/gojuno/minimock) [![Build Status](https://travis-ci.org/gojuno/minimock.svg?branch=master)](https://travis-ci.org/gojuno/minimock) [![Go Report Card](https://goreportcard.com/badge/github.com/gojuno/minimock)](https://goreportcard.com/report/github.com/gojuno/minimock) [![cover.run](https://cover.run/go/github.com/gojuno/minimock.svg?style=flat&tag=golang-1.10)](https://cover.run/go?tag=golang-1.10&repo=github.com%2Fgojuno%2Fminimock)
+[![GoDoc](https://godoc.org/github.com/gojuno/minimock?status.svg)](http://godoc.org/github.com/gojuno/minimock) [![Build Status](https://travis-ci.org/gojuno/minimock.svg?branch=master)](https://travis-ci.org/gojuno/minimock) [![Go Report Card](https://goreportcard.com/badge/github.com/gojuno/minimock)](https://goreportcard.com/report/github.com/gojuno/minimock) [![cover.run](https://cover.run/go/github.com/gojuno/minimock.svg?style=flat&tag=golang-1.10)](https://cover.run/go?tag=golang-1.10&repo=github.com%2Fgojuno%2Fminimock) [![Awesome](https://cdn.rawgit.com/sindresorhus/awesome/d7305f38d29fed78fa85652e3a63e154dd8e8829/media/badge.svg)](https://github.com/avelino/awesome-go#testing)
+
 
 ## Summary 
-Minimock parses the input Go source file that contains an interface declaration and generates
+Minimock parses the input Go source file that contains an interface declaration and generates an
 implementation of this interface that can be used as a mock.
 
 Main features of minimock:
@@ -12,8 +13,8 @@ Main features of minimock:
 * It's very convenient to use generated mocks in table tests because it implements builder pattern to set up several mocks
 * It provides a useful Controller.Wait(time.Duration) helper method to test concurrent code
 * It generates helpers to check if the mocked methods have been called and keeps your tests clean and up to date
-* It generates concurrent-safe mock execution counters that you can use in your mocks to implement sophisticated mocks behaviour
-* There is template for [GoUnit](https://github.com/hexdigest/gounit) tool which generates table driven tests that make use of minimock
+* It generates concurrent-safe mock execution counters that you can use in your mocks to implement sophisticated mocks behavior
+* There is the template for [GoUnit](https://github.com/hexdigest/gounit) tool which generates table driven tests that make use of minimock
 
 ## Installation
 
@@ -32,6 +33,12 @@ type Formatter interface {
 Here is how to generate the mock for this interface:
 ```
 minimock -i github.com/gojuno/minimock/tests.Formatter -o ./tests/
+```
+
+You can skip the package name if you are in the directory where `Formater` is defined:
+```
+cd ~/go/src/github.com/gojuno/minimock/tests
+minimock -i Formatter -o ./tests/
 ```
 
 The result file ./tests/formatter_mock_test.go will be:

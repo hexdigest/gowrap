@@ -42,7 +42,7 @@ var _ MockController = &Controller{}
 
 //NewController returns an instance of Controller
 func NewController(t Tester) *Controller {
-	return &Controller{Tester: t}
+	return &Controller{Tester: newSafeTester(t)}
 }
 
 //RegisterMocker puts mocker to the list of controller mockers

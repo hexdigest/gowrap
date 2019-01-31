@@ -6,13 +6,14 @@
 
 // Package imports implements a Go pretty-printer (like package "go/format")
 // that also adds or removes import statements as necessary.
-package imports
+package imports // import "golang.org/x/tools/imports"
 
 import (
 	"bufio"
 	"bytes"
 	"fmt"
 	"go/ast"
+	"go/build"
 	"go/format"
 	"go/parser"
 	"go/printer"
@@ -45,6 +46,11 @@ type Options struct {
 // so it is important that filename be accurate.
 // To process data ``as if'' it were in filename, pass the data as a non-nil src.
 func Process(filename string, src []byte, opt *Options) ([]byte, error) {
+	env := &fixEnv{GOPATH: build.Default.GOPATH, GOROOT: build.Default.GOROOT}
+	return process(filename, src, opt, env)
+}
+
+func process(filename string, src []byte, opt *Options, env *fixEnv) ([]byte, error) {
 	if opt == nil {
 		opt = &Options{Comments: true, TabIndent: true, TabWidth: 8}
 	}
@@ -57,14 +63,13 @@ func Process(filename string, src []byte, opt *Options) ([]byte, error) {
 	}
 
 	fileSet := token.NewFileSet()
-	newSrc, file, adjust, err := parse(fileSet, filename, src, opt)
+	file, adjust, err := parse(fileSet, filename, src, opt)
 	if err != nil {
 		return nil, err
 	}
 
 	if !opt.FormatOnly {
-		_, err = fixImports(newSrc, fileSet, file, filename)
-		if err != nil {
+		if err := fixImports(fileSet, file, filename, env); err != nil {
 			return nil, err
 		}
 	}
@@ -120,7 +125,7 @@ func Process(filename string, src []byte, opt *Options) ([]byte, error) {
 
 // parse parses src, which was read from filename,
 // as a Go source file or statement list.
-func parse(fset *token.FileSet, filename string, src []byte, opt *Options) ([]byte, *ast.File, func(orig, src []byte) []byte, error) {
+func parse(fset *token.FileSet, filename string, src []byte, opt *Options) (*ast.File, func(orig, src []byte) []byte, error) {
 	parserMode := parser.Mode(0)
 	if opt.Comments {
 		parserMode |= parser.ParseComments
@@ -132,13 +137,13 @@ func parse(fset *token.FileSet, filename string, src []byte, opt *Options) ([]by
 	// Try as whole source file.
 	file, err := parser.ParseFile(fset, filename, src, parserMode)
 	if err == nil {
-		return src, file, nil, nil
+		return file, nil, nil
 	}
 	// If the error is that the source file didn't begin with a
 	// package line and we accept fragmented input, fall through to
 	// try as a source fragment.  Stop and return on any other error.
 	if !opt.Fragment || !strings.Contains(err.Error(), "expected 'package'") {
-		return nil, nil, nil, err
+		return nil, nil, err
 	}
 
 	// If this is a declaration list, make it a source file
@@ -158,7 +163,7 @@ func parse(fset *token.FileSet, filename string, src []byte, opt *Options) ([]by
 		// If a main function exists, we will assume this is a main
 		// package and leave the file.
 		if containsMainFunc(file) {
-			return psrc, file, nil, nil
+			return file, nil, nil
 		}
 
 		adjust := func(orig, src []byte) []byte {
@@ -166,13 +171,13 @@ func parse(fset *token.FileSet, filename string, src []byte, opt *Options) ([]by
 			src = src[len(prefix):]
 			return matchSpace(orig, src)
 		}
-		return psrc, file, adjust, nil
+		return file, adjust, nil
 	}
 	// If the error is that the source file didn't begin with a
 	// declaration, fall through to try as a statement list.
 	// Stop and return on any other error.
 	if !strings.Contains(err.Error(), "expected declaration") {
-		return nil, nil, nil, err
+		return nil, nil, err
 	}
 
 	// If this is a statement list, make it a source file
@@ -193,11 +198,11 @@ func parse(fset *token.FileSet, filename string, src []byte, opt *Options) ([]by
 			src = bytes.Replace(src, []byte("\n\t"), []byte("\n"), -1)
 			return matchSpace(orig, src)
 		}
-		return fsrc, file, adjust, nil
+		return file, adjust, nil
 	}
 
 	// Failed, and out of options.
-	return nil, nil, nil, err
+	return nil, nil, err
 }
 
 // containsMainFunc checks if a file contains a function declaration with the

@@ -26,3 +26,4 @@ _testmain.go
 /examples/sample_interface_mock.go
 /cmd/minimock/minimock
 /minimock
+/dist

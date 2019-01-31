@@ -12,12 +12,10 @@ import (
 
 	"github.com/pkg/errors"
 	"golang.org/x/tools/go/packages"
+	"golang.org/x/tools/imports"
 
 	"github.com/hexdigest/gowrap/pkg"
 	"github.com/hexdigest/gowrap/printer"
-
-	//TODO: replace with "golang.org/x/tools/imports" once it supports modules
-	imports "github.com/heschik/goimports/imports"
 )
 
 //Generator generates decorators for the interface types
