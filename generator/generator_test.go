@@ -462,7 +462,7 @@ func Test_findInterface(t *testing.T) {
 			mc := minimock.NewController(t)
 			defer mc.Wait(time.Second)
 
-			got1, err := findInterface(tt.args.fs, tt.args.p, tt.args.interfaceName)
+			got1, _, err := findInterface(tt.args.fs, tt.args.p, tt.args.interfaceName)
 
 			assert.Equal(t, tt.want1, got1, "findInterface returned unexpected result")
 

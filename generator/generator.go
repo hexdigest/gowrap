@@ -56,6 +56,9 @@ type Options struct {
 	//InterfaceName is a name of interface type
 	InterfaceName string
 
+	//Imports from the file with interface definition
+	Imports []string
+
 	//SourcePackage is an import path or a relative path of the package that contains the source interface
 	SourcePackage string
 
@@ -129,7 +132,7 @@ func NewGenerator(options Options) (*Generator, error) {
 		srcPackageAST.Name = ""
 	}
 
-	methods, err := findInterface(fs, srcPackageAST, options.InterfaceName)
+	methods, imports, err := findInterface(fs, srcPackageAST, options.InterfaceName)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse interface declaration")
 	}
@@ -144,6 +147,8 @@ func NewGenerator(options Options) (*Generator, error) {
 		}
 	}
 
+	options.Imports = makeImports(imports)
+
 	return &Generator{
 		Options:        options,
 		headerTemplate: headerTemplate,
@@ -153,6 +158,19 @@ func NewGenerator(options Options) (*Generator, error) {
 		interfaceType:  interfaceType,
 		methods:        methods,
 	}, nil
+}
+
+func makeImports(imports []*ast.ImportSpec) []string {
+	result := make([]string, len(imports))
+	for _, i := range imports {
+		var name string
+		if i.Name != nil {
+			name = i.Name.Name
+		}
+		result = append(result, name+" "+i.Path.Value)
+	}
+
+	return result
 }
 
 //Generate generates code using header and body templates
@@ -193,12 +211,10 @@ func (g Generator) Generate(w io.Writer) error {
 var errInterfaceNotFound = errors.New("interface type declaration not found")
 
 // findInterface looks for the interface declaration in the given directory
-// it returns a list of the interface's methods,
-// a list of imports from the file where interface type declaration was found and
-// a list of all other type declarations found in the directory
-func findInterface(fs *token.FileSet, p *ast.Package, interfaceName string) (methods methodsList, err error) {
+// and returns a list of the interface's methods and a list of imports from the file
+// where interface type declaration was found
+func findInterface(fs *token.FileSet, p *ast.Package, interfaceName string) (methods methodsList, imports []*ast.ImportSpec, err error) {
 	var found bool
-	var imports []*ast.ImportSpec
 	var types []*ast.TypeSpec
 	var it *ast.InterfaceType
 
@@ -220,10 +236,15 @@ func findInterface(fs *token.FileSet, p *ast.Package, interfaceName string) (met
 	}
 
 	if !found {
-		return nil, errors.Wrap(errInterfaceNotFound, interfaceName)
+		return nil, nil, errors.Wrap(errInterfaceNotFound, interfaceName)
 	}
 
-	return processInterface(fs, it, types, p.Name, imports)
+	methods, err = processInterface(fs, it, types, p.Name, imports)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return methods, imports, err
 }
 
 func typeSpecs(f *ast.File) []*ast.TypeSpec {
@@ -299,7 +320,9 @@ func processSelector(fs *token.FileSet, se *ast.SelectorExpr, imports []*ast.Imp
 		return nil, errors.Wrap(err, "failed to import package")
 	}
 
-	return findInterface(fs, astPkg, interfaceName)
+	methods, _, err := findInterface(fs, astPkg, interfaceName)
+
+	return methods, err
 }
 
 var errDuplicateMethod = errors.New("embedded interface has same method")
@@ -330,7 +353,6 @@ func mergeMethods(ml1, ml2 methodsList) (methodsList, error) {
 var errEmbeddedInterfaceNotFound = errors.New("embedded interface not found")
 var errNotAnInterface = errors.New("embedded type is not an interface")
 
-//func processInterface(fs *token.FileSet, it *ast.InterfaceType, types []*ast.TypeSpec, typesPrefix string, imports []*ast.ImportSpec) (methods methodsList, err error) {
 func processIdent(fs *token.FileSet, i *ast.Ident, types []*ast.TypeSpec, typesPrefix string, imports []*ast.ImportSpec) (methodsList, error) {
 	var embeddedInterface *ast.InterfaceType
 	for _, t := range types {
