@@ -15,7 +15,7 @@ type {{$decorator}} struct {
 func New{{$decorator}} (base {{.Interface.Type}}, retryCount int, retryInterval time.Duration) {{$decorator}} {
   return {{$decorator}} {
     {{.Interface.Name}}: base,
-    _retryCount: retryCount + 1,
+    _retryCount: retryCount,
     _retryInterval: retryInterval,
   }
 }
@@ -24,26 +24,25 @@ func New{{$decorator}} (base {{.Interface.Type}}, retryCount int, retryInterval 
   {{if $method.ReturnsError}}
     // {{$method.Name}} implements {{$.Interface.Type}}
     func (_d {{$decorator}}) {{$method.Declaration}} {
+      {{$method.ResultsNames}} = _d.{{$.Interface.Name}}.{{$method.Call}}
+      if err == nil || _d._retryCount < 1 {
+        return
+      }
       _ticker:= time.NewTicker(_d._retryInterval)
       defer _ticker.Stop()
-      for _i := 0; _i < _d._retryCount; _i++ {
+      for _i := 0; _i < _d._retryCount && err != nil; _i++ {
+        {{- if $method.AcceptsContext}}
+          select {
+          case <-ctx.Done():
+            return
+          case <-_ticker.C:
+          }
+        {{else}}
+          <-_ticker.C
+        {{end -}}
         {{$method.ResultsNames}} = _d.{{$.Interface.Name}}.{{$method.Call}}
-        if err == nil {
-          break  
-        }
-        if _d._retryCount > 1 {
-          {{- if $method.AcceptsContext}}
-            select {
-            case <-ctx.Done():
-              return {{$method.ResultsNames}}
-            case <-_ticker.C:
-            }
-          {{else}}
-            <-_ticker.C
-          {{end -}}
-        }
       }
-      return {{$method.ResultsNames}}
+      return
     }
   {{end}}
 {{end}}
