@@ -24,6 +24,8 @@ func New{{$decorator}} (base {{.Interface.Type}}, retryCount int, retryInterval 
   {{if $method.ReturnsError}}
     // {{$method.Name}} implements {{$.Interface.Type}}
     func (_d {{$decorator}}) {{$method.Declaration}} {
+      _ticker:= time.NewTicker(_d._retryInterval)
+      defer _ticker.Stop()
       for _i := 0; _i < _d._retryCount; _i++ {
         {{$method.ResultsNames}} = _d.{{$.Interface.Name}}.{{$method.Call}}
         if err == nil {
@@ -34,10 +36,10 @@ func New{{$decorator}} (base {{.Interface.Type}}, retryCount int, retryInterval 
             select {
             case <-ctx.Done():
               return {{$method.ResultsNames}}
-            case <-time.After(_d._retryInterval):
+            case <-_ticker.C:
             }
           {{else}}
-            time.Sleep(_d._retryInterval)
+            <-_ticker.C
           {{end -}}
         }
       }
