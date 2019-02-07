@@ -1,4 +1,10 @@
-# gowrap [![License](https://img.shields.io/badge/license-mit-green.svg)](https://github.com/hexdigest/gowrap/blob/master/LICENSE) [![Build Status](https://travis-ci.org/hexdigest/gowrap.svg?branch=master)](https://travis-ci.org/hexdigest/gowrap) [![Coverage Status](https://coveralls.io/repos/github/hexdigest/gowrap/badge.svg?branch=master)](https://coveralls.io/github/hexdigest/gowrap?branch=master) [![Go Report Card](https://goreportcard.com/badge/github.com/hexdigest/gowrap?dropcache)](https://goreportcard.com/report/github.com/hexdigest/gowrap) [![GoDoc](https://godoc.org/github.com/hexdigest/gowrap?status.svg)](http://godoc.org/github.com/hexdigest/gowrap) [![Awesome](https://cdn.rawgit.com/sindresorhus/awesome/d7305f38d29fed78fa85652e3a63e154dd8e8829/media/badge.svg)](https://github.com/avelino/awesome-go#generation-and-generics)
+# GoWrap [![License](https://img.shields.io/badge/license-mit-green.svg)](https://github.com/hexdigest/gowrap/blob/master/LICENSE)
+[![Build Status](https://travis-ci.org/hexdigest/gowrap.svg?branch=master)](https://travis-ci.org/hexdigest/gowrap)
+[![Coverage Status](https://coveralls.io/repos/github/hexdigest/gowrap/badge.svg?branch=master)](https://coveralls.io/github/hexdigest/gowrap?branch=master)
+[![Go Report Card](https://goreportcard.com/badge/github.com/hexdigest/gowrap?dropcache)](https://goreportcard.com/report/github.com/hexdigest/gowrap)
+[![GoDoc](https://godoc.org/github.com/hexdigest/gowrap?status.svg)](http://godoc.org/github.com/hexdigest/gowrap)
+[![Awesome](https://cdn.rawgit.com/sindresorhus/awesome/d7305f38d29fed78fa85652e3a63e154dd8e8829/media/badge.svg)](https://github.com/avelino/awesome-go#generation-and-generics)
+[![Release](https://img.shields.io/github/release/hexdigest/gowrap.svg)](https://github.com/hexdigest/gowrap/releases/latest)
 
 GoWrap is a command line tool that generates decorators for Go interface types using simple templates.
 With GoWrap you can easily add metrics, tracing, fallbacks, pools, and many other features into your existing code in a few seconds.
