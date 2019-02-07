@@ -8,6 +8,7 @@ package templatestests
 
 import (
 	"context"
+	"sync"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -28,8 +29,11 @@ var testinterfaceDurationSummaryVec = prometheus.NewSummaryVec(
 	},
 	[]string{"instance_name", "method", "result"})
 
-// NewTestInterfaceWithPrometheus returns an instance of the TestInterface decorated with prometheus metrics
+var testinterfaceDurationSummaryOnce = &sync.Once{}
+
+// NewTestInterfaceWithPrometheus returns an instance of the TestInterface decorated with prometheus summary metric
 func NewTestInterfaceWithPrometheus(base TestInterface, instanceName string) TestInterfaceWithPrometheus {
+	testinterfaceDurationSummaryOnce.Do(func() { prometheus.MustRegister(testinterfaceDurationSummaryVec) })
 	return TestInterfaceWithPrometheus{
 		base:         base,
 		instanceName: instanceName,

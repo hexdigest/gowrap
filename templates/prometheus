@@ -1,4 +1,5 @@
 import (
+  "sync"
   "time"
   "github.com/prometheus/client_golang/prometheus"
 )
@@ -20,8 +21,11 @@ var {{down .Interface.Name}}DurationSummaryVec = prometheus.NewSummaryVec(
   }, 
   []string{"instance_name", "method", "result"})
 
-// New{{.Interface.Name}}WithPrometheus returns an instance of the {{.Interface.Type}} decorated with prometheus metrics
+var {{down .Interface.Name}}DurationSummaryOnce = &sync.Once{}
+
+// New{{.Interface.Name}}WithPrometheus returns an instance of the {{.Interface.Type}} decorated with prometheus summary metric
 func New{{$decorator}}(base {{.Interface.Type}}, instanceName string) {{$decorator}} {
+  {{down .Interface.Name}}DurationSummaryOnce.Do(func() { prometheus.MustRegister({{down .Interface.Name}}DurationSummaryVec) })
   return {{$decorator}} {
     base: base,
     instanceName: instanceName,
