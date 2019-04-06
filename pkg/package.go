@@ -31,6 +31,19 @@ func Load(path string) (*packages.Package, error) {
 	return pkgs[0], nil
 }
 
+var errNoPackageName = errors.New("failed to determine the destination package name")
+
+func makePackage(path string) (*packages.Package, error) {
+	name := filepath.Base(path)
+	if name == string(filepath.Separator) || name == "." {
+		return nil, errNoPackageName
+	}
+
+	return &packages.Package{
+		Name: name,
+	}, nil
+}
+
 // AST returns package's abstract syntax tree
 func AST(fs *token.FileSet, p *packages.Package) (*ast.Package, error) {
 	dir := Dir(p)

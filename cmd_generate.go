@@ -139,7 +139,7 @@ func (gc *GenerateCommand) getOptions() (*generator.Options, error) {
 
 	sourcePackage, err := pkg.Load(gc.sourcePkg)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to load source package")
 	}
 
 	options.SourcePackage = sourcePackage.PkgPath

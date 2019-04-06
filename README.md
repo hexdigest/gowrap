@@ -1,4 +1,5 @@
-# GoWrap [![License](https://img.shields.io/badge/license-mit-green.svg)](https://github.com/hexdigest/gowrap/blob/master/LICENSE)
+# GoWrap
+[![License](https://img.shields.io/badge/license-mit-green.svg)](https://github.com/hexdigest/gowrap/blob/master/LICENSE)
 [![Build Status](https://travis-ci.org/hexdigest/gowrap.svg?branch=master)](https://travis-ci.org/hexdigest/gowrap)
 [![Coverage Status](https://coveralls.io/repos/github/hexdigest/gowrap/badge.svg?branch=master)](https://coveralls.io/github/hexdigest/gowrap?branch=master)
 [![Go Report Card](https://goreportcard.com/badge/github.com/hexdigest/gowrap?dropcache)](https://goreportcard.com/report/github.com/hexdigest/gowrap)

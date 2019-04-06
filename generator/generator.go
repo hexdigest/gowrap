@@ -114,7 +114,7 @@ func NewGenerator(options Options) (*Generator, error) {
 		dstPackagePath = "./" + dstPackagePath
 	}
 
-	dstPackage, err := pkg.Load(dstPackagePath)
+	dstPackage, err := loadDestinationPackage(dstPackagePath)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to load destination package: %s", dstPackagePath)
 	}
@@ -169,6 +169,29 @@ func makeImports(imports []*ast.ImportSpec) []string {
 	}
 
 	return result
+}
+
+func loadDestinationPackage(path string) (*packages.Package, error) {
+	dstPackage, err := pkg.Load(path)
+	if err != nil {
+		//using directory name as a package name
+		dstPackage, err = makePackage(path)
+	}
+
+	return dstPackage, err
+}
+
+var errNoPackageName = errors.New("failed to determine the destination package name")
+
+func makePackage(path string) (*packages.Package, error) {
+	name := filepath.Base(path)
+	if name == string(filepath.Separator) || name == "." {
+		return nil, errNoPackageName
+	}
+
+	return &packages.Package{
+		Name: name,
+	}, nil
 }
 
 //Generate generates code using header and body templates
