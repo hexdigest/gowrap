@@ -60,6 +60,9 @@ type Options struct {
 	//SourcePackage is an import path or a relative path of the package that contains the source interface
 	SourcePackage string
 
+	//SourcePackageAlias is an import selector defauls is source package name
+	SourcePackageAlias string
+
 	//OutputFile name which is used to detect destination package name and also to fix imports in the resulting source
 	OutputFile string
 
@@ -128,6 +131,8 @@ func NewGenerator(options Options) (*Generator, error) {
 	if srcPackage.PkgPath == dstPackage.PkgPath {
 		interfaceType = options.InterfaceName
 		srcPackageAST.Name = ""
+	} else if options.SourcePackageAlias != "" {
+		srcPackageAST.Name = options.SourcePackageAlias
 	}
 
 	methods, imports, err := findInterface(fs, srcPackageAST, options.InterfaceName)
