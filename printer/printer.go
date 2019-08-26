@@ -88,9 +88,9 @@ func (p *Printer) printArray(a *ast.ArrayType) (string, error) {
 }
 
 var chanTypes = map[ast.ChanDir]string{
-	ast.ChanDir(0): "chan ",
-	ast.SEND:       "chan<- ",
-	ast.RECV:       "<-chan ",
+	ast.SEND & ast.RECV: "chan ",
+	ast.SEND:            "chan<- ",
+	ast.RECV:            "<-chan ",
 }
 
 func (p *Printer) printChan(c *ast.ChanType) (string, error) {

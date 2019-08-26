@@ -1,7 +1,7 @@
 project_name: gowrap
 before:
   hooks:
-    - make all
+    - make test
 builds:
 - 
   main: ./cmd/gowrap/
