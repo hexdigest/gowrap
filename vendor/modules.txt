@@ -2,7 +2,7 @@
 github.com/beorn7/perks/quantile
 # github.com/davecgh/go-spew v1.1.1
 github.com/davecgh/go-spew/spew
-# github.com/gojuno/minimock/v3 v3.0.2
+# github.com/gojuno/minimock/v3 v3.0.3 => /home/max/jgb/src/github.com/gojuno/minimock
 github.com/gojuno/minimock/v3
 # github.com/golang/protobuf v1.3.1
 github.com/golang/protobuf/proto
