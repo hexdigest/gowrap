@@ -5,7 +5,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/gojuno/minimock"
+	minimock "github.com/gojuno/minimock/v3"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/stretchr/testify/assert"
 )

@@ -9,7 +9,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/gojuno/minimock"
+	minimock "github.com/gojuno/minimock/v3"
 	opentracing "github.com/opentracing/opentracing-go"
 
 	testify_assert "github.com/stretchr/testify/assert"
