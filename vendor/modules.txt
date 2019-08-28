@@ -1,10 +1,10 @@
-# github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973
+# github.com/beorn7/perks v1.0.0
 github.com/beorn7/perks/quantile
 # github.com/davecgh/go-spew v1.1.1
 github.com/davecgh/go-spew/spew
-# github.com/gojuno/minimock v0.0.0-20190130082935-96af809257c4
-github.com/gojuno/minimock
-# github.com/golang/protobuf v1.2.0
+# github.com/gojuno/minimock/v3 v3.0.2
+github.com/gojuno/minimock/v3
+# github.com/golang/protobuf v1.3.1
 github.com/golang/protobuf/proto
 # github.com/konsorten/go-windows-terminal-sequences v1.0.1
 github.com/konsorten/go-windows-terminal-sequences
@@ -18,40 +18,39 @@ github.com/opentracing/opentracing-go/log
 github.com/pkg/errors
 # github.com/pmezard/go-difflib v1.0.0
 github.com/pmezard/go-difflib/difflib
-# github.com/prometheus/client_golang v0.9.1
+# github.com/prometheus/client_golang v1.0.0
 github.com/prometheus/client_golang/prometheus
 github.com/prometheus/client_golang/prometheus/internal
 # github.com/prometheus/client_model v0.0.0-20190129233127-fd36f4220a90
 github.com/prometheus/client_model/go
-# github.com/prometheus/common v0.2.0
+# github.com/prometheus/common v0.4.1
 github.com/prometheus/common/expfmt
 github.com/prometheus/common/model
 github.com/prometheus/common/internal/bitbucket.org/ww/goautoneg
-# github.com/prometheus/procfs v0.0.0-20190129233650-316cf8ccfec5
+# github.com/prometheus/procfs v0.0.2
 github.com/prometheus/procfs
-github.com/prometheus/procfs/nfs
-github.com/prometheus/procfs/xfs
-github.com/prometheus/procfs/internal/util
+github.com/prometheus/procfs/internal/fs
 # github.com/sirupsen/logrus v1.2.0
 github.com/sirupsen/logrus
-# github.com/stretchr/testify v1.2.2
+# github.com/stretchr/testify v1.3.0
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/require
-# golang.org/x/crypto v0.0.0-20180904163835-0709b304e793
+# golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2
 golang.org/x/crypto/ssh/terminal
-# golang.org/x/net v0.0.0-20190125091013-d26f9f9a57f3
+# golang.org/x/net v0.0.0-20190311183353-d8887717615a
 golang.org/x/net/context
-# golang.org/x/sys v0.0.0-20181116152217-5ac8a444bdc5
-golang.org/x/sys/unix
+# golang.org/x/sys v0.0.0-20190215142949-d0b11bdaac8a
 golang.org/x/sys/windows
-# golang.org/x/tools v0.0.0-20190130014116-16909d206f00
+golang.org/x/sys/unix
+# golang.org/x/tools v0.0.0-20190614205625-5aca471b1d59
 golang.org/x/tools/go/packages
 golang.org/x/tools/imports
 golang.org/x/tools/go/gcexportdata
-golang.org/x/tools/go/internal/cgo
 golang.org/x/tools/go/internal/packagesdriver
 golang.org/x/tools/internal/gopathwalk
 golang.org/x/tools/internal/semver
-golang.org/x/tools/go/ast/astutil
+golang.org/x/tools/internal/imports
 golang.org/x/tools/go/internal/gcimporter
 golang.org/x/tools/internal/fastwalk
+golang.org/x/tools/go/ast/astutil
+golang.org/x/tools/internal/module
