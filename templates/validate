@@ -1,0 +1,31 @@
+{{ $decorator := (or .Vars.DecoratorName (printf "%sWithValidation" .Interface.Name)) }}
+
+// {{$decorator}} implements {{.Interface.Type}} interface instrumented with arguments validation
+type {{$decorator}} struct {
+  {{.Interface.Type}}
+}
+
+// New{{$decorator}} returns {{$decorator}}
+func New{{$decorator}} (base {{.Interface.Type}}) {{$decorator}} {
+  return {{$decorator}} {
+    {{.Interface.Name}}: base,
+  }
+}
+
+{{range $method := .Interface.Methods}}
+  // {{$method.Name}} implements {{$.Interface.Type}}
+  func (_d {{$decorator}}) {{$method.Declaration}} {
+    {{- if $method.ReturnsError}}
+      {{range $param := $method.Params}}
+        {{if not ( and $method.AcceptsContext (eq $param.Name "ctx")) }}
+          if _v, _ok := interface{}({{$param.Name}}).(interface{ Validate() error}); _ok {
+            if err = _v.Validate(); err != nil {
+              return
+            }
+          }
+        {{end}}
+      {{end}}
+    {{end}}
+    {{$method.Pass (printf "_d.%s." $.Interface.Name) }}
+  }
+{{end}}

@@ -72,6 +72,8 @@ List of available templates:
   - [retry](https://github.com/hexdigest/gowrap/tree/master/templates/retry) instruments the source interface with retries
   - [robinpool](https://github.com/hexdigest/gowrap/tree/master/templates/robinpool) puts several implementations of the source interface to the slice and for every method call it picks one implementation from the slice using the Round-robin algorithm
   - [syncpool](https://github.com/hexdigest/gowrap/tree/master/templates/syncpool) puts several implementations of the source interface to the sync.Pool and for every method call it gets one implementation from the pool and puts it back once finished
+  - [validate](https://github.com/hexdigest/gowrap/tree/master/templates/validate) runs `func Validate() error` method on each argument if it's present
+  - [twirp\_validate](https://github.com/hexdigest/gowrap/tree/master/templates/twirp_validate) runs `func Validate() error` method on each argument if it's present and wraps returned error with twirp.Malformed error
 
 By default GoWrap places the `//go:generate` instruction into the generated code. 
 This allows you to regenerate decorators' code just by typing `go generate ./...` when you change the source interface type declaration.
