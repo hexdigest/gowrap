@@ -2,7 +2,7 @@
 github.com/beorn7/perks/quantile
 # github.com/davecgh/go-spew v1.1.1
 github.com/davecgh/go-spew/spew
-# github.com/gojuno/minimock/v3 v3.0.3 => /home/max/jgb/src/github.com/gojuno/minimock
+# github.com/gojuno/minimock/v3 v3.0.4
 github.com/gojuno/minimock/v3
 # github.com/golang/protobuf v1.3.1
 github.com/golang/protobuf/proto
@@ -35,6 +35,9 @@ github.com/sirupsen/logrus
 # github.com/stretchr/testify v1.3.0
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/require
+# github.com/twitchtv/twirp v5.8.0+incompatible
+github.com/twitchtv/twirp
+github.com/twitchtv/twirp/internal/contextkeys
 # golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2
 golang.org/x/crypto/ssh/terminal
 # golang.org/x/net v0.0.0-20190311183353-d8887717615a

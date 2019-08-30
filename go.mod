@@ -7,5 +7,6 @@ require (
 	github.com/prometheus/client_golang v1.0.0
 	github.com/sirupsen/logrus v1.2.0
 	github.com/stretchr/testify v1.3.0
+	github.com/twitchtv/twirp v5.8.0+incompatible
 	golang.org/x/tools v0.0.0-20190614205625-5aca471b1d59
 )
