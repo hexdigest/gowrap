@@ -29,7 +29,7 @@ func (_d InterfaceWithValidtableArgWithTwirpValidation) Method(ctx context.Conte
 
 	if _v, _ok := interface{}(r).(interface{ Validate() error }); _ok {
 		if err = _v.Validate(); err != nil {
-			err = twirp.NewError(twirp.Malformed, err.Error())
+			err = twirp.NewError(twirp.InvalidArgument, err.Error())
 			return
 		}
 	}
