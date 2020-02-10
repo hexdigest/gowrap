@@ -24,7 +24,8 @@ func TestInterfaceWithValidatableArgWithTwirp_Method(t *testing.T) {
 		wrapped := NewInterfaceWithValidtableArgWithTwirpValidation(&r)
 		err := wrapped.Method(context.Background(), &r)
 		require.Error(t, err)
-		_, ok := err.(twirp.Error)
+		twirpErr, ok := err.(twirp.Error)
 		require.True(t, ok)
+		require.Equal(t, twirp.InvalidArgument, twirpErr.Code())
 	})
 }

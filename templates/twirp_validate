@@ -24,7 +24,7 @@ func New{{$decorator}} (base {{.Interface.Type}}) {{$decorator}} {
         {{if not ( and $method.AcceptsContext (eq $param.Name "ctx")) }}
           if _v, _ok := interface{}({{$param.Name}}).(interface{ Validate() error}); _ok {
             if err = _v.Validate(); err != nil {
-              err = twirp.NewError(twirp.Malformed, err.Error())
+              err = twirp.NewError(twirp.InvalidArgument, err.Error())
               return
             }
           }
