@@ -88,7 +88,7 @@ func (gc *GenerateCommand) Run(args []string, stdout io.Writer) error {
 		return err
 	}
 
-	return gc.filepath.WriteFile(gc.outputFile, buf.Bytes(), 0777)
+	return gc.filepath.WriteFile(gc.outputFile, buf.Bytes(), 0664)
 }
 
 var (
