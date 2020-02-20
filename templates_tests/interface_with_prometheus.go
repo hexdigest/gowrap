@@ -8,10 +8,10 @@ package templatestests
 
 import (
 	"context"
-	"sync"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 )
 
 // TestInterfaceWithPrometheus implements TestInterface interface with all methods wrapped
@@ -21,7 +21,7 @@ type TestInterfaceWithPrometheus struct {
 	instanceName string
 }
 
-var testinterfaceDurationSummaryVec = prometheus.NewSummaryVec(
+var testinterfaceDurationSummaryVec = promauto.NewSummaryVec(
 	prometheus.SummaryOpts{
 		Name:   "testinterface_duration_seconds",
 		Help:   "testinterface runtime duration and result",
@@ -29,11 +29,8 @@ var testinterfaceDurationSummaryVec = prometheus.NewSummaryVec(
 	},
 	[]string{"instance_name", "method", "result"})
 
-var testinterfaceDurationSummaryOnce = &sync.Once{}
-
 // NewTestInterfaceWithPrometheus returns an instance of the TestInterface decorated with prometheus summary metric
 func NewTestInterfaceWithPrometheus(base TestInterface, instanceName string) TestInterfaceWithPrometheus {
-	testinterfaceDurationSummaryOnce.Do(func() { prometheus.MustRegister(testinterfaceDurationSummaryVec) })
 	return TestInterfaceWithPrometheus{
 		base:         base,
 		instanceName: instanceName,
