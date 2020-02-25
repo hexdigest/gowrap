@@ -34,18 +34,15 @@ func New{{$decorator}}(base {{.Interface.Type}}, instanceName string) {{$decorat
   // {{$method.Name}} implements {{$.Interface.Type}}
   func (_d {{$decorator}}) {{$method.Declaration}} {
       _since := time.Now()
-      {{- if $method.ReturnsError}}
-        defer func() {
-          result := "ok"
+      defer func() {
+        result := "ok"
+        {{- if $method.ReturnsError}}
           if err != nil {
             result = "error"
           }
-
-          {{down $.Interface.Name}}DurationSummaryVec.WithLabelValues(_d.instanceName, "{{$method.Name}}", result).Observe(time.Since(_since).Seconds())
-        }()
-      {{else}}
-        defer {{down $.Interface.Name}}DurationSummaryVec.WithLabelValues(_d.instanceName, "{{$method.Name}}", "ok").Observe(time.Since(_since).Seconds())
-      {{end}}
+        {{end}}
+        {{down $.Interface.Name}}DurationSummaryVec.WithLabelValues(_d.instanceName, "{{$method.Name}}", result).Observe(time.Since(_since).Seconds())
+      }()
     {{$method.Pass "_d.base."}}
   }
 {{end}}
