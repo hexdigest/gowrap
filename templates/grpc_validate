@@ -1,0 +1,37 @@
+import (
+  grpc_codes "google.golang.org/grpc/codes"
+  grpc_status "google.golang.org/grpc/status"
+)
+
+{{ $decorator := (or .Vars.DecoratorName (printf "%sWithGRPCValidation" .Interface.Name)) }}
+
+// {{$decorator}} implements {{.Interface.Type}} interface instrumented with GRPC request validation
+type {{$decorator}} struct {
+  {{.Interface.Type}}
+}
+
+// New{{$decorator}} returns {{$decorator}}
+func New{{$decorator}} (base {{.Interface.Type}}) {{$decorator}} {
+  return {{$decorator}} {
+    {{.Interface.Name}}: base,
+  }
+}
+
+{{range $method := .Interface.Methods}}
+  {{- if $method.ReturnsError}}
+  // {{$method.Name}} implements {{$.Interface.Type}}
+  func (_d {{$decorator}}) {{$method.Declaration}} {
+    {{- range $param := $method.Params}}
+      {{- if not ( and $method.AcceptsContext (eq $param.Name "ctx")) -}}
+        if _v, _ok := interface{}({{$param.Name}}).(interface{ Validate() error}); _ok {
+          if err = _v.Validate(); err != nil {
+            err = grpc_status.Error(grpc_codes.InvalidArgument, err.Error())
+            return
+          }
+        }
+      {{end}}
+    {{end}}
+    {{$method.Pass (printf "_d.%s." $.Interface.Name) }}
+  }
+  {{end}}
+{{end}}
