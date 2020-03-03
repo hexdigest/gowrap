@@ -1,0 +1,40 @@
+import (
+  "context"
+  "time"
+)
+
+{{ $decorator := (or .Vars.DecoratorName (printf "%sWithTimeout" .Interface.Name)) }}
+
+// {{$decorator}} implements {{.Interface.Type}} interface instrumented with timeouts
+type {{$decorator}} struct {
+  {{.Interface.Type}}
+  config {{$decorator}}Config
+}
+
+type {{$decorator}}Config struct {
+  {{range $method := .Interface.Methods}}
+    {{if $method.AcceptsContext}}{{$method.Name}}Timeout time.Duration{{ end }}
+  {{end}}
+}
+
+// New{{$decorator}} returns {{$decorator}}
+func New{{$decorator}} (base {{.Interface.Type}}, config {{$decorator}}Config) {{$decorator}} {
+  return {{$decorator}} {
+    {{.Interface.Name}}: base,
+    config: config,
+  }
+}
+
+{{range $method := .Interface.Methods}}
+  {{if $method.AcceptsContext  }}
+    // {{$method.Name}} implements {{$.Interface.Type}}
+    func (_d {{$decorator}}) {{$method.Declaration}} {
+      var cancelFunc func()
+      if _d.config.{{$method.Name}}Timeout > 0 {
+        ctx, cancelFunc = context.WithTimeout(ctx, _d.config.{{$method.Name}}Timeout)
+        defer cancelFunc()
+      }
+      {{$method.Pass (printf "_d.%s." $.Interface.Name) }}
+    }
+  {{end}}
+{{end}}
