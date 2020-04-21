@@ -23,9 +23,10 @@ type TestInterfaceWithPrometheus struct {
 
 var testinterfaceDurationSummaryVec = promauto.NewSummaryVec(
 	prometheus.SummaryOpts{
-		Name:   "testinterface_duration_seconds",
-		Help:   "testinterface runtime duration and result",
-		MaxAge: time.Minute,
+		Name:       "testinterface_duration_seconds",
+		Help:       "testinterface runtime duration and result",
+		MaxAge:     time.Minute,
+		Objectives: map[float64]float64{0.5: 0.05, 0.9: 0.01, 0.99: 0.001},
 	},
 	[]string{"instance_name", "method", "result"})
 
