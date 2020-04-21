@@ -19,6 +19,7 @@ var {{down .Interface.Name}}DurationSummaryVec = promauto.NewSummaryVec(
     Name: "{{down .Interface.Name}}_duration_seconds",
     Help: "{{down .Interface.Name}} runtime duration and result",
     MaxAge: time.Minute,
+    Objectives: map[float64]float64{0.5: 0.05, 0.9: 0.01, 0.99: 0.001},
   },
   []string{"instance_name", "method", "result"})
 
