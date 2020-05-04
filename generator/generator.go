@@ -35,7 +35,28 @@ type TemplateInputs struct {
 	// Interface information for template
 	Interface TemplateInputInterface
 	// Vars additional vars to pass to the template, see Options.Vars
-	Vars map[string]interface{}
+	Vars    map[string]interface{}
+	Imports []string
+}
+
+// RenderImports outputs a list of imports, combining the ones from
+// the source file with any provided for the template itself.
+func (t TemplateInputs) RenderImports(imports ...string) string {
+	allImports := make(map[string]struct{})
+	for _, i := range t.Imports {
+		allImports[i] = struct{}{}
+	}
+	for _, i := range imports {
+		if i[len(i)-1] != '"' {
+			i = `"` + i + `"`
+		}
+		allImports[i] = struct{}{}
+	}
+	var out []string
+	for i := range allImports {
+		out = append(out, i)
+	}
+	return strings.Join(out, "\n")
 }
 
 // TemplateInputInterface subset of interface information used for template generation
@@ -219,7 +240,8 @@ func (g Generator) Generate(w io.Writer) error {
 			Type:    g.interfaceType,
 			Methods: g.methods,
 		},
-		Vars: g.Options.Vars,
+		Imports: g.Options.Imports,
+		Vars:    g.Options.Vars,
 	})
 	if err != nil {
 		return err

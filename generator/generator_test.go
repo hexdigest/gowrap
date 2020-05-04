@@ -484,7 +484,7 @@ func TestGenerator_Generate(t *testing.T) {
 	tests := []struct {
 		name    string
 		init    func(t minimock.Tester) Generator
-		inspect func(r Generator, t *testing.T) //inspects Generator after execution of Generate
+		inspect func(r Generator, w io.Writer, t *testing.T) //inspects Generator after execution of Generate
 
 		args func(t minimock.Tester) args
 
@@ -551,6 +551,37 @@ func TestGenerator_Generate(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name: "imports can be generated",
+			init: func(t minimock.Tester) Generator {
+				return Generator{
+					Options: Options{
+						Imports: []string{`"github.com/pkg/errors"`, `"github.com/sirupsen/logrus"`},
+					},
+					headerTemplate: template.Must(template.New("header").Parse("package success\n")),
+					bodyTemplate: template.Must(template.New("body").Parse(`import (
+						{{.RenderImports "github.com/sirupsen/logrus" }}
+						)
+						func test(l *logrus.Logger) {}
+						`)),
+				}
+			},
+			args: func(t minimock.Tester) args {
+				return args{
+					w: bytes.NewBuffer([]byte{}),
+				}
+			},
+			inspect: func(_ Generator, w io.Writer, t *testing.T) {
+				assert.Equal(t, `package success
+
+import (
+	"github.com/sirupsen/logrus"
+)
+
+func test(l *logrus.Logger) {}
+`, w.(*bytes.Buffer).String())
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -564,7 +595,7 @@ func TestGenerator_Generate(t *testing.T) {
 			err := receiver.Generate(tArgs.w)
 
 			if tt.inspect != nil {
-				tt.inspect(receiver, t)
+				tt.inspect(receiver, tArgs.w, t)
 			}
 
 			if tt.wantErr {
