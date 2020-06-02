@@ -40,6 +40,9 @@ func (c *consecutiveErrorsImpl) NoError(string) string {
 func (c *consecutiveErrorsImpl) NoParamsOrResults() {
 }
 
+func (c *consecutiveErrorsImpl) Channels(chA chan bool, chB chan<- bool, chanC <-chan bool) {
+}
+
 func TestTestInterfaceWithCircuitBreaker_F(t *testing.T) {
 	ctx := context.Background()
 

@@ -34,6 +34,8 @@ func NewTestInterfaceWithCircuitBreaker(base TestInterface, consecutiveErrors in
 	}
 }
 
+// Channels implements TestInterface
+
 // F implements TestInterface
 func (_d *TestInterfaceWithCircuitBreaker) F(ctx context.Context, a1 string, a2 ...string) (result1 string, result2 string, err error) {
 	_d._lock.RLock()

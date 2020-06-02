@@ -38,6 +38,17 @@ func NewTestInterfaceWithPrometheus(base TestInterface, instanceName string) Tes
 	}
 }
 
+// Channels implements TestInterface
+func (_d TestInterfaceWithPrometheus) Channels(chA chan bool, chB chan<- bool, chanC <-chan bool) {
+	_since := time.Now()
+	defer func() {
+		result := "ok"
+		testinterfaceDurationSummaryVec.WithLabelValues(_d.instanceName, "Channels", result).Observe(time.Since(_since).Seconds())
+	}()
+	_d.base.Channels(chA, chB, chanC)
+	return
+}
+
 // F implements TestInterface
 func (_d TestInterfaceWithPrometheus) F(ctx context.Context, a1 string, a2 ...string) (result1 string, result2 string, err error) {
 	_since := time.Now()

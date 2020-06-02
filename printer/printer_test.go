@@ -258,7 +258,7 @@ func TestPrinter_printChan(t *testing.T) {
 		},
 		{
 			name: "bidirectional channel",
-			ch:   &ast.ChanType{Value: &ast.Ident{Name: "Exported"}, Dir: ast.SEND & ast.RECV},
+			ch:   &ast.ChanType{Value: &ast.Ident{Name: "Exported"}, Dir: ast.SEND | ast.RECV},
 			init: func(t minimock.Tester) *Printer {
 				return &Printer{
 					fs:    token.NewFileSet(),
@@ -845,7 +845,7 @@ func TestPrinter_PrintType(t *testing.T) {
 		},
 		{
 			name: "chan type",
-			node: &ast.ChanType{Value: &ast.Ident{Name: "string"}},
+			node: &ast.ChanType{Value: &ast.Ident{Name: "string"}, Dir: ast.SEND | ast.RECV},
 			init: func(t minimock.Tester) *Printer {
 				return &Printer{
 					fs:  token.NewFileSet(),

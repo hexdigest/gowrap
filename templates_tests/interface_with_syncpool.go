@@ -28,6 +28,16 @@ func NewTestInterfacePool(impls ...TestInterface) TestInterfacePool {
 	return TestInterfacePool{pool: pool}
 }
 
+// Channels implements TestInterface
+func (_d TestInterfacePool) Channels(chA chan bool, chB chan<- bool, chanC <-chan bool) {
+	_impl := <-_d.pool
+	defer func() {
+		_d.pool <- _impl
+	}()
+	_impl.Channels(chA, chB, chanC)
+	return
+}
+
 // F implements TestInterface
 func (_d TestInterfacePool) F(ctx context.Context, a1 string, a2 ...string) (result1 string, result2 string, err error) {
 	_impl := <-_d.pool

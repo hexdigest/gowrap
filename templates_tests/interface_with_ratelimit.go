@@ -40,6 +40,14 @@ func NewTestInterfaceWithRateLimit(base TestInterface, concurrentRequests int, r
 	return d
 }
 
+// Channels implements TestInterface
+func (_d *TestInterfaceWithRateLimit) Channels(chA chan bool, chB chan<- bool, chanC <-chan bool) {
+	<-_d._ticks
+
+	_d._base.Channels(chA, chB, chanC)
+	return
+}
+
 // F implements TestInterface
 func (_d *TestInterfaceWithRateLimit) F(ctx context.Context, a1 string, a2 ...string) (result1 string, result2 string, err error) {
 	select {

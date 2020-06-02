@@ -26,6 +26,19 @@ func NewTestInterfaceWithLogrus(base TestInterface, log *logrus.Entry) TestInter
 	}
 }
 
+// Channels implements TestInterface
+func (_d TestInterfaceWithLogrus) Channels(chA chan bool, chB chan<- bool, chanC <-chan bool) {
+	_d._log.WithFields(logrus.Fields(map[string]interface{}{
+		"chA":   chA,
+		"chB":   chB,
+		"chanC": chanC})).Debug("TestInterfaceWithLogrus: calling Channels")
+	defer func() {
+		_d._log.Debug("TestInterfaceWithLogrus: Channels finished")
+	}()
+	_d._base.Channels(chA, chB, chanC)
+	return
+}
+
 // F implements TestInterface
 func (_d TestInterfaceWithLogrus) F(ctx context.Context, a1 string, a2 ...string) (result1 string, result2 string, err error) {
 	_d._log.WithFields(logrus.Fields(map[string]interface{}{
