@@ -39,6 +39,13 @@ func MustNewTestInterfaceRoundRobinPool(pool ...TestInterface) *TestInterfaceRou
 	return &TestInterfaceRoundRobinPool{pool: pool, poolSize: uint32(len(pool))}
 }
 
+// Channels implements TestInterface
+func (_d *TestInterfaceRoundRobinPool) Channels(chA chan bool, chB chan<- bool, chanC <-chan bool) {
+	_counter := atomic.AddUint32(&_d.counter, 1)
+	_d.pool[_counter%_d.poolSize].Channels(chA, chB, chanC)
+	return
+}
+
 // F implements TestInterface
 func (_d *TestInterfaceRoundRobinPool) F(ctx context.Context, a1 string, a2 ...string) (result1 string, result2 string, err error) {
 	_counter := atomic.AddUint32(&_d.counter, 1)

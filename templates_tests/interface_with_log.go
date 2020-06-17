@@ -27,6 +27,17 @@ func NewTestInterfaceWithLogger(base TestInterface, stdout, stderr io.Writer) Te
 	}
 }
 
+// Channels implements TestInterface
+func (_d TestInterfaceWithLogger) Channels(chA chan bool, chB chan<- bool, chanC <-chan bool) {
+	_params := []interface{}{"TestInterfaceWithLogger: calling Channels with params:", chA, chB, chanC}
+	_d._stdlog.Println(_params...)
+	defer func() {
+		_d._stdlog.Println("TestInterfaceWithLogger: Channels finished")
+	}()
+	_d._base.Channels(chA, chB, chanC)
+	return
+}
+
 // F implements TestInterface
 func (_d TestInterfaceWithLogger) F(ctx context.Context, a1 string, a2 ...string) (result1 string, result2 string, err error) {
 	_params := []interface{}{"TestInterfaceWithLogger: calling F with params:", ctx, a1, a2}

@@ -45,6 +45,8 @@ func (f *testImpl) NoError(s string) string {
 
 func (f *testImpl) NoParamsOrResults() {}
 
+func (f *testImpl) Channels(chA chan bool, chB chan<- bool, chanC <-chan bool) {}
+
 func TestTestInterfaceWithFallback_F(t *testing.T) {
 	t.Run("one implementation success", func(t *testing.T) {
 		impl := &testImpl{r1: "1", r2: "2"}

@@ -25,6 +25,30 @@ func NewTestInterfaceWithFallback(interval time.Duration, impls ...TestInterface
 	return TestInterfaceWithFallback{implementations: impls, interval: interval}
 }
 
+// Channels implements TestInterface
+func (_d TestInterfaceWithFallback) Channels(chA chan bool, chB chan<- bool, chanC <-chan bool) {
+	type _resultStruct struct {
+	}
+
+	var _ch = make(chan _resultStruct, 0)
+
+	var _ticker = time.NewTicker(_d.interval)
+	defer _ticker.Stop()
+	for _i := 0; _i < len(_d.implementations); _i++ {
+		go func(_impl TestInterface) {
+			_impl.Channels(chA, chB, chanC)
+			_ch <- _resultStruct{}
+		}(_d.implementations[_i])
+		select {
+		case <-_ch:
+			return
+		case <-_ticker.C:
+		}
+	}
+
+	return
+}
+
 // F implements TestInterface
 func (_d TestInterfaceWithFallback) F(ctx context.Context, a1 string, a2 ...string) (result1 string, result2 string, err error) {
 	type _resultStruct struct {

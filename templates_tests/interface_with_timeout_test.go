@@ -27,6 +27,9 @@ func (c *timeoutsImpl) NoError(string) string {
 func (c *timeoutsImpl) NoParamsOrResults() {
 }
 
+func (c *timeoutsImpl) Channels(chA chan bool, chB chan<- bool, chanC <-chan bool) {
+}
+
 func TestTestInterfaceWithTimeout_F(t *testing.T) {
 	ctx := context.Background()
 
