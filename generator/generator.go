@@ -50,7 +50,7 @@ func (t TemplateInputs) RenderImports(imports ...string) string {
 		if i[len(i)-1] != '"' {
 			i = `"` + i + `"`
 		}
-		allImports[i] = struct{}{}
+		allImports[strings.TrimSpace(i)] = struct{}{}
 	}
 	var out []string
 	for i := range allImports {
