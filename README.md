@@ -74,6 +74,7 @@ List of available templates:
   - [syncpool](https://github.com/hexdigest/gowrap/tree/master/templates/syncpool) puts several implementations of the source interface to the sync.Pool and for every method call it gets one implementation from the pool and puts it back once finished
   - [timeout](https://github.com/hexdigest/gowrap/tree/master/templates/timeout) instruments each method that accepts context with configurable timeout
   - [validate](https://github.com/hexdigest/gowrap/tree/master/templates/validate) runs `func Validate() error` method on each argument if it's present
+  - [twirp\_error](https://github.com/hexdigest/gowrap/tree/master/templates/twirp_error) inject request data into twirp.Error as metadata
   - [twirp\_validate](https://github.com/hexdigest/gowrap/tree/master/templates/twirp_validate) runs `func Validate() error` method on each argument if it's present and wraps returned error with twirp.Malformed error
   - [grpc\_validate](https://github.com/hexdigest/gowrap/tree/master/templates/grpc_validate) runs `func Validate() error` method on each argument if it's present and returns [InvalidArgument](https://github.com/grpc/grpc-go/blob/9d8d97a245af2d4bc743585418e1b4aebada0637/codes/codes.go#L49) error in case when validation failed
 
