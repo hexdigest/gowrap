@@ -4,7 +4,7 @@ package templatestests
 // This code is generated with http://github.com/hexdigest/gowrap tool
 // using ../templates/prometheus template
 
-//go:generate gowrap gen -p github.com/hexdigest/gowrap/templates_tests -i AnotherTestInterface -t ../templates/prometheus -o interface_with_prometheus_metric_prefix.go -v MetricName=custom_metric_name_seconds
+//go:generate gowrap gen -p github.com/hexdigest/gowrap/templates_tests -i AnotherTestInterface -t ../templates/prometheus -o interface_with_prometheus_metric_name.go -v MetricName=custom_metric_name_seconds
 
 import (
 	"context"
