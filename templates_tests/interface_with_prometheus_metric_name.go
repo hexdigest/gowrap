@@ -4,7 +4,7 @@ package templatestests
 // This code is generated with http://github.com/hexdigest/gowrap tool
 // using ../templates/prometheus template
 
-//go:generate gowrap gen -p github.com/hexdigest/gowrap/templates_tests -i AnotherTestInterface -t ../templates/prometheus -o interface_with_prometheus_metric_prefix.go -v MetricPrefix=some_prefix
+//go:generate gowrap gen -p github.com/hexdigest/gowrap/templates_tests -i AnotherTestInterface -t ../templates/prometheus -o interface_with_prometheus_metric_prefix.go -v MetricName=custom_metric_name_seconds
 
 import (
 	"context"
@@ -23,8 +23,8 @@ type AnotherTestInterfaceWithPrometheus struct {
 
 var anothertestinterfaceDurationSummaryVec = promauto.NewSummaryVec(
 	prometheus.SummaryOpts{
-		Name:       "some_prefix_duration_seconds",
-		Help:       "some_prefix runtime duration and result",
+		Name:       "custom_metric_name_seconds",
+		Help:       "anothertestinterface runtime duration and result",
 		MaxAge:     time.Minute,
 		Objectives: map[float64]float64{0.5: 0.05, 0.9: 0.01, 0.99: 0.001},
 	},

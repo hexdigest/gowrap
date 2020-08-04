@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestTestInterfaceWithPrometheusMetricPrefix_F(t *testing.T) {
+func TestTestInterfaceWithPrometheusMetricName_F(t *testing.T) {
 	t.Run("no error", func(t *testing.T) {
 		impl := &testImpl{r1: "1", r2: "2"}
 
