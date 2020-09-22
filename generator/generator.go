@@ -3,6 +3,7 @@ package generator
 import (
 	"bytes"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"go/ast"
@@ -35,7 +36,46 @@ type TemplateInputs struct {
 	// Interface information for template
 	Interface TemplateInputInterface
 	// Vars additional vars to pass to the template, see Options.Vars
-	Vars map[string]interface{}
+	Vars    map[string]interface{}
+	Imports []string
+}
+
+// Import generates an import statement using a list of imports from the source file
+// along with the ones from the template itself
+func (t TemplateInputs) Import(imports ...string) string {
+	allImports := make(map[string]struct{}, len(imports)+len(t.Imports))
+
+	for _, i := range t.Imports {
+		allImports[strings.TrimSpace(i)] = struct{}{}
+	}
+
+	for _, i := range imports {
+		if len(i) == 0 {
+			continue
+		}
+
+		i = strings.TrimSpace(i)
+
+		if i[len(i)-1] != '"' {
+			i += `"`
+		}
+
+		if i[0] != '"' {
+			i = `"` + i
+		}
+
+		allImports[i] = struct{}{}
+	}
+
+	out := make([]string, 0, len(allImports))
+
+	for i := range allImports {
+		out = append(out, i)
+	}
+
+	sort.Strings(out)
+
+	return "import (\n" + strings.Join(out, "\n") + ")\n"
 }
 
 // TemplateInputInterface subset of interface information used for template generation
@@ -131,8 +171,12 @@ func NewGenerator(options Options) (*Generator, error) {
 	if srcPackage.PkgPath == dstPackage.PkgPath {
 		interfaceType = options.InterfaceName
 		srcPackageAST.Name = ""
-	} else if options.SourcePackageAlias != "" {
-		srcPackageAST.Name = options.SourcePackageAlias
+	} else {
+		if options.SourcePackageAlias != "" {
+			srcPackageAST.Name = options.SourcePackageAlias
+		}
+
+		options.Imports = append(options.Imports, `"`+srcPackage.PkgPath+`"`)
 	}
 
 	methods, imports, err := findInterface(fs, srcPackageAST, options.InterfaceName)
@@ -150,7 +194,7 @@ func NewGenerator(options Options) (*Generator, error) {
 		}
 	}
 
-	options.Imports = makeImports(imports)
+	options.Imports = append(options.Imports, makeImports(imports)...)
 
 	return &Generator{
 		Options:        options,
@@ -219,7 +263,8 @@ func (g Generator) Generate(w io.Writer) error {
 			Type:    g.interfaceType,
 			Methods: g.methods,
 		},
-		Vars: g.Options.Vars,
+		Imports: g.Options.Imports,
+		Vars:    g.Options.Vars,
 	})
 	if err != nil {
 		return err
