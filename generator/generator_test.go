@@ -559,9 +559,8 @@ func TestGenerator_Generate(t *testing.T) {
 						Imports: []string{`"github.com/pkg/errors"`, `"github.com/sirupsen/logrus"`},
 					},
 					headerTemplate: template.Must(template.New("header").Parse("package success\n")),
-					bodyTemplate: template.Must(template.New("body").Parse(`import (
-						{{.RenderImports "github.com/sirupsen/logrus" }}
-						)
+					bodyTemplate: template.Must(template.New("body").Parse(`
+						{{.Import "github.com/sirupsen/logrus" }}
 						func test(l *logrus.Logger) {}
 						`)),
 				}

@@ -3,6 +3,7 @@ package generator
 import (
 	"bytes"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"go/ast"
@@ -39,24 +40,42 @@ type TemplateInputs struct {
 	Imports []string
 }
 
-// RenderImports outputs a list of imports, combining the ones from
-// the source file with any provided for the template itself.
-func (t TemplateInputs) RenderImports(imports ...string) string {
-	allImports := make(map[string]struct{})
+// Import generates an import statement using a list of imports from the source file
+// along with the ones from the template itself
+func (t TemplateInputs) Import(imports ...string) string {
+	allImports := make(map[string]struct{}, len(imports)+len(t.Imports))
+
 	for _, i := range t.Imports {
 		allImports[strings.TrimSpace(i)] = struct{}{}
 	}
+
 	for _, i := range imports {
-		if i[len(i)-1] != '"' {
-			i = `"` + i + `"`
+		if len(i) == 0 {
+			continue
 		}
-		allImports[strings.TrimSpace(i)] = struct{}{}
+
+		i = strings.TrimSpace(i)
+
+		if i[len(i)-1] != '"' {
+			i += `"`
+		}
+
+		if i[0] != '"' {
+			i = `"` + i
+		}
+
+		allImports[i] = struct{}{}
 	}
-	var out []string
+
+	out := make([]string, 0, len(allImports))
+
 	for i := range allImports {
 		out = append(out, i)
 	}
-	return strings.Join(out, "\n")
+
+	sort.Strings(out)
+
+	return "import (\n" + strings.Join(out, "\n") + ")\n"
 }
 
 // TemplateInputInterface subset of interface information used for template generation
@@ -152,8 +171,12 @@ func NewGenerator(options Options) (*Generator, error) {
 	if srcPackage.PkgPath == dstPackage.PkgPath {
 		interfaceType = options.InterfaceName
 		srcPackageAST.Name = ""
-	} else if options.SourcePackageAlias != "" {
-		srcPackageAST.Name = options.SourcePackageAlias
+	} else {
+		if options.SourcePackageAlias != "" {
+			srcPackageAST.Name = options.SourcePackageAlias
+		}
+
+		options.Imports = append(options.Imports, `"`+srcPackage.PkgPath+`"`)
 	}
 
 	methods, imports, err := findInterface(fs, srcPackageAST, options.InterfaceName)
@@ -171,7 +194,7 @@ func NewGenerator(options Options) (*Generator, error) {
 		}
 	}
 
-	options.Imports = makeImports(imports)
+	options.Imports = append(options.Imports, makeImports(imports)...)
 
 	return &Generator{
 		Options:        options,
