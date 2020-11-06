@@ -257,9 +257,39 @@ func varsToArgs(v vars) string {
 var helperFuncs = template.FuncMap{
 	"up":   strings.ToUpper,
 	"down": strings.ToLower,
-	"upFirst": func(s string) string {return strings.ToUpper(s[:1])+s[:1]},
-	"downFirst": func(s string) string {return strings.ToLower(s[:1])+s[:1]},
+	"upFirst": upFirst,
+	"downFirst": downFirst,
 	"replace": strings.ReplaceAll,
+}
+
+func upFirst(s string) string {
+	var res string
+
+	// iterate over runes
+	for i, c := range s {
+		if i == 0 {
+			res += strings.ToUpper(string(c))
+		} else {
+			res += string(c)
+		}
+	}
+
+	return res
+}
+
+func downFirst(s string) string {
+	var res string
+
+	// iterate over runes
+	for i, c := range s {
+		if i == 0 {
+			res += strings.ToLower(string(c))
+		} else {
+			res += string(c)
+		}
+	}
+
+	return res
 }
 
 const headerTemplate = `package {{.Package.Name}}
