@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 	"text/template"
+	"unicode"
 
 	"github.com/hexdigest/gowrap/generator"
 	"github.com/hexdigest/gowrap/pkg"
@@ -263,33 +264,17 @@ var helperFuncs = template.FuncMap{
 }
 
 func upFirst(s string) string {
-	var res string
-
-	// iterate over runes
-	for i, c := range s {
-		if i == 0 {
-			res += strings.ToUpper(string(c))
-		} else {
-			res += string(c)
-		}
+	for _, v := range s {
+		return string(unicode.ToUpper(v)) + s[len(string(v)):]
 	}
-
-	return res
+	return ""
 }
 
 func downFirst(s string) string {
-	var res string
-
-	// iterate over runes
-	for i, c := range s {
-		if i == 0 {
-			res += strings.ToLower(string(c))
-		} else {
-			res += string(c)
-		}
+	for _, v := range s {
+		return string(unicode.ToLower(v)) + s[len(string(v)):]
 	}
-
-	return res
+	return ""
 }
 
 const headerTemplate = `package {{.Package.Name}}
