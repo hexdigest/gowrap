@@ -350,3 +350,75 @@ func TestVars_Set(t *testing.T) {
 		})
 	}
 }
+
+func TestHelper_UpFirst(t *testing.T) {
+	tests := []struct {
+		name string
+		in    string
+		out string
+	}{
+		{
+			name: "fist is lower-cased",
+			in:    "typeName",
+			out:    "TypeName",
+		},
+		{
+			name: "single letter",
+			in:    "v",
+			out:    "V",
+		},
+		{
+			name: "multi-bytes chars",
+			in:    "йоу",
+			out:    "Йоу",
+		},
+		{
+			name: "empty string",
+			in:    "",
+			out:    "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotOut := upFirst(tt.in)
+			assert.Equal(t, tt.out, gotOut)
+		})
+	}
+}
+
+func TestHelper_DownFirst(t *testing.T) {
+	tests := []struct {
+		name string
+		in    string
+		out string
+	}{
+		{
+			name: "fist is upper-cased",
+			in:    "TypeName",
+			out:    "typeName",
+		},
+		{
+			name: "single letter",
+			in:    "V",
+			out:    "v",
+		},
+		{
+			name: "multi-bytes chars",
+			in:    "Йоу",
+			out:    "йоу",
+		},
+		{
+			name: "empty string",
+			in:    "",
+			out:    "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotOut := downFirst(tt.in)
+			assert.Equal(t, tt.out, gotOut)
+		})
+	}
+}

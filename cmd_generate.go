@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 	"text/template"
+	"unicode"
 
 	"github.com/hexdigest/gowrap/generator"
 	"github.com/hexdigest/gowrap/pkg"
@@ -257,6 +258,23 @@ func varsToArgs(v vars) string {
 var helperFuncs = template.FuncMap{
 	"up":   strings.ToUpper,
 	"down": strings.ToLower,
+	"upFirst": upFirst,
+	"downFirst": downFirst,
+	"replace": strings.ReplaceAll,
+}
+
+func upFirst(s string) string {
+	for _, v := range s {
+		return string(unicode.ToUpper(v)) + s[len(string(v)):]
+	}
+	return ""
+}
+
+func downFirst(s string) string {
+	for _, v := range s {
+		return string(unicode.ToLower(v)) + s[len(string(v)):]
+	}
+	return ""
 }
 
 const headerTemplate = `package {{.Package.Name}}
