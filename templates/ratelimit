@@ -10,7 +10,7 @@ type {{$decorator}} struct {
   _ticks chan time.Time
 }
 
-// New{{$decorator}} instruments an implementation of the {{.Interface.Type}} with with rate limiting
+// New{{$decorator}} instruments an implementation of the {{.Interface.Type}} with rate limiting
 func New{{$decorator}}(base {{.Interface.Type}}, concurrentRequests int, rps float64) *{{$decorator}} {
   d := &{{$decorator}}{
     _base: base,
