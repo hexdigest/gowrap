@@ -1,0 +1,46 @@
+{{ $decorator := (or .Vars.DecoratorName (printf "%sWithConcurrencyLimit" .Interface.Name)) }}
+
+import (
+  "time"
+)
+
+// {{$decorator}} implements {{.Interface.Type}}
+type {{$decorator}} struct {
+  _base {{.Interface.Type}}
+  _burst chan int
+}
+
+// New{{$decorator}} instruments an implementation of the {{.Interface.Type}} with concurrency limiting
+func New{{$decorator}}(base {{.Interface.Type}}, concurrentCalls int) *{{$decorator}} {
+  d := &{{$decorator}}{
+    _base: base,
+    _burst: make(chan int, concurrentCalls),
+  }
+
+  return d
+}
+
+{{range $method := .Interface.Methods}}
+  // {{$method.Name}} implements {{$.Interface.Type}}
+  func (_d *{{$decorator}}) {{$method.Declaration}} {
+
+    {{- if (and $method.AcceptsContext $method.ReturnsError)}}
+      select {
+      case <-ctx.Done():
+        err = ctx.Err()
+        return
+      case _d._burst<-1:
+        defer func() {
+          <-_d._burst
+        }()
+      }
+    {{else}}
+      _d._burst<-1
+      defer func() {
+        <-_d._burst
+      }()
+    {{end}}
+
+    {{ $method.Pass "_d._base." }}
+  }
+{{end}}
