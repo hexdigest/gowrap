@@ -63,6 +63,7 @@ If the file is not found, gowrap will look for the template [here](https://githu
 
 List of available templates:
   - [circuitbreaker](https://github.com/hexdigest/gowrap/tree/master/templates/circuitbreaker) stops executing methods of the wrapped interface after the specified number of consecutive errors and resumes execution after the specified delay
+  - [concurrencylimit](https://github.com/hexdigest/gowrap/tree/master/templates/concurrencylimit) limits amount of simultaneous calls
   - [fallback](https://github.com/hexdigest/gowrap/tree/master/templates/fallback) takes several implementations of the source interface and concurrently runs each implementation if the previous attempt didn't return the result in a specified period of time, it returns the first non-error result
   - [log](https://github.com/hexdigest/gowrap/tree/master/templates/log) instruments the source interface with logging using standard logger from the "log" package
   - [logrus](https://github.com/hexdigest/gowrap/tree/master/templates/logrus) instruments the source interface with logging using popular [sirupsen/logrus](https://github.com/sirupsen/logrus) logger
