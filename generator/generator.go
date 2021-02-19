@@ -87,6 +87,15 @@ type TemplateInputInterface struct {
 	Methods map[string]Method
 }
 
+//MethodsList returns list of method information
+func (i TemplateInputInterface) MethodsList() []Method {
+	methods := make([]Method, 0, len(i.Methods))
+	for _, v := range i.Methods {
+		methods = append(methods, v)
+	}
+	return methods
+}
+
 type methodsList map[string]Method
 
 //Options of the NewGenerator constructor
