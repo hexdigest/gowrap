@@ -260,9 +260,6 @@ func TestGenerateCommand_Run(t *testing.T) {
 }
 
 func Test_varsToArgs(t *testing.T) {
-	type args struct {
-		v vars
-	}
 	tests := []struct {
 		name  string
 		v     vars
@@ -354,28 +351,28 @@ func TestVars_Set(t *testing.T) {
 func TestHelper_UpFirst(t *testing.T) {
 	tests := []struct {
 		name string
-		in    string
-		out string
+		in   string
+		out  string
 	}{
 		{
 			name: "fist is lower-cased",
-			in:    "typeName",
-			out:    "TypeName",
+			in:   "typeName",
+			out:  "TypeName",
 		},
 		{
 			name: "single letter",
-			in:    "v",
-			out:    "V",
+			in:   "v",
+			out:  "V",
 		},
 		{
 			name: "multi-bytes chars",
-			in:    "йоу",
-			out:    "Йоу",
+			in:   "йоу",
+			out:  "Йоу",
 		},
 		{
 			name: "empty string",
-			in:    "",
-			out:    "",
+			in:   "",
+			out:  "",
 		},
 	}
 
@@ -390,28 +387,28 @@ func TestHelper_UpFirst(t *testing.T) {
 func TestHelper_DownFirst(t *testing.T) {
 	tests := []struct {
 		name string
-		in    string
-		out string
+		in   string
+		out  string
 	}{
 		{
 			name: "fist is upper-cased",
-			in:    "TypeName",
-			out:    "typeName",
+			in:   "TypeName",
+			out:  "typeName",
 		},
 		{
 			name: "single letter",
-			in:    "V",
-			out:    "v",
+			in:   "V",
+			out:  "v",
 		},
 		{
 			name: "multi-bytes chars",
-			in:    "Йоу",
-			out:    "йоу",
+			in:   "Йоу",
+			out:  "йоу",
 		},
 		{
 			name: "empty string",
-			in:    "",
-			out:    "",
+			in:   "",
+			out:  "",
 		},
 	}
 

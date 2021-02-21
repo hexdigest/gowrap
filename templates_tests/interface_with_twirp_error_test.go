@@ -3,9 +3,10 @@ package templatestests
 import (
 	"context"
 	"fmt"
+	"testing"
+
 	"github.com/stretchr/testify/require"
 	"github.com/twitchtv/twirp"
-	"testing"
 )
 
 type WithTwirpError struct{}

@@ -17,15 +17,15 @@ type TestInterfaceWithRateLimit struct {
 	_ticks chan time.Time
 }
 
-// NewTestInterfaceWithRateLimit instruments an implementation of the TestInterface with with rate limiting
-func NewTestInterfaceWithRateLimit(base TestInterface, concurrentRequests int, rps float64) *TestInterfaceWithRateLimit {
+// NewTestInterfaceWithRateLimit instruments an implementation of the TestInterface with rate limiting
+func NewTestInterfaceWithRateLimit(base TestInterface, burst int, rps float64) *TestInterfaceWithRateLimit {
 	d := &TestInterfaceWithRateLimit{
 		_base:  base,
-		_ticks: make(chan time.Time, concurrentRequests),
+		_ticks: make(chan time.Time, burst),
 	}
 
 	now := time.Now()
-	for i := 0; i < concurrentRequests; i++ {
+	for i := 0; i < burst; i++ {
 		d._ticks <- now
 	}
 

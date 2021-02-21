@@ -96,7 +96,6 @@ var (
 	errNoOutputFile    = CommandLineError("output file is not specified")
 	errNoInterfaceName = CommandLineError("interface name is not specified")
 	errNoTemplate      = CommandLineError("no template specified")
-	errNoSourcePackage = CommandLineError("no source package specified")
 )
 
 func (gc *GenerateCommand) checkFlags() error {
@@ -256,11 +255,11 @@ func varsToArgs(v vars) string {
 }
 
 var helperFuncs = template.FuncMap{
-	"up":   strings.ToUpper,
-	"down": strings.ToLower,
-	"upFirst": upFirst,
+	"up":        strings.ToUpper,
+	"down":      strings.ToLower,
+	"upFirst":   upFirst,
 	"downFirst": downFirst,
-	"replace": strings.ReplaceAll,
+	"replace":   strings.ReplaceAll,
 }
 
 func upFirst(s string) string {

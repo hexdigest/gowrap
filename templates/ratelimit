@@ -11,14 +11,14 @@ type {{$decorator}} struct {
 }
 
 // New{{$decorator}} instruments an implementation of the {{.Interface.Type}} with rate limiting
-func New{{$decorator}}(base {{.Interface.Type}}, concurrentRequests int, rps float64) *{{$decorator}} {
+func New{{$decorator}}(base {{.Interface.Type}}, burst int, rps float64) *{{$decorator}} {
   d := &{{$decorator}}{
     _base: base,
-    _ticks: make(chan time.Time, concurrentRequests),
+    _ticks: make(chan time.Time, burst),
   }
 
   now := time.Now()
-  for i := 0; i < concurrentRequests; i++ {
+  for i := 0; i < burst; i++ {
     d._ticks <- now 
   }
 

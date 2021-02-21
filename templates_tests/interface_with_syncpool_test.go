@@ -43,6 +43,6 @@ func TestTestInterfacePool_F(t *testing.T) {
 	<-doneCh2
 	<-doneCh3
 
-	assert.True(t, time.Now().Sub(start) > delay*2)
+	assert.True(t, time.Since(start) > delay*2)
 	assert.EqualValues(t, 3, impl1.callCounter+impl2.callCounter)
 }

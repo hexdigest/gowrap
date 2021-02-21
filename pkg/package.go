@@ -14,7 +14,7 @@ var errPackageNotFound = errors.New("package not found")
 
 // Load loads package by its import path
 func Load(path string) (*packages.Package, error) {
-	cfg := &packages.Config{Mode: packages.LoadFiles}
+	cfg := &packages.Config{Mode: packages.NeedName | packages.NeedFiles | packages.NeedCompiledGoFiles}
 	pkgs, err := packages.Load(cfg, path)
 	if err != nil {
 		return nil, err
@@ -29,19 +29,6 @@ func Load(path string) (*packages.Package, error) {
 	}
 
 	return pkgs[0], nil
-}
-
-var errNoPackageName = errors.New("failed to determine the destination package name")
-
-func makePackage(path string) (*packages.Package, error) {
-	name := filepath.Base(path)
-	if name == string(filepath.Separator) || name == "." {
-		return nil, errNoPackageName
-	}
-
-	return &packages.Package{
-		Name: name,
-	}, nil
 }
 
 // AST returns package's abstract syntax tree

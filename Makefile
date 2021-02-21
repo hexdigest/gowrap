@@ -1,10 +1,22 @@
-lint:
-	golint ./... && go vet ./...
+export GOBIN := $(PWD)/bin
+export PATH := $(GOBIN):$(PATH)
 
-test:
-	go generate ./... && go test -race ./...
+./bin:
+	mkdir ./bin
 
-install:
+./bin/gowrap: ./bin
 	go install ./cmd/gowrap
 
-all: lint test install
+./bin/golangci-lint: ./bin
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint
+
+lint: ./bin/golangci-lint
+	./bin/golangci-lint run --enable=goimports --disable=unused --exclude=S1023,"Error return value" ./...
+
+test:
+	 go test -race ./...
+
+generate: ./bin/gowrap
+	go generate ./...
+
+all: ./bin/gowrap generate lint test
