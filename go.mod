@@ -3,6 +3,7 @@ module github.com/hexdigest/gowrap
 require (
 	github.com/gojuno/minimock/v3 v3.0.4
 	github.com/golangci/golangci-lint v1.37.1 // indirect
+	github.com/iancoleman/strcase v0.1.3 // indirect
 	github.com/opentracing/opentracing-go v1.0.2
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.0.0

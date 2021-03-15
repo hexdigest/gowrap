@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"go/ast"
 	"strings"
+
+	"github.com/iancoleman/strcase"
 )
 
 type typePrinter interface {
@@ -59,6 +61,17 @@ func (p Param) Pass() string {
 		return p.Name + "..."
 	}
 	return p.Name
+}
+
+func (p Param) Tags() []string {
+	tags := []string{"db", "json", "form", "pg"}
+	var res []string
+	name := strcase.ToSnake(p.Name)
+	for _, tag := range tags {
+		res = append(res, fmt.Sprintf("%s:\"%s\"", tag, name))
+	}
+
+	return res
 }
 
 // NewMethod returns pointer to Signature struct or error
@@ -230,9 +243,9 @@ func (m Method) ParamsStruct() string {
 	ss := []string{}
 	for _, p := range m.Params {
 		if p.Variadic {
-			ss = append(ss, p.Name+" "+strings.Replace(p.Type, "...", "[]", 1))
+			ss = append(ss, p.Name+" "+strings.Replace(p.Type, "...", "[]", 1)+fmt.Sprintf(" `%s`", strings.Join(p.Tags(), " ")))
 		} else {
-			ss = append(ss, p.Name+" "+p.Type)
+			ss = append(ss, p.Name+" "+p.Type+fmt.Sprintf(" `%s`", strings.Join(p.Tags(), " ")))
 		}
 	}
 	return "struct{\n" + strings.Join(ss, "\n ") + "}"

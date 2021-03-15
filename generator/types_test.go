@@ -76,7 +76,7 @@ func TestMethod_ParamsStruct(t *testing.T) {
 		Name:   "method",
 		Params: []Param{{Name: "s", Type: "...string", Variadic: true}},
 	}
-	assert.Equal(t, "struct{\ns []string}", m.ParamsStruct())
+	assert.Equal(t, "struct{\ns []string `db:\"s\" json:\"s\" form:\"s\"`}", m.ParamsStruct())
 }
 
 func TestMethod_ResultsStruct(t *testing.T) {
