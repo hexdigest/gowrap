@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"text/template"
 	"unicode"
@@ -255,11 +256,12 @@ func varsToArgs(v vars) string {
 }
 
 var helperFuncs = template.FuncMap{
-	"up":        strings.ToUpper,
-	"down":      strings.ToLower,
-	"upFirst":   upFirst,
-	"downFirst": downFirst,
-	"replace":   strings.ReplaceAll,
+	"up":          strings.ToUpper,
+	"down":        strings.ToLower,
+	"upFirst":     upFirst,
+	"downFirst":   downFirst,
+	"replace":     strings.ReplaceAll,
+	"toSnakeCase": toSnakeCase,
 }
 
 func upFirst(s string) string {
@@ -274,6 +276,15 @@ func downFirst(s string) string {
 		return string(unicode.ToLower(v)) + s[len(string(v)):]
 	}
 	return ""
+}
+
+var matchFirstCap = regexp.MustCompile("(.)([A-Z][a-z]+)")
+var matchAllCap = regexp.MustCompile("([a-z0-9])([A-Z])")
+
+func toSnakeCase(str string) string {
+	snake := matchFirstCap.ReplaceAllString(str, "${1}_${2}")
+	snake = matchAllCap.ReplaceAllString(snake, "${1}_${2}")
+	return strings.ToLower(snake)
 }
 
 const headerTemplate = `package {{.Package.Name}}
