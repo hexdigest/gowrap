@@ -127,7 +127,8 @@ func NewMethod(name string, fi *ast.Field, printer typePrinter) (*Method, error)
 }
 
 // NewParam returns Param struct
-func NewParam(name string, typ ast.Expr, usedNames map[string]bool, printer typePrinter, fi *ast.Field) (*Param, error) {
+func NewParam(name string, fi *ast.Field, usedNames map[string]bool, printer typePrinter) (*Param, error) {
+	typ := fi.Type
 	if name == "" || usedNames[name] {
 		name = genName(typePrefix(typ), 1, usedNames)
 	}
@@ -172,14 +173,14 @@ func makeParams(params *ast.FieldList, usedNames map[string]bool, printer typePr
 		//for anonymous parameters we generate params and results names
 		//based on their type
 		if p.Names == nil {
-			param, err := NewParam("", p.Type, usedNames, printer, p)
+			param, err := NewParam("", p, usedNames, printer)
 			if err != nil {
 				return nil, err
 			}
 			result = append(result, *param)
 		} else {
 			for _, ident := range p.Names {
-				param, err := NewParam(ident.Name, p.Type, usedNames, printer, p)
+				param, err := NewParam(ident.Name, p, usedNames, printer)
 				if err != nil {
 					return nil, err
 				}
