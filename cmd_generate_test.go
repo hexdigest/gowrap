@@ -437,6 +437,6 @@ func Test_toSnakeCase(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		assert.Equal(t, test.want, snake(test.input))
+		assert.Equal(t, test.want, toSnakeCase(test.input))
 	}
 }
