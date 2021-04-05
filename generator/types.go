@@ -66,7 +66,7 @@ func (p Param) Pass() string {
 }
 
 // NewMethod returns pointer to Signature struct or error
-func NewMethod(name string, f *ast.FuncType, printer typePrinter, fi *ast.Field) (*Method, error) {
+func NewMethod(name string, fi *ast.Field, printer typePrinter) (*Method, error) {
 	m := Method{Name: name}
 	if fi.Doc != nil && len(fi.Doc.List) > 0 {
 		m.Doc = make([]string, 0, len(fi.Doc.List))
@@ -84,29 +84,35 @@ func NewMethod(name string, f *ast.FuncType, printer typePrinter, fi *ast.Field)
 
 	usedNames := map[string]bool{}
 
-	//Always name the last return parameter as an "err" if it's of type "error"
-	if f.Results != nil {
-		ident, ok := f.Results.List[len(f.Results.List)-1].Type.(*ast.Ident)
-		m.ReturnsError = ok && ident.Name == "error"
-		usedNames["err"] = true
-	}
-
-	if len(f.Params.List) > 0 {
-		if se, ok := f.Params.List[0].Type.(*ast.SelectorExpr); ok {
-			m.AcceptsContext = ok && se.Sel.Name == "Context"
-			usedNames["ctx"] = true
+	switch f := fi.Type.(type) {
+	case *ast.FuncType:
+		//Always name the last return parameter as an "err" if it's of type "error"
+		if f.Results != nil {
+			ident, ok := f.Results.List[len(f.Results.List)-1].Type.(*ast.Ident)
+			m.ReturnsError = ok && ident.Name == "error"
+			usedNames["err"] = true
 		}
-	}
 
-	var err error
+		if len(f.Params.List) > 0 {
+			if se, ok := f.Params.List[0].Type.(*ast.SelectorExpr); ok {
+				m.AcceptsContext = ok && se.Sel.Name == "Context"
+				usedNames["ctx"] = true
+			}
+		}
 
-	m.Params, err = makeParams(f.Params, usedNames, printer)
-	if err != nil {
-		return nil, err
-	}
-	m.Results, err = makeParams(f.Results, usedNames, printer)
-	if err != nil {
-		return nil, err
+		var err error
+
+		m.Params, err = makeParams(f.Params, usedNames, printer)
+		if err != nil {
+			return nil, err
+		}
+		m.Results, err = makeParams(f.Results, usedNames, printer)
+		if err != nil {
+			return nil, err
+		}
+
+	default:
+		return nil, fmt.Errorf("%s not a method", name)
 	}
 
 	if m.ReturnsError {
