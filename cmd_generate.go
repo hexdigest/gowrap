@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"text/template"
 	"unicode"
@@ -260,6 +261,7 @@ var helperFuncs = template.FuncMap{
 	"upFirst":   upFirst,
 	"downFirst": downFirst,
 	"replace":   strings.ReplaceAll,
+	"snake":     toSnakeCase,
 }
 
 func upFirst(s string) string {
@@ -274,6 +276,15 @@ func downFirst(s string) string {
 		return string(unicode.ToLower(v)) + s[len(string(v)):]
 	}
 	return ""
+}
+
+var matchFirstCap = regexp.MustCompile("(.)([A-Z][a-z]+)")
+var matchAllCap = regexp.MustCompile("([a-z0-9])([A-Z])")
+
+func toSnakeCase(str string) string {
+	result := matchFirstCap.ReplaceAllString(str, "${1}_${2}")
+	result = matchAllCap.ReplaceAllString(result, "${1}_${2}")
+	return strings.ToLower(result)
 }
 
 const headerTemplate = `package {{.Package.Name}}
