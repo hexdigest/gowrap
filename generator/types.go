@@ -69,7 +69,7 @@ func (p Param) Pass() string {
 func NewMethod(name string, fi *ast.Field, printer typePrinter) (*Method, error) {
 	f, ok := fi.Type.(*ast.FuncType)
 	if !ok {
-		return nil, fmt.Errorf("%s not a method", name)
+		return nil, fmt.Errorf("%q is not a method", name)
 	}
 
 	m := Method{Name: name}
