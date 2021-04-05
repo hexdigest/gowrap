@@ -261,7 +261,7 @@ var helperFuncs = template.FuncMap{
 	"upFirst":   upFirst,
 	"downFirst": downFirst,
 	"replace":   strings.ReplaceAll,
-	"snake":     snake,
+	"snake":     toSnakeCase,
 }
 
 func upFirst(s string) string {
@@ -281,7 +281,7 @@ func downFirst(s string) string {
 var matchFirstCap = regexp.MustCompile("(.)([A-Z][a-z]+)")
 var matchAllCap = regexp.MustCompile("([a-z0-9])([A-Z])")
 
-func snake(str string) string {
+func toSnakeCase(str string) string {
 	result := matchFirstCap.ReplaceAllString(str, "${1}_${2}")
 	result = matchAllCap.ReplaceAllString(result, "${1}_${2}")
 	return strings.ToLower(result)
