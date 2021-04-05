@@ -12,6 +12,8 @@ type typePrinter interface {
 
 // Method represents a method's signature
 type Method struct {
+	Doc     []string
+	Comment []string
 	Name    string
 	Params  ParamsSlice
 	Results ParamsSlice
@@ -22,6 +24,8 @@ type Method struct {
 
 // Param represents fuction argument or result
 type Param struct {
+	Doc      []string
+	Comment  []string
 	Name     string
 	Type     string
 	Variadic bool
@@ -62,8 +66,27 @@ func (p Param) Pass() string {
 }
 
 // NewMethod returns pointer to Signature struct or error
-func NewMethod(name string, f *ast.FuncType, printer typePrinter) (*Method, error) {
+func NewMethod(name string, fi *ast.Field, printer typePrinter) (*Method, error) {
+	f, ok := fi.Type.(*ast.FuncType)
+	if !ok {
+		return nil, fmt.Errorf("%q is not a method", name)
+	}
+
 	m := Method{Name: name}
+	if fi.Doc != nil && len(fi.Doc.List) > 0 {
+		m.Doc = make([]string, 0, len(fi.Doc.List))
+		for _, comment := range fi.Doc.List {
+			m.Doc = append(m.Doc, comment.Text)
+		}
+	}
+
+	if fi.Comment != nil && len(fi.Comment.List) > 0 {
+		m.Comment = make([]string, 0, len(fi.Comment.List))
+		for _, comment := range fi.Comment.List {
+			m.Comment = append(m.Comment, comment.Text)
+		}
+	}
+
 	usedNames := map[string]bool{}
 
 	//Always name the last return parameter as an "err" if it's of type "error"
@@ -103,7 +126,8 @@ func NewMethod(name string, f *ast.FuncType, printer typePrinter) (*Method, erro
 }
 
 // NewParam returns Param struct
-func NewParam(name string, typ ast.Expr, usedNames map[string]bool, printer typePrinter) (*Param, error) {
+func NewParam(name string, fi *ast.Field, usedNames map[string]bool, printer typePrinter) (*Param, error) {
+	typ := fi.Type
 	if name == "" || usedNames[name] {
 		name = genName(typePrefix(typ), 1, usedNames)
 	}
@@ -116,11 +140,26 @@ func NewParam(name string, typ ast.Expr, usedNames map[string]bool, printer type
 	}
 
 	_, variadic := typ.(*ast.Ellipsis)
-	return &Param{
+	p := &Param{
 		Name:     name,
 		Variadic: variadic,
 		Type:     typeStr,
-	}, nil
+	}
+	if fi.Doc != nil && len(fi.Doc.List) > 0 {
+		p.Doc = make([]string, 0, len(fi.Doc.List))
+		for _, comment := range fi.Doc.List {
+			p.Doc = append(p.Doc, comment.Text)
+		}
+	}
+
+	if fi.Comment != nil && len(fi.Comment.List) > 0 {
+		p.Comment = make([]string, 0, len(fi.Comment.List))
+		for _, comment := range fi.Comment.List {
+			p.Comment = append(p.Comment, comment.Text)
+		}
+	}
+
+	return p, nil
 }
 
 func makeParams(params *ast.FieldList, usedNames map[string]bool, printer typePrinter) (ParamsSlice, error) {
@@ -133,14 +172,14 @@ func makeParams(params *ast.FieldList, usedNames map[string]bool, printer typePr
 		//for anonymous parameters we generate params and results names
 		//based on their type
 		if p.Names == nil {
-			param, err := NewParam("", p.Type, usedNames, printer)
+			param, err := NewParam("", p, usedNames, printer)
 			if err != nil {
 				return nil, err
 			}
 			result = append(result, *param)
 		} else {
 			for _, ident := range p.Names {
-				param, err := NewParam(ident.Name, p.Type, usedNames, printer)
+				param, err := NewParam(ident.Name, p, usedNames, printer)
 				if err != nil {
 					return nil, err
 				}

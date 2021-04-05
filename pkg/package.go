@@ -35,7 +35,7 @@ func Load(path string) (*packages.Package, error) {
 func AST(fs *token.FileSet, p *packages.Package) (*ast.Package, error) {
 	dir := Dir(p)
 
-	pkgs, err := parser.ParseDir(fs, dir, nil, parser.DeclarationErrors)
+	pkgs, err := parser.ParseDir(fs, dir, nil, parser.DeclarationErrors|parser.ParseComments)
 	if err != nil {
 		return nil, err
 	}
