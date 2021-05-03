@@ -25,7 +25,7 @@ generate: ./bin/gowrap
 all: ./bin/gowrap generate lint test
 
 release: ./bin/goreleaser
-	goreleaser
+	goreleaser release
 
 build: ./bin/goreleaser
 	goreleaser build
