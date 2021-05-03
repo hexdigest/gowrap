@@ -7,6 +7,8 @@ import (
 	"text/template"
 )
 
+var version string = "dev"
+
 // Command interface represents gowrap subcommand
 type Command interface {
 	//FlagSet returns command specific flag set. If command doesn't have any flags nil should be returned.
@@ -69,17 +71,20 @@ func GetCommand(name string) Command {
 
 // Usage writes gowrap usage message to w
 func Usage(w io.Writer) error {
-	return usageTemplate.Execute(w, commands)
+	return usageTemplate.Execute(w, struct {
+		Commands map[string]Command
+		Version  string
+	}{commands, version})
 }
 
-var usageTemplate = template.Must(template.New("usage").Parse(`GoWrap is a tool for generating decorators for the Go interfaces
+var usageTemplate = template.Must(template.New("usage").Parse(`GoWrap({{.Version}}) is a tool for generating decorators for the Go interfaces
 
 Usage:
 
 	gowrap command [arguments]
 
 The commands are:
-{{ range $name, $cmd := . }}
+{{ range $name, $cmd := .Commands }}
 	{{ printf "%-10s" $name }}{{ $cmd.ShortDescription }}
 {{ end }}
 Use "gowrap help [command]" for more information about a command.

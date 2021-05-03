@@ -10,6 +10,9 @@ export PATH := $(GOBIN):$(PATH)
 ./bin/golangci-lint: ./bin
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint
 
+./bin/goreleaser:
+	go install github.com/goreleaser/goreleaser
+
 lint: ./bin/golangci-lint
 	./bin/golangci-lint run --enable=goimports --disable=unused --exclude=S1023,"Error return value" ./...
 
@@ -20,3 +23,9 @@ generate: ./bin/gowrap
 	go generate ./...
 
 all: ./bin/gowrap generate lint test
+
+release: ./bin/goreleaser
+	goreleaser
+
+build: ./bin/goreleaser
+	goreleaser build
