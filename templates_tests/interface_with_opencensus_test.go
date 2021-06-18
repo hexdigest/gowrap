@@ -3,8 +3,9 @@ package templatestests
 import (
 	"context"
 	"errors"
-	"go.opencensus.io/trace"
 	"testing"
+
+	"go.opencensus.io/trace"
 
 	minimock "github.com/gojuno/minimock/v3"
 	"github.com/stretchr/testify/assert"
