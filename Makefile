@@ -1,5 +1,6 @@
 export GOBIN := $(PWD)/bin
 export PATH := $(GOBIN):$(PATH)
+export GOFLAGS := -mod=mod
 
 ./bin:
 	mkdir ./bin
