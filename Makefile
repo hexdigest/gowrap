@@ -1,5 +1,6 @@
 export GOBIN := $(PWD)/bin
 export PATH := $(GOBIN):$(PATH)
+export GOFLAGS := -mod=mod
 
 ./bin:
 	mkdir ./bin
@@ -8,7 +9,7 @@ export PATH := $(GOBIN):$(PATH)
 	go install ./cmd/gowrap
 
 ./bin/golangci-lint: ./bin
-	go install github.com/golangci/golangci-lint/cmd/golangci-lint
+	go get github.com/golangci/golangci-lint/cmd/golangci-lint
 
 ./bin/goreleaser:
 	go install github.com/goreleaser/goreleaser
@@ -28,4 +29,4 @@ release: ./bin/goreleaser
 	goreleaser release
 
 build: ./bin/goreleaser
-	goreleaser build
+	goreleaser build --snapshot --rm-dist
