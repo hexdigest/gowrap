@@ -28,6 +28,7 @@ type GenerateCommand struct {
 	sourcePkg     string
 	noGenerate    bool
 	vars          vars
+	localPrefix   string
 
 	loader   templateLoader
 	filepath fs
@@ -54,6 +55,7 @@ func NewGenerateCommand(l remoteTemplateLoader) *GenerateCommand {
 	fs.StringVar(&gc.template, "t", "", "the template to use, it can be an HTTPS URL, local file or a\nreference to a template in gowrap repository,\n"+
 		"run `gowrap template list` for details")
 	fs.Var(&gc.vars, "v", "a key-value pair to parametrize the template,\narguments without an equal sign are treated as a bool values,\ni.e. -v foo=bar -v disableChecks")
+	fs.StringVar(&gc.localPrefix, "l", "", "put imports beginning with this string after 3rd-party packages; comma-separated list")
 
 	gc.BaseCommand = BaseCommand{
 		Short: "generate decorators",
@@ -126,7 +128,8 @@ func (gc *GenerateCommand) getOptions() (*generator.Options, error) {
 			"OutputFileName":    filepath.Base(gc.outputFile),
 			"VarsArgs":          varsToArgs(gc.vars),
 		},
-		Vars: gc.vars.toMap(),
+		Vars:        gc.vars.toMap(),
+		LocalPrefix: gc.localPrefix,
 	}
 
 	outputFileDir, err := gc.filepath.Abs(gc.filepath.Dir(gc.outputFile))
@@ -294,7 +297,7 @@ const headerTemplate = `package {{.Package.Name}}
 // gowrap: http://github.com/hexdigest/gowrap
 
 {{if (not .Options.HeaderVars.DisableGoGenerate)}}
-//{{"go:generate"}} gowrap gen -p {{.SourcePackage.PkgPath}} -i {{.Options.InterfaceName}} -t {{.Options.HeaderVars.Template}} -o {{.Options.HeaderVars.OutputFileName}}{{.Options.HeaderVars.VarsArgs}}
+//{{"go:generate"}} gowrap gen -p {{.SourcePackage.PkgPath}} -i {{.Options.InterfaceName}} -t {{.Options.HeaderVars.Template}} -o {{.Options.HeaderVars.OutputFileName}}{{.Options.HeaderVars.VarsArgs}} -l "{{.Options.LocalPrefix}}"
 {{end}}
 
 `
