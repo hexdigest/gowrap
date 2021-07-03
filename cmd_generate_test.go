@@ -3,6 +3,7 @@ package gowrap
 import (
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -228,6 +229,40 @@ func TestGenerateCommand_Run(t *testing.T) {
 				cmd.loader = newRemoteTemplateLoaderMock(t).LoadMock.Return([]byte("//comment"), "local/file", nil)
 				cmd.filepath.WriteFile = func(string, []byte, os.FileMode) error { return nil }
 				return cmd
+			},
+			wantErr: false,
+		},
+		{
+			name: "success with local prefixes",
+			args: []string{"-o", "out.file", "-i", "Command", "-t", "template/template", "-l", "foobar.com/pkg"},
+			init: func(mt minimock.Tester) *GenerateCommand {
+				cmd := NewGenerateCommand(nil)
+				cmd.loader = newRemoteTemplateLoaderMock(mt).LoadMock.Return([]byte(`import (
+	_ "foobar.com/pkg"
+	_ "github.com/pkg/errors"
+	_ "fmt"
+)`), "local/file", nil)
+
+				cmd.filepath.WriteFile = func(filename string, data []byte, perm os.FileMode) error {
+					cmd.outputFile = filepath.Join(t.TempDir(), cmd.outputFile)
+					return os.WriteFile(cmd.outputFile, data, perm)
+				}
+				return cmd
+			},
+			inspect: func(cmd *GenerateCommand, t *testing.T) {
+				assert.EqualValues(t, "foobar.com/pkg", cmd.localPrefix)
+
+				data, err := os.ReadFile(cmd.outputFile)
+				assert.NoError(t, err)
+
+				assert.Contains(t, string(data), `-l "foobar.com/pkg"`)
+				assert.Contains(t, string(data), `import (
+	_ "fmt"
+
+	_ "github.com/pkg/errors"
+
+	_ "foobar.com/pkg"
+)`)
 			},
 			wantErr: false,
 		},

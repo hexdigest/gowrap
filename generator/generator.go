@@ -29,6 +29,7 @@ type Generator struct {
 	dstPackage     *packages.Package
 	methods        methodsList
 	interfaceType  string
+	localPrefix    string
 }
 
 // TemplateInputs information passed to template for generation
@@ -120,6 +121,10 @@ type Options struct {
 
 	//Funcs is a map of helper functions that can be used within a template
 	Funcs template.FuncMap
+
+	//LocalPrefix is a comma-separated string of import path prefixes, which, if set, instructs Process to sort the import
+	//paths with the given prefixes into another group after 3rd-party packages.
+	LocalPrefix string
 }
 
 var errEmptyInterface = errors.New("interface has no methods")
@@ -204,6 +209,7 @@ func NewGenerator(options Options) (*Generator, error) {
 		dstPackage:     dstPackage,
 		interfaceType:  interfaceType,
 		methods:        methods,
+		localPrefix:    options.LocalPrefix,
 	}, nil
 }
 
@@ -270,6 +276,7 @@ func (g Generator) Generate(w io.Writer) error {
 		return err
 	}
 
+	imports.LocalPrefix = g.localPrefix
 	processedSource, err := imports.Process(g.Options.OutputFile, buf.Bytes(), nil)
 	if err != nil {
 		return errors.Wrapf(err, "failed to format generated code:\n%s", buf)
