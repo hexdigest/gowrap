@@ -4,7 +4,7 @@ import (
 
 {{ $decorator := (or .Vars.DecoratorName (printf "%sWithTwirpError" .Interface.Name)) }}
 
-// {{$decorator}} implements {{.Interface.Type}} interface instrumented with arguments validation
+// {{$decorator}} implements {{.Interface.Type}} interface instrumented such that the request data is injected into twirp.Error as metadata
 type {{$decorator}} struct {
   {{.Interface.Type}}
 }
