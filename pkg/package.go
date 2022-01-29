@@ -14,7 +14,7 @@ var errPackageNotFound = errors.New("package not found")
 
 // Load loads package by its import path
 func Load(path string) (*packages.Package, error) {
-	cfg := &packages.Config{Mode: packages.NeedName | packages.NeedFiles | packages.NeedCompiledGoFiles}
+	cfg := &packages.Config{Mode: packages.NeedName | packages.NeedFiles | packages.NeedCompiledGoFiles | packages.NeedImports | packages.NeedDeps}
 	pkgs, err := packages.Load(cfg, path)
 	if err != nil {
 		return nil, err

@@ -13,6 +13,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/tools/go/packages"
 )
 
 func Test_unquote(t *testing.T) {
@@ -51,77 +52,59 @@ func Test_unquote(t *testing.T) {
 	}
 }
 
-func Test_importPathByPrefix(t *testing.T) {
+func Test_findImportPathForName(t *testing.T) {
 	type args struct {
+		name    string
 		imports []*ast.ImportSpec
-		prefix  string
+		cp      *packages.Package
 	}
 	tests := []struct {
 		name string
 		args args
 
-		inspectErr func(*testing.T, error)
-
-		want1   string
-		wantErr bool
+		want    string
+		wantErr error
 	}{
 		{
-			name: "prefix in import statement",
+			name: "path from import name",
 			args: args{
-				imports: []*ast.ImportSpec{{Name: &ast.Ident{Name: "myio"}, Path: &ast.BasicLit{Value: "io"}}},
-				prefix:  "myio",
+				name:    "pkg",
+				imports: []*ast.ImportSpec{{Name: &ast.Ident{Name: "pkg"}, Path: &ast.BasicLit{Value: "domain/pkgname"}}},
 			},
-			wantErr: false,
-			want1:   "io",
+			want: "domain/pkgname",
 		},
 		{
-			name: "failed to load package",
+			name: "path from package imports",
 			args: args{
-				imports: []*ast.ImportSpec{{Name: &ast.Ident{Name: "myio"}, Path: &ast.BasicLit{Value: "unexisting_package"}}},
-				prefix:  "unexisting_package",
+				name: "pkg",
+				cp: &packages.Package{
+					Imports: map[string]*packages.Package{
+						"domain/pkgname": {
+							Name: "pkg",
+						},
+					},
+				},
 			},
-			wantErr: true,
+			want: "domain/pkgname",
 		},
 		{
-			name: "success",
+			name: "not found",
 			args: args{
-				imports: []*ast.ImportSpec{{Path: &ast.BasicLit{Value: "io"}}},
-				prefix:  "io",
+				name: "pkg",
+				cp:   &packages.Package{},
 			},
-			want1:   "io",
-			wantErr: false,
-		},
-		{
-			name: "unknown prefix",
-			args: args{
-				imports: []*ast.ImportSpec{{Path: &ast.BasicLit{Value: "io"}}},
-				prefix:  "unknown_prefix",
-			},
-			inspectErr: func(t *testing.T, err error) {
-				assert.Equal(t, errUnknownSelector, err)
-			},
-			wantErr: true,
+			wantErr: errors.Wrapf(errUnknownSelector, "pkg"),
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mc := minimock.NewController(t)
-			defer mc.Wait(time.Second)
-
-			got1, err := importPathByPrefix(tt.args.imports, tt.args.prefix)
-
-			assert.Equal(t, tt.want1, got1, "importPathByPrefix returned unexpected result")
-
-			if tt.wantErr {
-				assert.Error(t, err)
-				if tt.inspectErr != nil {
-					tt.inspectErr(t, err)
-				}
+			path, err := findImportPathForName(tt.args.name, tt.args.imports, tt.args.cp)
+			if tt.wantErr != nil {
+				assert.EqualError(t, err, tt.wantErr.Error())
 			} else {
-				assert.NoError(t, err)
+				assert.Equal(t, tt.want, path)
 			}
-
 		})
 	}
 }
@@ -179,7 +162,7 @@ func Test_processIdent(t *testing.T) {
 			mc := minimock.NewController(t)
 			defer mc.Wait(time.Second)
 
-			got1, err := processIdent(tt.args.fs, tt.args.i, tt.args.types, tt.args.typesPrefix, tt.args.imports)
+			got1, err := processIdent(tt.args.fs, nil, tt.args.i, tt.args.types, tt.args.typesPrefix, tt.args.imports)
 
 			assert.Equal(t, tt.want1, got1, "processIdent returned unexpected result")
 
@@ -266,6 +249,7 @@ func Test_mergeMethods(t *testing.T) {
 func Test_processSelector(t *testing.T) {
 	type args struct {
 		fs      *token.FileSet
+		cp      *packages.Package
 		se      *ast.SelectorExpr
 		imports []*ast.ImportSpec
 	}
@@ -278,17 +262,19 @@ func Test_processSelector(t *testing.T) {
 		inspectErr func(err error, t *testing.T)
 	}{
 		{
-			name: "import not found",
+			name: "import with name not found",
 			args: args{
 				se: &ast.SelectorExpr{X: &ast.Ident{Name: "unknown"}, Sel: &ast.Ident{Name: "unknown"}},
+				cp: &packages.Package{Imports: nil},
 			},
 			wantErr: true,
 		},
 		{
-			name: "import failed",
+			name: "import not found",
 			args: args{
 				se:      &ast.SelectorExpr{X: &ast.Ident{Name: "unknownpackage"}, Sel: &ast.Ident{Name: "Unknown"}},
-				imports: []*ast.ImportSpec{{Name: &ast.Ident{Name: "unknownpackage"}, Path: &ast.BasicLit{Value: "unknown_path"}}},
+				imports: []*ast.ImportSpec{{Path: &ast.BasicLit{Value: "unknown_path"}}},
+				cp:      &packages.Package{Imports: nil},
 			},
 			wantErr: true,
 		},
@@ -298,6 +284,9 @@ func Test_processSelector(t *testing.T) {
 				se:      &ast.SelectorExpr{X: &ast.Ident{Name: "io"}, Sel: &ast.Ident{Name: "UnknownInterface"}},
 				imports: []*ast.ImportSpec{{Path: &ast.BasicLit{Value: "io"}}},
 				fs:      token.NewFileSet(),
+				cp: &packages.Package{Imports: map[string]*packages.Package{
+					"io": {},
+				}},
 			},
 			wantErr: true,
 		},
@@ -305,7 +294,7 @@ func Test_processSelector(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got1, err := processSelector(tt.args.fs, tt.args.se, tt.args.imports)
+			got1, err := processSelector(tt.args.fs, tt.args.cp, tt.args.se, tt.args.imports)
 
 			assert.Equal(t, tt.want1, got1, "processSelector returned unexpected result")
 
@@ -324,6 +313,7 @@ func Test_processSelector(t *testing.T) {
 func Test_processInterface(t *testing.T) {
 	type args struct {
 		fs          *token.FileSet
+		cp          *packages.Package
 		it          *ast.InterfaceType
 		types       []*ast.TypeSpec
 		typesPrefix string
@@ -350,6 +340,7 @@ func Test_processInterface(t *testing.T) {
 			name: "selector expression",
 			args: args{
 				fs: token.NewFileSet(),
+				cp: &packages.Package{Imports: nil},
 				it: &ast.InterfaceType{Methods: &ast.FieldList{List: []*ast.Field{
 					{
 						Names: []*ast.Ident{{Name: "methodName"}},
@@ -390,7 +381,7 @@ func Test_processInterface(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got1, err := processInterface(tt.args.fs, tt.args.it, tt.args.types, tt.args.typesPrefix, tt.args.imports)
+			got1, err := processInterface(tt.args.fs, tt.args.cp, tt.args.it, tt.args.types, tt.args.typesPrefix, tt.args.imports)
 
 			assert.Equal(t, tt.want1, got1, "processInterface returned unexpected result")
 
@@ -462,7 +453,7 @@ func Test_findInterface(t *testing.T) {
 			mc := minimock.NewController(t)
 			defer mc.Wait(time.Second)
 
-			got1, _, err := findInterface(tt.args.fs, tt.args.p, tt.args.interfaceName)
+			got1, _, err := findInterface(tt.args.fs, nil, tt.args.p, tt.args.interfaceName)
 
 			assert.Equal(t, tt.want1, got1, "findInterface returned unexpected result")
 
