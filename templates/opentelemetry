@@ -39,8 +39,10 @@ func (_d {{$decorator}}) {{$method.Declaration}} {
       _d._spanDecorator(_span, {{$method.ParamsMap}}, {{$method.ResultsMap}})
     }{{- if $method.ReturnsError}} else if err != nil {
       _span.RecordError(err)
-      _span.SetAttributes(attribute.String("event", "error"))
-      _span.SetAttributes(attribute.String("message", err.Error()))
+      _span.SetAttributes(
+        attribute.String("event", "error"),
+        attribute.String("message", err.Error()),
+      )
     }
     {{end}}
     _span.End()

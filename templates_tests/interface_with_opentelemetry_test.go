@@ -46,8 +46,8 @@ func TestTestInterfaceWithOpenTelemetryTracing_F(t *testing.T) {
 		defer mc.Finish()
 
 		span := NewOpentelemetrySpanMock(mc)
-		span.EndMock.Expect().Return()
 		span.RecordErrorMock.Expect(err)
+		span.EndMock.Expect().Return()
 		span.SetAttributesMock.
 			Inspect(func(kv ...attribute.KeyValue) {
 				assert.Equal(t, string(kv[0].Key), "event")
