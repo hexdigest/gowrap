@@ -12,7 +12,7 @@ type {{$decorator}} struct {
   interval time.Duration
 }
 
-// New{{$decorator}} takes several implementations of the {{.Interface.Type}} and returns an instance of {{.Interface.Type}} 
+// New{{$decorator}} takes several implementations of the {{.Interface.Type}} and returns an instance of {{.Interface.Type}}
 // which calls all implementations concurrently with given interval and returns first non-error response.
 func New{{$decorator}}(interval time.Duration, impls ...{{.Interface.Type}}) {{$decorator}} {
   return {{$decorator}}{implementations: impls, interval: interval}
@@ -39,7 +39,10 @@ func New{{$decorator}}(interval time.Duration, impls ...{{.Interface.Type}}) {{$
               err = fmt.Errorf("%T: %v", _impl, err)
             }
           {{end}}
-          _ch <- _resultStruct{ {{$method.ResultsNames}} }
+          select {
+            case _ch <- _resultStruct{ {{$method.ResultsNames}} }:
+            default:
+          }
         }(_d.implementations[_i])
 
         _tickerCh := _ticker.C

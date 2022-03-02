@@ -37,7 +37,10 @@ func (_d TestInterfaceWithFallback) Channels(chA chan bool, chB chan<- bool, cha
 	for _i := 0; _i < len(_d.implementations); _i++ {
 		go func(_impl TestInterface) {
 			_impl.Channels(chA, chB, chanC)
-			_ch <- _resultStruct{}
+			select {
+			case _ch <- _resultStruct{}:
+			default:
+			}
 		}(_d.implementations[_i])
 
 		_tickerCh := _ticker.C
@@ -77,7 +80,10 @@ _loop:
 				err = fmt.Errorf("%T: %v", _impl, err)
 			}
 
-			_ch <- _resultStruct{result1, result2, err}
+			select {
+			case _ch <- _resultStruct{result1, result2, err}:
+			default:
+			}
 		}(_d.implementations[_i])
 
 		_tickerCh := _ticker.C
@@ -116,7 +122,10 @@ func (_d TestInterfaceWithFallback) NoError(s1 string) (s2 string) {
 	for _i := 0; _i < len(_d.implementations); _i++ {
 		go func(_impl TestInterface) {
 			s2 := _impl.NoError(s1)
-			_ch <- _resultStruct{s2}
+			select {
+			case _ch <- _resultStruct{s2}:
+			default:
+			}
 		}(_d.implementations[_i])
 
 		_tickerCh := _ticker.C
@@ -146,7 +155,10 @@ func (_d TestInterfaceWithFallback) NoParamsOrResults() {
 	for _i := 0; _i < len(_d.implementations); _i++ {
 		go func(_impl TestInterface) {
 			_impl.NoParamsOrResults()
-			_ch <- _resultStruct{}
+			select {
+			case _ch <- _resultStruct{}:
+			default:
+			}
 		}(_d.implementations[_i])
 
 		_tickerCh := _ticker.C
