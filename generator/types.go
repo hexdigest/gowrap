@@ -297,6 +297,18 @@ func (m Method) ParamsMap() string {
 	return "map[string]interface{}{\n" + strings.Join(ss, ",\n ") + "}"
 }
 
+// ParamsMapWithoutContext returns a string representation of the map[string]interface{}
+// filled with method's params excluding the context
+func (m Method) ParamsMapWithoutContext() string {
+	ss := []string{}
+	for _, p := range m.Params {
+		if p.Type != "context.Context" {
+			ss = append(ss, `"`+p.Name+`": `+p.Name)
+		}
+	}
+	return "map[string]interface{}{\n" + strings.Join(ss, ",\n ") + "}"
+}
+
 // ResultsMap returns a string representation of the map[string]interface{}
 // filled with method's results
 func (m Method) ResultsMap() string {
@@ -310,6 +322,26 @@ func (m Method) ResultsMap() string {
 // HasParams returns true if method has params
 func (m Method) HasParams() bool {
 	return len(m.Params) > 0
+}
+
+// HasContext returns true if method has a context
+func (m Method) HasContext() bool {
+	for _, p := range m.Params {
+		if p.Type == "context.Context" {
+			return true
+		}
+	}
+	return false
+}
+
+// GetContext returns the variable name of the context param
+func (m Method) GetContext() string {
+	for _, p := range m.Params {
+		if p.Type == "context.Context" {
+			return p.Name
+		}
+	}
+	return ""
 }
 
 // HasResults returns true if method has results

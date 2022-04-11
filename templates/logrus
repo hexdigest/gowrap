@@ -23,7 +23,11 @@ func New{{$decorator}}(base {{.Interface.Type}}, log *logrus.Entry) {{$decorator
   // {{$method.Name}} implements {{$.Interface.Type}}
   func (_d {{$decorator}}) {{$method.Declaration}} {
       {{- if $method.HasParams}}
-        _d._log.WithFields(logrus.Fields({{$method.ParamsMap}})).Debug("{{$decorator}}: calling {{$method.Name}}")
+          {{- if $method.HasContext}}
+            _d._log.WithContext({{$method.GetContext}}).WithFields(logrus.Fields({{$method.ParamsMapWithoutContext}})).Debug("{{$decorator}}: calling {{$method.Name}}")
+          {{else}}
+            _d._log.WithFields(logrus.Fields({{$method.ParamsMap}})).Debug("{{$decorator}}: calling {{$method.Name}}")
+          {{end -}}
       {{else}}
         _d._log.Debug("{{$decorator}}: calling {{$method.Name}}")
       {{end -}}

@@ -12,6 +12,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+type contextKey struct{}
+
+var key = contextKey{}
+
 func TestTestInterfaceWithLogrus_F(t *testing.T) {
 	t.Run("method returns an error", func(t *testing.T) {
 		errUnexpected := errors.New("unexpected error")
@@ -23,13 +27,16 @@ func TestTestInterfaceWithLogrus_F(t *testing.T) {
 			Out:       buf,
 			Formatter: &logrus.JSONFormatter{},
 			Level:     logrus.DebugLevel,
+			Hooks:     map[logrus.Level][]logrus.Hook{},
 		}
 
+		logger.AddHook(&ContextHook{})
 		entry := logrus.NewEntry(&logger)
 
 		wrapped := NewTestInterfaceWithLogrus(impl, entry)
 
-		r1, r2, err := wrapped.F(context.Background(), "a1")
+		ctx := context.WithValue(context.Background(), key, "it does")
+		r1, r2, err := wrapped.F(ctx, "a1")
 
 		assert.Error(t, err)
 		assert.Equal(t, "1", r1)
@@ -43,7 +50,7 @@ func TestTestInterfaceWithLogrus_F(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, "a1", callingRecord["a1"])
 		assert.Nil(t, callingRecord["a2"])
-		assert.EqualValues(t, 0, callingRecord["ctx"])
+		assert.EqualValues(t, "it does", callingRecord["has_context"])
 		assert.Equal(t, "TestInterfaceWithLogrus: calling F", callingRecord["msg"])
 
 		finishedRecord := make(map[string]interface{})
@@ -66,13 +73,16 @@ func TestTestInterfaceWithLogrus_F(t *testing.T) {
 			Out:       buf,
 			Formatter: &logrus.JSONFormatter{},
 			Level:     logrus.DebugLevel,
+			Hooks:     map[logrus.Level][]logrus.Hook{},
 		}
 
+		logger.AddHook(&ContextHook{})
 		entry := logrus.NewEntry(&logger)
 
 		wrapped := NewTestInterfaceWithLogrus(impl, entry)
 
-		r1, r2, err := wrapped.F(context.Background(), "a1")
+		ctx := context.WithValue(context.Background(), key, "yes")
+		r1, r2, err := wrapped.F(ctx, "a1")
 
 		assert.NoError(t, err)
 		assert.Equal(t, "1", r1)
@@ -86,7 +96,7 @@ func TestTestInterfaceWithLogrus_F(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, "a1", callingRecord["a1"])
 		assert.Nil(t, callingRecord["a2"])
-		assert.EqualValues(t, 0, callingRecord["ctx"])
+		assert.EqualValues(t, "yes", callingRecord["has_context"])
 		assert.Equal(t, "TestInterfaceWithLogrus: calling F", callingRecord["msg"])
 
 		finishedRecord := make(map[string]interface{})
@@ -103,4 +113,26 @@ func TestTestInterfaceWithLogrus_F(t *testing.T) {
 		assert.True(t, ok)
 		assert.Nil(t, errorMessage)
 	})
+}
+
+type ContextHook struct {
+}
+
+func (hook *ContextHook) Fire(entry *logrus.Entry) error {
+	if entry.Context != nil {
+		entry.Data["has_context"] = entry.Context.Value(key)
+	}
+	return nil
+}
+
+func (hook *ContextHook) Levels() []logrus.Level {
+	return []logrus.Level{
+		logrus.TraceLevel,
+		logrus.DebugLevel,
+		logrus.InfoLevel,
+		logrus.WarnLevel,
+		logrus.ErrorLevel,
+		logrus.FatalLevel,
+		logrus.PanicLevel,
+	}
 }
