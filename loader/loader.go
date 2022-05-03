@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -24,7 +26,8 @@ type httpClient interface {
 
 //Loader fetches remote templates from the project's github page or any HTTPS URL
 type Loader struct {
-	client httpClient
+	client  httpClient
+	gitRoot func() (string, error)
 }
 
 //New returns Loader
@@ -33,7 +36,7 @@ func New(client httpClient) Loader {
 		client = http.DefaultClient
 	}
 
-	return Loader{client: client}
+	return Loader{client: client, gitRoot: gitRootPath}
 }
 
 //Load returns template contents and template URL or error
@@ -43,9 +46,22 @@ func (l Loader) Load(path string) (tmpl []byte, url string, err error) {
 		body, err := l.get(path)
 		return body, path, err
 	}
+
 	if strings.HasPrefix(path, "file://") {
-		body, err := ioutil.ReadFile(path[len("file://"):])
-		return body, path, err
+		templatePath := path[len("file://"):]
+
+		if _, err := os.Stat(templatePath); os.IsNotExist(err) {
+			templatePath, err := l.absGitPath(templatePath)
+			if err != nil {
+				return tmpl, templatePath, err
+			}
+
+			body, err := ioutil.ReadFile(templatePath)
+			return body, templatePath, err
+		}
+
+		body, err := ioutil.ReadFile(templatePath)
+		return body, templatePath, err
 	}
 
 	return l.fetchFromGithub(path)
@@ -99,6 +115,15 @@ func (l Loader) get(url string) (b []byte, err error) {
 	}
 
 	return ioutil.ReadAll(resp.Body)
+}
+
+func (l Loader) absGitPath(path string) (string, error) {
+	gitRoot, err := l.gitRoot()
+	if err != nil {
+		return "", err
+	}
+
+	return filepath.Join(gitRoot, path), nil
 }
 
 var errTemplateNotFound = errors.New("remote template not found")
