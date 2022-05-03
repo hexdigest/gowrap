@@ -3,6 +3,7 @@ package loader
 import (
 	"encoding/json"
 	"io"
+	"io/fs"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -17,7 +18,7 @@ import (
 
 func TestNew(t *testing.T) {
 	l := New(nil)
-	assert.Equal(t, Loader{client: http.DefaultClient}, l)
+	assert.Equal(t, Loader{client: http.DefaultClient}.client, l.client)
 }
 
 func TestLoader_Load(t *testing.T) {
@@ -57,6 +58,41 @@ func TestLoader_Load(t *testing.T) {
 			wantErr: true,
 			inspectErr: func(err error, t *testing.T) {
 				assert.Equal(t, clientError, err)
+			},
+		},
+		{
+			name: "file relative path",
+			path: "file://testdata/.gitkeep",
+			init: func(t minimock.Tester) Loader {
+				return Loader{}
+			},
+			want1:   []byte{},
+			want2:   "testdata/.gitkeep",
+			wantErr: false,
+		},
+		{
+			name: "file absolute path",
+			path: "file:///tmp",
+			init: func(t minimock.Tester) Loader {
+				return Loader{}
+			},
+			want1:   []byte{},
+			want2:   "/tmp",
+			wantErr: true,
+			inspectErr: func(err error, t *testing.T) {
+				assert.ErrorAs(t, &fs.PathError{}, &err)
+			},
+		},
+		{
+			name: "file path relative to git root",
+			path: "file://log",
+			init: func(t minimock.Tester) Loader {
+				return Loader{gitRoot: mockGitRootPath("/home/git")}
+			},
+			want2:   "/home/git/log",
+			wantErr: true,
+			inspectErr: func(err error, t *testing.T) {
+				assert.ErrorAs(t, &fs.PathError{}, &err)
 			},
 		},
 	}
