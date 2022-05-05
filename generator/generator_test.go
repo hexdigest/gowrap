@@ -197,6 +197,27 @@ func Test_mergeMethods(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "duplicate methods should return outer method",
+			args: args{
+				ml1: methodsList{
+					"method": Method{
+						Doc: []string{"outer"},
+					},
+				},
+				ml2: methodsList{
+					"method": Method{
+						Doc: []string{"inner"},
+					},
+				},
+			},
+			wantErr: false,
+			want1: methodsList{
+				"method": {
+					Doc: []string{"outer"},
+				},
+			},
+		},
+		{
 			name: "success",
 			args: args{
 				ml1: methodsList{

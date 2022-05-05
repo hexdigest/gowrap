@@ -404,18 +404,19 @@ func processSelector(fs *token.FileSet, currentPackage *packages.Package, se *as
 	return methods, err
 }
 
-//mergeMethods merges two methods list
-func mergeMethods(ml1, ml2 methodsList) (methodsList, error) {
-	if ml1 == nil || ml2 == nil {
-		return ml1, nil
+//mergeMethods merges two methods list. Retains overlapping methods from the
+//parent list
+func mergeMethods(methods, embeddedMethods methodsList) (methodsList, error) {
+	if methods == nil || embeddedMethods == nil {
+		return methods, nil
 	}
 
-	result := make(methodsList, len(ml1)+len(ml2))
-	for k, v := range ml1 {
-		result[k] = v
+	result := make(methodsList, len(methods)+len(embeddedMethods))
+	for name, signature := range embeddedMethods {
+		result[name] = signature
 	}
 
-	for name, signature := range ml2 {
+	for name, signature := range methods {
 		result[name] = signature
 	}
 
