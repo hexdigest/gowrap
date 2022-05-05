@@ -404,10 +404,7 @@ func processSelector(fs *token.FileSet, currentPackage *packages.Package, se *as
 	return methods, err
 }
 
-var errDuplicateMethod = errors.New("embedded interface has same method")
-
-//mergeMethods merges two methods list, if there is a duplicate method name
-//errDuplicateMethod is returned
+//mergeMethods merges two methods list
 func mergeMethods(ml1, ml2 methodsList) (methodsList, error) {
 	if ml1 == nil || ml2 == nil {
 		return ml1, nil
@@ -419,10 +416,6 @@ func mergeMethods(ml1, ml2 methodsList) (methodsList, error) {
 	}
 
 	for name, signature := range ml2 {
-		if _, ok := ml1[name]; ok {
-			return nil, errors.Wrap(errDuplicateMethod, name)
-		}
-
 		result[name] = signature
 	}
 

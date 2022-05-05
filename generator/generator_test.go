@@ -197,21 +197,6 @@ func Test_mergeMethods(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "duplicate method",
-			args: args{
-				ml1: methodsList{
-					"method": Method{},
-				},
-				ml2: methodsList{
-					"method": Method{},
-				},
-			},
-			wantErr: true,
-			inspectErr: func(err error, t *testing.T) {
-				assert.Equal(t, errDuplicateMethod, errors.Cause(err))
-			},
-		},
-		{
 			name: "success",
 			args: args{
 				ml1: methodsList{
