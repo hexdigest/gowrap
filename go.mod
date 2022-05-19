@@ -1,6 +1,7 @@
 module github.com/hexdigest/gowrap
 
 require (
+	github.com/Masterminds/sprig/v3 v3.2.2
 	github.com/gojuno/minimock/v3 v3.0.10
 	github.com/golangci/golangci-lint v1.41.1
 	github.com/goreleaser/goreleaser v0.169.0
