@@ -13,6 +13,7 @@ import (
 	"text/template"
 	"unicode"
 
+	"github.com/Masterminds/sprig/v3"
 	"github.com/hexdigest/gowrap/generator"
 	"github.com/hexdigest/gowrap/pkg"
 	"github.com/pkg/errors"
@@ -258,13 +259,17 @@ func varsToArgs(v vars) string {
 	return " -v " + strings.Join(ss, " -v ")
 }
 
-var helperFuncs = template.FuncMap{
-	"up":        strings.ToUpper,
-	"down":      strings.ToLower,
-	"upFirst":   upFirst,
-	"downFirst": downFirst,
-	"replace":   strings.ReplaceAll,
-	"snake":     toSnakeCase,
+var helperFuncs template.FuncMap
+
+func init() {
+	helperFuncs = sprig.TxtFuncMap()
+
+	helperFuncs["up"] = strings.ToUpper
+	helperFuncs["down"] = strings.ToLower
+	helperFuncs["upFirst"] = upFirst
+	helperFuncs["downFirst"] = downFirst
+	helperFuncs["replace"] = strings.ReplaceAll
+	helperFuncs["snake"] = toSnakeCase
 }
 
 func upFirst(s string) string {

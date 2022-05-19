@@ -102,6 +102,19 @@ If you think that your template might be useful to others, please consider addin
 
 The structure of information passed to templates is documented with the [TemplateInputs](https://godoc.org/github.com/hexdigest/gowrap/generator#TemplateInputs) struct.
 
+### Template Functions
+
+In the templates, all functions provided by the [sprig](http://masterminds.github.io/sprig/) template library are available.
+
+Additionally `gowrap` includes the following template functions:
+
+- `up`: returns the input with all Unicode letters mapped to their upper case.
+- `down`: returns the input with all Unicode letters mapped to their lower case.
+- `upFirst`: returns the input with the first Unicode letter mapped to their upper case.
+- `downFirst`: returns the input with the first Unicode letter mapped to their lower case.
+- `replace`: returns the input with all occurences of the first argument replaced with the second argument.
+- `snake`: returns the input in snake case representation.
+
 ## Become a patron
 
 Here's my [Patreon page](https://www.patreon.com/hexdigest). Thank you!
