@@ -9,10 +9,10 @@ export GOFLAGS := -mod=mod
 	go install ./cmd/gowrap
 
 ./bin/golangci-lint: ./bin
-	go get github.com/golangci/golangci-lint/cmd/golangci-lint
+	go install -modfile tools/go.mod github.com/golangci/golangci-lint/cmd/golangci-lint
 
 ./bin/goreleaser:
-	go install github.com/goreleaser/goreleaser
+	go install -modfile tools/go.mod github.com/goreleaser/goreleaser
 
 lint: ./bin/golangci-lint
 	./bin/golangci-lint run --enable=goimports --disable=unused --exclude=S1023,"Error return value" ./...
