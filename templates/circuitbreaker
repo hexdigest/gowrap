@@ -15,15 +15,17 @@ type {{$decorator}} struct {
   _consecutiveErrors int
   _openInterval time.Duration
   _closesAt *time.Time
+  _ignoreErrors []error
 }
 
 // New{{$decorator}} breakes a circuit after consecutiveErrors of errors and closes the circuit again after openInterval of time.
 // If, after openInterval, the first method call results in error we open and close again.
-func New{{$decorator}}(base {{.Interface.Type}}, consecutiveErrors int, openInterval time.Duration) (*{{$decorator}}) {
+func New{{$decorator}}(base {{.Interface.Type}}, consecutiveErrors int, openInterval time.Duration, ignoreErrors ...error) (*{{$decorator}}) {
   return &{{$decorator}}{
     {{.Interface.Name}}: base, 
     _maxConsecutiveErrors: consecutiveErrors,
     _openInterval: openInterval,
+    _ignoreErrors: ignoreErrors,
   }
 }
 
@@ -48,7 +50,15 @@ func New{{$decorator}}(base {{.Interface.Type}}, consecutiveErrors int, openInte
         _d._consecutiveErrors = 0
         _d._closesAt = nil
         return
-      } 
+      }
+
+      for _, _e := range _d._ignoreErrors {
+        if errors.Is(err, _e) {
+          _d._consecutiveErrors = 0
+          _d._closesAt = nil
+          return
+        }
+      }
 
       _d._consecutiveErrors++
 

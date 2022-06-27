@@ -22,19 +22,19 @@ type TestInterfaceWithCircuitBreaker struct {
 	_consecutiveErrors    int
 	_openInterval         time.Duration
 	_closesAt             *time.Time
+	_ignoreErrors         []error
 }
 
-// NewTestInterfaceWithCircuitBreaker breakes a circuit after consecutiveErrors of errors and opens the circuit again after openInterval of time.
-// If after openInterval first method call results in error we close open again.
-func NewTestInterfaceWithCircuitBreaker(base TestInterface, consecutiveErrors int, openInterval time.Duration) *TestInterfaceWithCircuitBreaker {
+// NewTestInterfaceWithCircuitBreaker breakes a circuit after consecutiveErrors of errors and closes the circuit again after openInterval of time.
+// If, after openInterval, the first method call results in error we open and close again.
+func NewTestInterfaceWithCircuitBreaker(base TestInterface, consecutiveErrors int, openInterval time.Duration, ignoreErrors ...error) *TestInterfaceWithCircuitBreaker {
 	return &TestInterfaceWithCircuitBreaker{
 		TestInterface:         base,
 		_maxConsecutiveErrors: consecutiveErrors,
 		_openInterval:         openInterval,
+		_ignoreErrors:         ignoreErrors,
 	}
 }
-
-// Channels implements TestInterface
 
 // F implements TestInterface
 func (_d *TestInterfaceWithCircuitBreaker) F(ctx context.Context, a1 string, a2 ...string) (result1 string, result2 string, err error) {
@@ -57,6 +57,14 @@ func (_d *TestInterfaceWithCircuitBreaker) F(ctx context.Context, a1 string, a2 
 		return
 	}
 
+	for _, _e := range _d._ignoreErrors {
+		if errors.Is(err, _e) {
+			_d._consecutiveErrors = 0
+			_d._closesAt = nil
+			return
+		}
+	}
+
 	_d._consecutiveErrors++
 
 	if _d._consecutiveErrors >= _d._maxConsecutiveErrors {
@@ -66,7 +74,3 @@ func (_d *TestInterfaceWithCircuitBreaker) F(ctx context.Context, a1 string, a2 
 
 	return
 }
-
-// NoError implements TestInterface
-
-// NoParamsOrResults implements TestInterface
