@@ -93,6 +93,10 @@ func (gc *GenerateCommand) Run(args []string, stdout io.Writer) error {
 		return err
 	}
 
+	if err := os.MkdirAll(filepath.Dir(gc.outputFile), os.ModePerm); err != nil {
+		return err
+	}
+
 	return gc.filepath.WriteFile(gc.outputFile, buf.Bytes(), 0664)
 }
 
