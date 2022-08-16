@@ -69,7 +69,7 @@ func TestTestInterfaceWithFallback_F(t *testing.T) {
 	t.Run("first comes first, no errors", func(t *testing.T) {
 		impl := &testImpl{r1: "11", r2: "12"}
 		impl2 := &testImpl{r1: "21", r2: "22", delay: time.Second}
-		wrapped := NewTestInterfaceWithFallback(time.Second, impl, impl2)
+		wrapped := NewTestInterfaceWithFallback(100*time.Millisecond, impl, impl2)
 
 		r1, r2, err := wrapped.F(context.Background(), "")
 		require.NoError(t, err)

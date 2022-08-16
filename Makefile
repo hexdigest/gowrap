@@ -14,13 +14,16 @@ export GOFLAGS := -mod=mod
 ./bin/goreleaser:
 	go install -modfile tools/go.mod github.com/goreleaser/goreleaser
 
+./bin/minimock: ./bin
+	go install -modfile tools/go.mod github.com/gojuno/minimock/v3/cmd/minimock
+
 lint: ./bin/golangci-lint
 	./bin/golangci-lint run --enable=goimports --disable=unused --exclude=S1023,"Error return value" ./...
 
 test:
 	 go test -race ./...
 
-generate: ./bin/gowrap
+generate: ./bin/gowrap ./bin/minimock
 	go generate ./...
 
 all: ./bin/gowrap generate lint test
