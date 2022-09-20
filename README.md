@@ -67,6 +67,7 @@ List of available templates:
   - [log](https://github.com/hexdigest/gowrap/tree/master/templates/log) instruments the source interface with logging using standard logger from the "log" package
   - [logrus](https://github.com/hexdigest/gowrap/tree/master/templates/logrus) instruments the source interface with logging using popular [sirupsen/logrus](https://github.com/sirupsen/logrus) logger
   - [opencensus](https://github.com/hexdigest/gowrap/tree/master/templates/opencensus) instruments the source interface with opencensus spans
+  - [opentelemetry](https://github.com/hexdigest/gowrap/tree/master/templates/opentelemetry) instruments the source interface with opentelemetry spans
   - [opentracing](https://github.com/hexdigest/gowrap/tree/master/templates/opentracing) instruments the source interface with opentracing spans
   - [prometheus](https://github.com/hexdigest/gowrap/tree/master/templates/prometheus) instruments the source interface with prometheus metrics
   - [ratelimit](https://github.com/hexdigest/gowrap/tree/master/templates/ratelimit) instruments the source interface with RPS limit and concurrent calls limit
