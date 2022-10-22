@@ -79,8 +79,7 @@ func New{{$decorator}}(interval time.Duration, impls ...{{.Interface.Type}}) {{$
                 {{end -}}
               {{if $method.AcceptsContext}}case <-ctx.Done():
                 {{if $method.ReturnsError}}
-                  _errorsList = append(_errorsList, ctx.Err().Error())
-                  err = fmt.Errorf(strings.Join(_errorsList, ";"))
+                  err = fmt.Errorf("%w: %s", ctx.Err(), strings.Join(_errorsList, ";"))
                 {{end}}
                 return
               {{end -}}

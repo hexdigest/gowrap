@@ -146,8 +146,7 @@ func (_d TestInterfaceWithFallback) F(ctx context.Context, a1 string, a2 ...stri
 			}
 		case <-ctx.Done():
 
-			_errorsList = append(_errorsList, ctx.Err().Error())
-			err = fmt.Errorf(strings.Join(_errorsList, ";"))
+			err = fmt.Errorf("%w: %s", ctx.Err(), strings.Join(_errorsList, ";"))
 
 			return
 		}
