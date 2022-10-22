@@ -37,6 +37,9 @@ func (c *consecutiveErrorsImpl) NoError(string) string {
 	return ""
 }
 
+func (c *consecutiveErrorsImpl) ContextNoError(ctx context.Context, a1 string, a2 string) {
+}
+
 func (c *consecutiveErrorsImpl) NoParamsOrResults() {
 }
 

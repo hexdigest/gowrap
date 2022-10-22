@@ -22,36 +22,72 @@ func New{{$decorator}}(interval time.Duration, impls ...{{.Interface.Type}}) {{$
   // {{$method.Name}} implements {{$.Interface.Type}}
   func (_d {{$decorator}}) {{$method.Declaration}} {
       type _resultStruct {{$method.ResultsStruct}}
-      {{if $method.HasResults}}var _res _resultStruct{{end}}
       var _ch = make(chan _resultStruct, 0)
       {{if $method.ReturnsError}}var _errorsList []string{{end}}
       var _ticker = time.NewTicker(_d.interval)
       defer _ticker.Stop()
+
       {{- if $method.AcceptsContext}}
         ctx, _cancelFunc := context.WithCancel(ctx)
         defer _cancelFunc()
-    _loop:{{end}}
-      for _i :=0; _i < len(_d.implementations); _i++ {
-        go func(_impl {{$.Interface.Type}}) {
-          {{if $method.HasResults}}{{$method.ResultsNames}} := {{end}}_impl.{{$method.Call}}
-          {{- if $method.ReturnsError}}
-            if err != nil {
-              err = fmt.Errorf("%T: %v", _impl, err)
-            }
-          {{end}}
-          select {
-            case _ch <- _resultStruct{ {{$method.ResultsNames}} }:
-            default:
+      {{end}}
+
+      go func() {
+        for _i :=0; _i < len(_d.implementations); _i++ {
+          go func(_impl {{$.Interface.Type}}) {
+            {{if $method.HasResults}}{{$method.ResultsNames}} := {{end}}_impl.{{$method.Call}}
+            {{- if $method.ReturnsError}}
+              if err != nil {
+                err = fmt.Errorf("%T: %v", _impl, err)
+              }
+            {{end}}
+
+            {{if $method.AcceptsContext}}
+              select {
+                case _ch <- _resultStruct{ {{$method.ResultsNames}} }:
+                case <-ctx.Done():
+              }
+            {{else}}
+              select {
+                case _ch <- _resultStruct{ {{$method.ResultsNames}} }:
+                default:
+              }
+            {{end}}
+          }(_d.implementations[_i])
+
+          if _i < len(_d.implementations) - 1 {
+            <-_ticker.C
           }
-        }(_d.implementations[_i])
-
-        _tickerCh := _ticker.C
-        if _i == len(_d.implementations) - 1 {
-          _tickerCh = nil
         }
+      }()
 
-        select {
-        case {{if $method.HasResults}}_res = {{end}}<- _ch:
+        {{if $method.AcceptsContext}}
+          for {
+              select {
+              case {{if $method.HasResults}}_res := {{end}} <- _ch:
+                {{- if $method.ReturnsError}}
+                  if _res.err == nil {
+                    {{ $method.ReturnStruct "_res" }}
+                  }
+                  _errorsList = append(_errorsList, _res.err.Error())
+                  if len(_errorsList) == len(_d.implementations) {
+                    err =  fmt.Errorf(strings.Join(_errorsList, ";"))
+                    return
+                  }
+                {{else}}
+                  {{ $method.ReturnStruct "_res" }}
+                {{end -}}
+              {{if $method.AcceptsContext}}case <-ctx.Done():
+                {{if $method.ReturnsError}}
+                  _errorsList = append(_errorsList, ctx.Err().Error())
+                  err = fmt.Errorf(strings.Join(_errorsList, ";"))
+                {{end}}
+                return
+              {{end -}}
+              }
+          }
+        {{else}}
+          {{if $method.HasResults}}_res := {{end}} <- _ch
           {{- if $method.ReturnsError}}
             if _res.err == nil {
               {{ $method.ReturnStruct "_res" }}
@@ -60,17 +96,6 @@ func New{{$decorator}}(interval time.Duration, impls ...{{.Interface.Type}}) {{$
           {{else}}
             {{ $method.ReturnStruct "_res" }}
           {{end -}}
-        {{if $method.AcceptsContext}}case <-ctx.Done():
-			    _errorsList = append(_errorsList, ctx.Err().Error())
-			    break _loop
-        {{end -}}
-        case <-_tickerCh:
-          {{- if $method.ReturnsError}}
-			    _errorsList = append(_errorsList, fmt.Sprintf("%T: timeout", _d.implementations[_i]))
-			    {{end}}
-        }
-      }
-      {{if $method.ReturnsError}}err = fmt.Errorf(strings.Join(_errorsList, ";")){{end}}
-      return
+        {{end}}
   }
 {{end}}

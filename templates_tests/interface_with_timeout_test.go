@@ -20,6 +20,9 @@ func (c *timeoutsImpl) F(ctx context.Context, a1 string, a2 ...string) (r1, r2 s
 	return "", "", nil
 }
 
+func (c *timeoutsImpl) ContextNoError(ctx context.Context, a1 string, a2 string) {
+}
+
 func (c *timeoutsImpl) NoError(string) string {
 	return ""
 }

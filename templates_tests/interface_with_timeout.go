@@ -18,6 +18,8 @@ type TestInterfaceWithTimeout struct {
 }
 
 type TestInterfaceWithTimeoutConfig struct {
+	ContextNoErrorTimeout time.Duration
+
 	FTimeout time.Duration
 }
 
@@ -27,6 +29,17 @@ func NewTestInterfaceWithTimeout(base TestInterface, config TestInterfaceWithTim
 		TestInterface: base,
 		config:        config,
 	}
+}
+
+// ContextNoError implements TestInterface
+func (_d TestInterfaceWithTimeout) ContextNoError(ctx context.Context, a1 string, a2 string) {
+	var cancelFunc func()
+	if _d.config.ContextNoErrorTimeout > 0 {
+		ctx, cancelFunc = context.WithTimeout(ctx, _d.config.ContextNoErrorTimeout)
+		defer cancelFunc()
+	}
+	_d.TestInterface.ContextNoError(ctx, a1, a2)
+	return
 }
 
 // F implements TestInterface

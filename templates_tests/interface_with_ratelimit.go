@@ -48,6 +48,14 @@ func (_d *TestInterfaceWithRateLimit) Channels(chA chan bool, chB chan<- bool, c
 	return
 }
 
+// ContextNoError implements TestInterface
+func (_d *TestInterfaceWithRateLimit) ContextNoError(ctx context.Context, a1 string, a2 string) {
+	<-_d._ticks
+
+	_d._base.ContextNoError(ctx, a1, a2)
+	return
+}
+
 // F implements TestInterface
 func (_d *TestInterfaceWithRateLimit) F(ctx context.Context, a1 string, a2 ...string) (result1 string, result2 string, err error) {
 	select {

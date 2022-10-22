@@ -46,6 +46,13 @@ func (_d *TestInterfaceRoundRobinPool) Channels(chA chan bool, chB chan<- bool, 
 	return
 }
 
+// ContextNoError implements TestInterface
+func (_d *TestInterfaceRoundRobinPool) ContextNoError(ctx context.Context, a1 string, a2 string) {
+	_counter := atomic.AddUint32(&_d.counter, 1)
+	_d.pool[_counter%_d.poolSize].ContextNoError(ctx, a1, a2)
+	return
+}
+
 // F implements TestInterface
 func (_d *TestInterfaceRoundRobinPool) F(ctx context.Context, a1 string, a2 ...string) (result1 string, result2 string, err error) {
 	_counter := atomic.AddUint32(&_d.counter, 1)

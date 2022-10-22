@@ -49,6 +49,17 @@ func (_d TestInterfaceWithPrometheus) Channels(chA chan bool, chB chan<- bool, c
 	return
 }
 
+// ContextNoError implements TestInterface
+func (_d TestInterfaceWithPrometheus) ContextNoError(ctx context.Context, a1 string, a2 string) {
+	_since := time.Now()
+	defer func() {
+		result := "ok"
+		testinterfaceDurationSummaryVec.WithLabelValues(_d.instanceName, "ContextNoError", result).Observe(time.Since(_since).Seconds())
+	}()
+	_d.base.ContextNoError(ctx, a1, a2)
+	return
+}
+
 // F implements TestInterface
 func (_d TestInterfaceWithPrometheus) F(ctx context.Context, a1 string, a2 ...string) (result1 string, result2 string, err error) {
 	_since := time.Now()

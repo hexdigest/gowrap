@@ -39,6 +39,9 @@ func (f *testImpl) F(ctx context.Context, a1 string, a2 ...string) (r1, r2 strin
 	return
 }
 
+func (f *testImpl) ContextNoError(ctx context.Context, a1 string, a2 string) {
+}
+
 func (f *testImpl) NoError(s string) string {
 	return s
 }

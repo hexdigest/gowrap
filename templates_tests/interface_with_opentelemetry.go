@@ -35,6 +35,22 @@ func NewTestInterfaceWithOpentelemetry(base TestInterface, instance string, span
 	return d
 }
 
+// ContextNoError implements TestInterface
+func (_d TestInterfaceWithOpentelemetry) ContextNoError(ctx context.Context, a1 string, a2 string) {
+	ctx, _span := otel.Tracer(_d._instance).Start(ctx, "TestInterface.ContextNoError")
+	defer func() {
+		if _d._spanDecorator != nil {
+			_d._spanDecorator(_span, map[string]interface{}{
+				"ctx": ctx,
+				"a1":  a1,
+				"a2":  a2}, map[string]interface{}{})
+		}
+		_span.End()
+	}()
+	_d.TestInterface.ContextNoError(ctx, a1, a2)
+	return
+}
+
 // F implements TestInterface
 func (_d TestInterfaceWithOpentelemetry) F(ctx context.Context, a1 string, a2 ...string) (result1 string, result2 string, err error) {
 	ctx, _span := otel.Tracer(_d._instance).Start(ctx, "TestInterface.F")

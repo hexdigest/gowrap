@@ -38,6 +38,17 @@ func (_d TestInterfaceWithLogger) Channels(chA chan bool, chB chan<- bool, chanC
 	return
 }
 
+// ContextNoError implements TestInterface
+func (_d TestInterfaceWithLogger) ContextNoError(ctx context.Context, a1 string, a2 string) {
+	_params := []interface{}{"TestInterfaceWithLogger: calling ContextNoError with params:", ctx, a1, a2}
+	_d._stdlog.Println(_params...)
+	defer func() {
+		_d._stdlog.Println("TestInterfaceWithLogger: ContextNoError finished")
+	}()
+	_d._base.ContextNoError(ctx, a1, a2)
+	return
+}
+
 // F implements TestInterface
 func (_d TestInterfaceWithLogger) F(ctx context.Context, a1 string, a2 ...string) (result1 string, result2 string, err error) {
 	_params := []interface{}{"TestInterfaceWithLogger: calling F with params:", ctx, a1, a2}

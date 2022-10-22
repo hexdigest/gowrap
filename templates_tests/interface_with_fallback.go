@@ -29,33 +29,73 @@ func NewTestInterfaceWithFallback(interval time.Duration, impls ...TestInterface
 func (_d TestInterfaceWithFallback) Channels(chA chan bool, chB chan<- bool, chanC <-chan bool) {
 	type _resultStruct struct {
 	}
-
 	var _ch = make(chan _resultStruct, 0)
 
 	var _ticker = time.NewTicker(_d.interval)
 	defer _ticker.Stop()
-	for _i := 0; _i < len(_d.implementations); _i++ {
-		go func(_impl TestInterface) {
-			_impl.Channels(chA, chB, chanC)
-			select {
-			case _ch <- _resultStruct{}:
-			default:
+
+	go func() {
+		for _i := 0; _i < len(_d.implementations); _i++ {
+			go func(_impl TestInterface) {
+				_impl.Channels(chA, chB, chanC)
+
+				select {
+				case _ch <- _resultStruct{}:
+				default:
+				}
+
+			}(_d.implementations[_i])
+
+			if _i < len(_d.implementations)-1 {
+				<-_ticker.C
 			}
-		}(_d.implementations[_i])
-
-		_tickerCh := _ticker.C
-		if _i == len(_d.implementations)-1 {
-			_tickerCh = nil
 		}
+	}()
 
+	<-_ch
+	return
+
+}
+
+// ContextNoError implements TestInterface
+func (_d TestInterfaceWithFallback) ContextNoError(ctx context.Context, a1 string, a2 string) {
+	type _resultStruct struct {
+	}
+	var _ch = make(chan _resultStruct, 0)
+
+	var _ticker = time.NewTicker(_d.interval)
+	defer _ticker.Stop()
+	ctx, _cancelFunc := context.WithCancel(ctx)
+	defer _cancelFunc()
+
+	go func() {
+		for _i := 0; _i < len(_d.implementations); _i++ {
+			go func(_impl TestInterface) {
+				_impl.ContextNoError(ctx, a1, a2)
+
+				select {
+				case _ch <- _resultStruct{}:
+				case <-ctx.Done():
+				}
+
+			}(_d.implementations[_i])
+
+			if _i < len(_d.implementations)-1 {
+				<-_ticker.C
+			}
+		}
+	}()
+
+	for {
 		select {
 		case <-_ch:
 			return
-		case <-_tickerCh:
+		case <-ctx.Done():
+
+			return
 		}
 	}
 
-	return
 }
 
 // F implements TestInterface
@@ -65,48 +105,54 @@ func (_d TestInterfaceWithFallback) F(ctx context.Context, a1 string, a2 ...stri
 		result2 string
 		err     error
 	}
-	var _res _resultStruct
 	var _ch = make(chan _resultStruct, 0)
 	var _errorsList []string
 	var _ticker = time.NewTicker(_d.interval)
 	defer _ticker.Stop()
 	ctx, _cancelFunc := context.WithCancel(ctx)
 	defer _cancelFunc()
-_loop:
-	for _i := 0; _i < len(_d.implementations); _i++ {
-		go func(_impl TestInterface) {
-			result1, result2, err := _impl.F(ctx, a1, a2...)
-			if err != nil {
-				err = fmt.Errorf("%T: %v", _impl, err)
-			}
 
-			select {
-			case _ch <- _resultStruct{result1, result2, err}:
-			default:
-			}
-		}(_d.implementations[_i])
+	go func() {
+		for _i := 0; _i < len(_d.implementations); _i++ {
+			go func(_impl TestInterface) {
+				result1, result2, err := _impl.F(ctx, a1, a2...)
+				if err != nil {
+					err = fmt.Errorf("%T: %v", _impl, err)
+				}
 
-		_tickerCh := _ticker.C
-		if _i == len(_d.implementations)-1 {
-			_tickerCh = nil
+				select {
+				case _ch <- _resultStruct{result1, result2, err}:
+				case <-ctx.Done():
+				}
+
+			}(_d.implementations[_i])
+
+			if _i < len(_d.implementations)-1 {
+				<-_ticker.C
+			}
 		}
+	}()
 
+	for {
 		select {
-		case _res = <-_ch:
+		case _res := <-_ch:
 			if _res.err == nil {
 				return _res.result1, _res.result2, _res.err
 			}
 			_errorsList = append(_errorsList, _res.err.Error())
+			if len(_errorsList) == len(_d.implementations) {
+				err = fmt.Errorf(strings.Join(_errorsList, ";"))
+				return
+			}
 		case <-ctx.Done():
-			_errorsList = append(_errorsList, ctx.Err().Error())
-			break _loop
-		case <-_tickerCh:
-			_errorsList = append(_errorsList, fmt.Sprintf("%T: timeout", _d.implementations[_i]))
 
+			_errorsList = append(_errorsList, ctx.Err().Error())
+			err = fmt.Errorf(strings.Join(_errorsList, ";"))
+
+			return
 		}
 	}
-	err = fmt.Errorf(strings.Join(_errorsList, ";"))
-	return
+
 }
 
 // NoError implements TestInterface
@@ -114,64 +160,62 @@ func (_d TestInterfaceWithFallback) NoError(s1 string) (s2 string) {
 	type _resultStruct struct {
 		s2 string
 	}
-	var _res _resultStruct
 	var _ch = make(chan _resultStruct, 0)
 
 	var _ticker = time.NewTicker(_d.interval)
 	defer _ticker.Stop()
-	for _i := 0; _i < len(_d.implementations); _i++ {
-		go func(_impl TestInterface) {
-			s2 := _impl.NoError(s1)
-			select {
-			case _ch <- _resultStruct{s2}:
-			default:
+
+	go func() {
+		for _i := 0; _i < len(_d.implementations); _i++ {
+			go func(_impl TestInterface) {
+				s2 := _impl.NoError(s1)
+
+				select {
+				case _ch <- _resultStruct{s2}:
+				default:
+				}
+
+			}(_d.implementations[_i])
+
+			if _i < len(_d.implementations)-1 {
+				<-_ticker.C
 			}
-		}(_d.implementations[_i])
-
-		_tickerCh := _ticker.C
-		if _i == len(_d.implementations)-1 {
-			_tickerCh = nil
 		}
+	}()
 
-		select {
-		case _res = <-_ch:
-			return _res.s2
-		case <-_tickerCh:
-		}
-	}
+	_res := <-_ch
+	return _res.s2
 
-	return
 }
 
 // NoParamsOrResults implements TestInterface
 func (_d TestInterfaceWithFallback) NoParamsOrResults() {
 	type _resultStruct struct {
 	}
-
 	var _ch = make(chan _resultStruct, 0)
 
 	var _ticker = time.NewTicker(_d.interval)
 	defer _ticker.Stop()
-	for _i := 0; _i < len(_d.implementations); _i++ {
-		go func(_impl TestInterface) {
-			_impl.NoParamsOrResults()
-			select {
-			case _ch <- _resultStruct{}:
-			default:
+
+	go func() {
+		for _i := 0; _i < len(_d.implementations); _i++ {
+			go func(_impl TestInterface) {
+				_impl.NoParamsOrResults()
+
+				select {
+				case _ch <- _resultStruct{}:
+				default:
+				}
+
+			}(_d.implementations[_i])
+
+			if _i < len(_d.implementations)-1 {
+				<-_ticker.C
 			}
-		}(_d.implementations[_i])
-
-		_tickerCh := _ticker.C
-		if _i == len(_d.implementations)-1 {
-			_tickerCh = nil
 		}
+	}()
 
-		select {
-		case <-_ch:
-			return
-		case <-_tickerCh:
-		}
-	}
-
+	<-_ch
 	return
+
 }

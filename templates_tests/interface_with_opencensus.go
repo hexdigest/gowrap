@@ -33,6 +33,22 @@ func NewTestInterfaceWithOpenCensus(base TestInterface, instance string, spanDec
 	return d
 }
 
+// ContextNoError implements TestInterface
+func (_d TestInterfaceWithOpenCensus) ContextNoError(ctx context.Context, a1 string, a2 string) {
+	ctx, _span := trace.StartSpan(ctx, _d._instance+".TestInterface.ContextNoError")
+	defer func() {
+		if _d._spanDecorator != nil {
+			_d._spanDecorator(_span, map[string]interface{}{
+				"ctx": ctx,
+				"a1":  a1,
+				"a2":  a2}, map[string]interface{}{})
+		}
+		_span.End()
+	}()
+	_d.TestInterface.ContextNoError(ctx, a1, a2)
+	return
+}
+
 // F implements TestInterface
 func (_d TestInterfaceWithOpenCensus) F(ctx context.Context, a1 string, a2 ...string) (result1 string, result2 string, err error) {
 	ctx, _span := trace.StartSpan(ctx, _d._instance+".TestInterface.F")

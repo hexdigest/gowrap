@@ -38,6 +38,16 @@ func (_d TestInterfacePool) Channels(chA chan bool, chB chan<- bool, chanC <-cha
 	return
 }
 
+// ContextNoError implements TestInterface
+func (_d TestInterfacePool) ContextNoError(ctx context.Context, a1 string, a2 string) {
+	_impl := <-_d.pool
+	defer func() {
+		_d.pool <- _impl
+	}()
+	_impl.ContextNoError(ctx, a1, a2)
+	return
+}
+
 // F implements TestInterface
 func (_d TestInterfacePool) F(ctx context.Context, a1 string, a2 ...string) (result1 string, result2 string, err error) {
 	_impl := <-_d.pool

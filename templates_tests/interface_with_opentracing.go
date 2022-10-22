@@ -35,6 +35,22 @@ func NewTestInterfaceWithTracing(base TestInterface, instance string, spanDecora
 	return d
 }
 
+// ContextNoError implements TestInterface
+func (_d TestInterfaceWithTracing) ContextNoError(ctx context.Context, a1 string, a2 string) {
+	_span, ctx := opentracing.StartSpanFromContext(ctx, _d._instance+".TestInterface.ContextNoError")
+	defer func() {
+		if _d._spanDecorator != nil {
+			_d._spanDecorator(_span, map[string]interface{}{
+				"ctx": ctx,
+				"a1":  a1,
+				"a2":  a2}, map[string]interface{}{})
+		}
+		_span.Finish()
+	}()
+	_d.TestInterface.ContextNoError(ctx, a1, a2)
+	return
+}
+
 // F implements TestInterface
 func (_d TestInterfaceWithTracing) F(ctx context.Context, a1 string, a2 ...string) (result1 string, result2 string, err error) {
 	_span, ctx := opentracing.StartSpanFromContext(ctx, _d._instance+".TestInterface.F")

@@ -39,6 +39,19 @@ func (_d TestInterfaceWithLogrus) Channels(chA chan bool, chB chan<- bool, chanC
 	return
 }
 
+// ContextNoError implements TestInterface
+func (_d TestInterfaceWithLogrus) ContextNoError(ctx context.Context, a1 string, a2 string) {
+	_d._log.WithFields(logrus.Fields(map[string]interface{}{
+		"ctx": ctx,
+		"a1":  a1,
+		"a2":  a2})).Debug("TestInterfaceWithLogrus: calling ContextNoError")
+	defer func() {
+		_d._log.Debug("TestInterfaceWithLogrus: ContextNoError finished")
+	}()
+	_d._base.ContextNoError(ctx, a1, a2)
+	return
+}
+
 // F implements TestInterface
 func (_d TestInterfaceWithLogrus) F(ctx context.Context, a1 string, a2 ...string) (result1 string, result2 string, err error) {
 	_d._log.WithFields(logrus.Fields(map[string]interface{}{
