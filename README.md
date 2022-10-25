@@ -17,7 +17,16 @@ With GoWrap you can easily add metrics, tracing, fallbacks, pools, and many othe
 
 ## Installation
 
+Install Go and run the following command.
+
 ```
+# For Go 1.16+
+# Make sure that `$GOPATH/bin` is in your `$PATH`, because that's where this gets installed
+go install github.com/hexdigest/gowrap/cmd/gowrap@latest
+```
+
+```
+# For Go <1.16
 go get -u github.com/hexdigest/gowrap/cmd/gowrap
 ```
 
