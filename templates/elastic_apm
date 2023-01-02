@@ -1,0 +1,38 @@
+import (
+    "context"
+
+    "go.elastic.co/apm/v2"
+)
+
+{{ $decorator := (or .Vars.DecoratorName (printf "%sWithAPMTracing" .Interface.Name)) }}
+
+// {{$decorator}} implements {{.Interface.Type}} interface instrumented with elastic apm spans
+type {{$decorator}} struct {
+  {{.Interface.Type}}
+  _spanType string
+}
+
+// New{{$decorator}} returns {{$decorator}}
+func New{{$decorator}} (base {{.Interface.Type}}, spanType string) {{$decorator}} {
+  return {{$decorator}} {
+             {{.Interface.Name}}: base,
+             _spanType: spanType,
+           }
+}
+
+{{range $method := .Interface.Methods}}
+  {{if $method.AcceptsContext}}
+    // {{$method.Name}} implements {{$.Interface.Type}}
+func (_d {{$decorator}}) {{$method.Declaration}} {
+  span, ctx := apm.StartSpan(ctx, "{{$.Interface.Type}}.{{$method.Name}}", _d._spanType)
+  defer func() {
+    {{- if $method.ReturnsError}} if err != nil {
+      apm.CaptureError(ctx, err).Send()
+    }
+    {{end}}
+    span.End()
+  }()
+  {{$method.Pass (printf "_d.%s." $.Interface.Name) }}
+}
+  {{end}}
+{{end}}
