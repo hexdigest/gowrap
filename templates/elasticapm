@@ -1,0 +1,59 @@
+import (
+	"context"
+	"go.elastic.co/apm/v2"
+)
+
+{{ $decorator := (or .Vars.DecoratorName (printf "%sAPMTracing" .Interface.Name)) }}
+{{ $component := (or .Vars.ComponentName (printf "%s" (down .Interface.Name))) }}
+
+// {{$decorator}} implements {{.Interface.Type}} interface with all methods wrapped
+// with go.elastic.co/apm/v2
+type {{$decorator}} struct {
+    base         {{.Interface.Type}}
+	startSpan    func(ctx context.Context, name, spanType string) (*apm.Span, context.Context)
+	endSpan      func(span *apm.Span)
+	setLabel 	 func(span *apm.Span, key string, value interface{})
+	captureError func(ctx context.Context, err error) *apm.Error
+}
+
+
+// New{{$decorator}} returns an instance of the {{.Interface.Type}} decorated with go.elastic.co/apm/v2
+func New{{$decorator}}(base {{.Interface.Type}}) {{$decorator}} {
+    return {{$decorator}} {
+        base: base,
+		startSpan: apm.StartSpan,
+		endSpan: func(span *apm.Span) {
+		    span.End()
+		},
+		setLabel: func(span *apm.Span, key string, value interface{}) {
+			span.SpanData.Context.SetLabel(key, value)
+		},
+		captureError: apm.CaptureError,
+    }
+}
+
+{{range $method := .Interface.Methods}}
+  {{if $method.AcceptsContext}}
+    {{ $span_name := (printf "%s.%s" $component $method.Name) }}
+    // {{$method.Name}} implements {{$.Interface.Type}}
+    func (_d {{$decorator}}) {{$method.Declaration}} {
+        {{- if $method.AcceptsContext }}
+            span, ctx := _d.startSpan(ctx, "{{ $span_name }}", "{{ $component }}")
+            defer func() {
+                {{- if $method.ReturnsError -}}
+                    if err != nil {
+                        _d.captureError(ctx, err)
+                    }
+                {{- end }}
+                _d.endSpan(span)
+            }()
+            {{- range $param := $method.Params -}}
+                {{- if not (eq $param.Name "ctx") -}}
+                    _d.setLabel(span, "{{ (snake $param.Name) }}", {{ $param.Name }})
+                {{- end}}
+            {{ end }}
+        {{ end }}
+        {{$method.Pass "_d.base."}}
+    }
+  {{end}}
+{{end}}
