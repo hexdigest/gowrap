@@ -79,6 +79,7 @@ List of available templates:
   - [twirp\_error](https://github.com/hexdigest/gowrap/tree/master/templates/twirp_error) inject request data into twirp.Error as metadata
   - [twirp\_validate](https://github.com/hexdigest/gowrap/tree/master/templates/twirp_validate) runs `func Validate() error` method on each argument if it's present and wraps returned error with twirp.Malformed error
   - [grpc\_validate](https://github.com/hexdigest/gowrap/tree/master/templates/grpc_validate) runs `func Validate() error` method on each argument if it's present and returns [InvalidArgument](https://github.com/grpc/grpc-go/blob/9d8d97a245af2d4bc743585418e1b4aebada0637/codes/codes.go#L49) error in case when validation failed
+  - [elastic apm](https://github.com/hexdigest/gowrap/tree/master/templates/elasticapm) instruments the source interface with elastic apm spans
 
 By default GoWrap places the `//go:generate` instruction into the generated code. 
 This allows you to regenerate decorators' code just by typing `go generate ./...` when you change the source interface type declaration.
