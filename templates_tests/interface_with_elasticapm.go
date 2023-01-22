@@ -20,6 +20,7 @@ type TestInterfaceAPMTracing struct {
 	endSpan      func(span *apm.Span)
 	setLabel     func(span *apm.Span, key string, value interface{})
 	captureError func(ctx context.Context, err error)
+	spanType     string
 }
 
 type TestInterfaceAPMTracingOption func(v *TestInterfaceAPMTracing)
@@ -29,6 +30,12 @@ func TestInterfaceAPMTracingWithUsingSetLabel() TestInterfaceAPMTracingOption {
 		v.setLabel = func(span *apm.Span, key string, value interface{}) {
 			span.SpanData.Context.SetLabel(key, value)
 		}
+	}
+}
+
+func TestInterfaceAPMTracingWithSpanType(spanType string) TestInterfaceAPMTracingOption {
+	return func(v *TestInterfaceAPMTracing) {
+		v.spanType = spanType
 	}
 }
 
@@ -45,6 +52,7 @@ func NewTestInterfaceAPMTracing(base TestInterface, opts ...TestInterfaceAPMTrac
 		captureError: func(ctx context.Context, err error) {
 			apm.CaptureError(ctx, err).Send()
 		},
+		spanType: "testinterface",
 	}
 
 	for _, fn := range opts {
@@ -55,7 +63,7 @@ func NewTestInterfaceAPMTracing(base TestInterface, opts ...TestInterfaceAPMTrac
 
 // ContextNoError implements TestInterface
 func (_d TestInterfaceAPMTracing) ContextNoError(ctx context.Context, a1 string, a2 string) {
-	span, ctx := _d.startSpan(ctx, "testinterface.ContextNoError", "testinterface")
+	span, ctx := _d.startSpan(ctx, "testinterface.ContextNoError", _d.spanType)
 	defer func() {
 		_d.endSpan(span)
 	}()
@@ -68,7 +76,7 @@ func (_d TestInterfaceAPMTracing) ContextNoError(ctx context.Context, a1 string,
 
 // F implements TestInterface
 func (_d TestInterfaceAPMTracing) F(ctx context.Context, a1 string, a2 ...string) (result1 string, result2 string, err error) {
-	span, ctx := _d.startSpan(ctx, "testinterface.F", "testinterface")
+	span, ctx := _d.startSpan(ctx, "testinterface.F", _d.spanType)
 	defer func() {
 		if err != nil {
 			_d.captureError(ctx, err)

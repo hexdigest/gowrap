@@ -15,6 +15,7 @@ type {{$decorator}} struct {
 	endSpan      func(span *apm.Span)
 	setLabel 	 func(span *apm.Span, key string, value interface{})
 	captureError func(ctx context.Context, err error)
+	spanType     string
 }
 
 type {{$decorator_option}} func (v *{{$decorator}})
@@ -24,6 +25,12 @@ func {{$decorator}}WithUsingSetLabel() {{$decorator_option}} {
 		v.setLabel = func(span *apm.Span, key string, value interface{}) {
 			span.SpanData.Context.SetLabel(key, value)
 		}
+	}
+}
+
+func {{$decorator}}WithSpanType(spanType string) {{$decorator_option}} {
+	return func(v *{{$decorator}}) {
+		v.spanType = spanType
 	}
 }
 
@@ -40,6 +47,7 @@ func New{{$decorator}}(base {{.Interface.Type}}, opts ...{{$decorator}}Option) {
   		captureError: func(ctx context.Context, err error) {
   			apm.CaptureError(ctx, err).Send()
   		},
+  		spanType: "{{ $component }}",
     }
 
     for _, fn := range opts {
@@ -54,7 +62,7 @@ func New{{$decorator}}(base {{.Interface.Type}}, opts ...{{$decorator}}Option) {
     // {{$method.Name}} implements {{$.Interface.Type}}
     func (_d {{$decorator}}) {{$method.Declaration}} {
         {{- if $method.AcceptsContext }}
-            span, ctx := _d.startSpan(ctx, "{{ $span_name }}", "{{ $component }}")
+            span, ctx := _d.startSpan(ctx, "{{ $span_name }}", _d.spanType)
             defer func() {
                 {{- if $method.ReturnsError -}}
                     if err != nil {
