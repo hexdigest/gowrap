@@ -19,27 +19,51 @@ type TestInterfaceAPMTracing struct {
 	startSpan    func(ctx context.Context, name, spanType string) (*apm.Span, context.Context)
 	endSpan      func(span *apm.Span)
 	setLabel     func(span *apm.Span, key string, value interface{})
-	captureError func(ctx context.Context, err error) *apm.Error
+	captureError func(ctx context.Context, err error)
+	spanType     string
+}
+
+type TestInterfaceAPMTracingOption func(v *TestInterfaceAPMTracing)
+
+func TestInterfaceAPMTracingWithUsingSetLabel() TestInterfaceAPMTracingOption {
+	return func(v *TestInterfaceAPMTracing) {
+		v.setLabel = func(span *apm.Span, key string, value interface{}) {
+			span.SpanData.Context.SetLabel(key, value)
+		}
+	}
+}
+
+func TestInterfaceAPMTracingWithSpanType(spanType string) TestInterfaceAPMTracingOption {
+	return func(v *TestInterfaceAPMTracing) {
+		v.spanType = spanType
+	}
 }
 
 // NewTestInterfaceAPMTracing returns an instance of the TestInterface decorated with go.elastic.co/apm/v2
-func NewTestInterfaceAPMTracing(base TestInterface) TestInterfaceAPMTracing {
-	return TestInterfaceAPMTracing{
+func NewTestInterfaceAPMTracing(base TestInterface, opts ...TestInterfaceAPMTracingOption) TestInterfaceAPMTracing {
+	r := TestInterfaceAPMTracing{
 		base:      base,
 		startSpan: apm.StartSpan,
 		endSpan: func(span *apm.Span) {
 			span.End()
 		},
 		setLabel: func(span *apm.Span, key string, value interface{}) {
-			span.SpanData.Context.SetLabel(key, value)
 		},
-		captureError: apm.CaptureError,
+		captureError: func(ctx context.Context, err error) {
+			apm.CaptureError(ctx, err).Send()
+		},
+		spanType: "testinterface",
 	}
+
+	for _, fn := range opts {
+		fn(&r)
+	}
+	return r
 }
 
 // ContextNoError implements TestInterface
 func (_d TestInterfaceAPMTracing) ContextNoError(ctx context.Context, a1 string, a2 string) {
-	span, ctx := _d.startSpan(ctx, "testinterface.ContextNoError", "testinterface")
+	span, ctx := _d.startSpan(ctx, "testinterface.ContextNoError", _d.spanType)
 	defer func() {
 		_d.endSpan(span)
 	}()
@@ -52,7 +76,7 @@ func (_d TestInterfaceAPMTracing) ContextNoError(ctx context.Context, a1 string,
 
 // F implements TestInterface
 func (_d TestInterfaceAPMTracing) F(ctx context.Context, a1 string, a2 ...string) (result1 string, result2 string, err error) {
-	span, ctx := _d.startSpan(ctx, "testinterface.F", "testinterface")
+	span, ctx := _d.startSpan(ctx, "testinterface.F", _d.spanType)
 	defer func() {
 		if err != nil {
 			_d.captureError(ctx, err)

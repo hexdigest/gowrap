@@ -14,7 +14,7 @@ type ElasticAPM interface {
 	StartSpan(ctx context.Context, name, spanType string) (*apm.Span, context.Context)
 	EndSpan(span *apm.Span)
 	SetLabel(span *apm.Span, key string, value interface{})
-	CaptureError(ctx context.Context, err error) *apm.Error
+	CaptureError(ctx context.Context, err error)
 }
 
 func reintroduceElasticAPM(testAPMTracing *TestInterfaceAPMTracing, apm ElasticAPM) {
@@ -67,7 +67,7 @@ func TestTestInterfaceWithElasticAPMTracing_F(t *testing.T) {
 		elasticAPM.
 			StartSpanMock.Expect(ctx, "testinterface.F", "testinterface").Return(span, ctxSpan).
 			SetLabelMock.Return().
-			CaptureErrorMock.Expect(ctxSpan, err).Return(nil).
+			CaptureErrorMock.Expect(ctxSpan, err).Return().
 			EndSpanMock.Expect(span).Return()
 		reintroduceElasticAPM(&wrapped, elasticAPM)
 
@@ -94,6 +94,29 @@ func TestTestInterfaceWithElasticAPMTracing_F(t *testing.T) {
 
 		elasticAPM.
 			StartSpanMock.Expect(ctx, "testinterface.ContextNoError", "testinterface").Return(span, ctxSpan).
+			SetLabelMock.Return().
+			EndSpanMock.Expect(span).Return()
+		reintroduceElasticAPM(&wrapped, elasticAPM)
+
+		wrapped.ContextNoError(context.Background(), "a1", "a2")
+	})
+
+	t.Run("set span name", func(t *testing.T) {
+		err := errors.New("unexpected error")
+
+		impl := &testImpl{r1: "1", r2: "2", err: err}
+		wrapped := NewTestInterfaceAPMTracing(impl, TestInterfaceAPMTracingWithSpanType("test_set_span_type"))
+
+		mc := minimock.NewController(t)
+		defer mc.Finish()
+
+		elasticAPM := NewElasticAPMMock(mc)
+		ctx := context.Background()
+		span, ctxSpan := apm.StartSpan(ctx, "testinterface.ContextNoError", "test_set_span_type")
+		defer span.End()
+
+		elasticAPM.
+			StartSpanMock.Expect(ctx, "testinterface.ContextNoError", "test_set_span_type").Return(span, ctxSpan).
 			SetLabelMock.Return().
 			EndSpanMock.Expect(span).Return()
 		reintroduceElasticAPM(&wrapped, elasticAPM)
