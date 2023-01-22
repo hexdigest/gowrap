@@ -14,7 +14,7 @@ type ElasticAPM interface {
 	StartSpan(ctx context.Context, name, spanType string) (*apm.Span, context.Context)
 	EndSpan(span *apm.Span)
 	SetLabel(span *apm.Span, key string, value interface{})
-	CaptureError(ctx context.Context, err error) *apm.Error
+	CaptureError(ctx context.Context, err error)
 }
 
 func reintroduceElasticAPM(testAPMTracing *TestInterfaceAPMTracing, apm ElasticAPM) {
@@ -67,7 +67,7 @@ func TestTestInterfaceWithElasticAPMTracing_F(t *testing.T) {
 		elasticAPM.
 			StartSpanMock.Expect(ctx, "testinterface.F", "testinterface").Return(span, ctxSpan).
 			SetLabelMock.Return().
-			CaptureErrorMock.Expect(ctxSpan, err).Return(nil).
+			CaptureErrorMock.Expect(ctxSpan, err).Return().
 			EndSpanMock.Expect(span).Return()
 		reintroduceElasticAPM(&wrapped, elasticAPM)
 

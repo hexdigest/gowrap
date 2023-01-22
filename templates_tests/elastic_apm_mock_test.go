@@ -18,8 +18,8 @@ import (
 type ElasticAPMMock struct {
 	t minimock.Tester
 
-	funcCaptureError          func(ctx context.Context, e1 error) (ep1 *apm.Error)
-	inspectFuncCaptureError   func(ctx context.Context, e1 error)
+	funcCaptureError          func(ctx context.Context, err error)
+	inspectFuncCaptureError   func(ctx context.Context, err error)
 	afterCaptureErrorCounter  uint64
 	beforeCaptureErrorCounter uint64
 	CaptureErrorMock          mElasticAPMMockCaptureError
@@ -76,25 +76,20 @@ type mElasticAPMMockCaptureError struct {
 
 // ElasticAPMMockCaptureErrorExpectation specifies expectation struct of the ElasticAPM.CaptureError
 type ElasticAPMMockCaptureErrorExpectation struct {
-	mock    *ElasticAPMMock
-	params  *ElasticAPMMockCaptureErrorParams
-	results *ElasticAPMMockCaptureErrorResults
+	mock   *ElasticAPMMock
+	params *ElasticAPMMockCaptureErrorParams
+
 	Counter uint64
 }
 
 // ElasticAPMMockCaptureErrorParams contains parameters of the ElasticAPM.CaptureError
 type ElasticAPMMockCaptureErrorParams struct {
 	ctx context.Context
-	e1  error
-}
-
-// ElasticAPMMockCaptureErrorResults contains results of the ElasticAPM.CaptureError
-type ElasticAPMMockCaptureErrorResults struct {
-	ep1 *apm.Error
+	err error
 }
 
 // Expect sets up expected params for ElasticAPM.CaptureError
-func (mmCaptureError *mElasticAPMMockCaptureError) Expect(ctx context.Context, e1 error) *mElasticAPMMockCaptureError {
+func (mmCaptureError *mElasticAPMMockCaptureError) Expect(ctx context.Context, err error) *mElasticAPMMockCaptureError {
 	if mmCaptureError.mock.funcCaptureError != nil {
 		mmCaptureError.mock.t.Fatalf("ElasticAPMMock.CaptureError mock is already set by Set")
 	}
@@ -103,7 +98,7 @@ func (mmCaptureError *mElasticAPMMockCaptureError) Expect(ctx context.Context, e
 		mmCaptureError.defaultExpectation = &ElasticAPMMockCaptureErrorExpectation{}
 	}
 
-	mmCaptureError.defaultExpectation.params = &ElasticAPMMockCaptureErrorParams{ctx, e1}
+	mmCaptureError.defaultExpectation.params = &ElasticAPMMockCaptureErrorParams{ctx, err}
 	for _, e := range mmCaptureError.expectations {
 		if minimock.Equal(e.params, mmCaptureError.defaultExpectation.params) {
 			mmCaptureError.mock.t.Fatalf("Expectation set by When has same params: %#v", *mmCaptureError.defaultExpectation.params)
@@ -114,7 +109,7 @@ func (mmCaptureError *mElasticAPMMockCaptureError) Expect(ctx context.Context, e
 }
 
 // Inspect accepts an inspector function that has same arguments as the ElasticAPM.CaptureError
-func (mmCaptureError *mElasticAPMMockCaptureError) Inspect(f func(ctx context.Context, e1 error)) *mElasticAPMMockCaptureError {
+func (mmCaptureError *mElasticAPMMockCaptureError) Inspect(f func(ctx context.Context, err error)) *mElasticAPMMockCaptureError {
 	if mmCaptureError.mock.inspectFuncCaptureError != nil {
 		mmCaptureError.mock.t.Fatalf("Inspect function is already set for ElasticAPMMock.CaptureError")
 	}
@@ -125,7 +120,7 @@ func (mmCaptureError *mElasticAPMMockCaptureError) Inspect(f func(ctx context.Co
 }
 
 // Return sets up results that will be returned by ElasticAPM.CaptureError
-func (mmCaptureError *mElasticAPMMockCaptureError) Return(ep1 *apm.Error) *ElasticAPMMock {
+func (mmCaptureError *mElasticAPMMockCaptureError) Return() *ElasticAPMMock {
 	if mmCaptureError.mock.funcCaptureError != nil {
 		mmCaptureError.mock.t.Fatalf("ElasticAPMMock.CaptureError mock is already set by Set")
 	}
@@ -133,12 +128,12 @@ func (mmCaptureError *mElasticAPMMockCaptureError) Return(ep1 *apm.Error) *Elast
 	if mmCaptureError.defaultExpectation == nil {
 		mmCaptureError.defaultExpectation = &ElasticAPMMockCaptureErrorExpectation{mock: mmCaptureError.mock}
 	}
-	mmCaptureError.defaultExpectation.results = &ElasticAPMMockCaptureErrorResults{ep1}
+
 	return mmCaptureError.mock
 }
 
 // Set uses given function f to mock the ElasticAPM.CaptureError method
-func (mmCaptureError *mElasticAPMMockCaptureError) Set(f func(ctx context.Context, e1 error) (ep1 *apm.Error)) *ElasticAPMMock {
+func (mmCaptureError *mElasticAPMMockCaptureError) Set(f func(ctx context.Context, err error)) *ElasticAPMMock {
 	if mmCaptureError.defaultExpectation != nil {
 		mmCaptureError.mock.t.Fatalf("Default expectation is already set for the ElasticAPM.CaptureError method")
 	}
@@ -151,37 +146,16 @@ func (mmCaptureError *mElasticAPMMockCaptureError) Set(f func(ctx context.Contex
 	return mmCaptureError.mock
 }
 
-// When sets expectation for the ElasticAPM.CaptureError which will trigger the result defined by the following
-// Then helper
-func (mmCaptureError *mElasticAPMMockCaptureError) When(ctx context.Context, e1 error) *ElasticAPMMockCaptureErrorExpectation {
-	if mmCaptureError.mock.funcCaptureError != nil {
-		mmCaptureError.mock.t.Fatalf("ElasticAPMMock.CaptureError mock is already set by Set")
-	}
-
-	expectation := &ElasticAPMMockCaptureErrorExpectation{
-		mock:   mmCaptureError.mock,
-		params: &ElasticAPMMockCaptureErrorParams{ctx, e1},
-	}
-	mmCaptureError.expectations = append(mmCaptureError.expectations, expectation)
-	return expectation
-}
-
-// Then sets up ElasticAPM.CaptureError return parameters for the expectation previously defined by the When method
-func (e *ElasticAPMMockCaptureErrorExpectation) Then(ep1 *apm.Error) *ElasticAPMMock {
-	e.results = &ElasticAPMMockCaptureErrorResults{ep1}
-	return e.mock
-}
-
 // CaptureError implements ElasticAPM
-func (mmCaptureError *ElasticAPMMock) CaptureError(ctx context.Context, e1 error) (ep1 *apm.Error) {
+func (mmCaptureError *ElasticAPMMock) CaptureError(ctx context.Context, err error) {
 	mm_atomic.AddUint64(&mmCaptureError.beforeCaptureErrorCounter, 1)
 	defer mm_atomic.AddUint64(&mmCaptureError.afterCaptureErrorCounter, 1)
 
 	if mmCaptureError.inspectFuncCaptureError != nil {
-		mmCaptureError.inspectFuncCaptureError(ctx, e1)
+		mmCaptureError.inspectFuncCaptureError(ctx, err)
 	}
 
-	mm_params := &ElasticAPMMockCaptureErrorParams{ctx, e1}
+	mm_params := &ElasticAPMMockCaptureErrorParams{ctx, err}
 
 	// Record call args
 	mmCaptureError.CaptureErrorMock.mutex.Lock()
@@ -191,29 +165,27 @@ func (mmCaptureError *ElasticAPMMock) CaptureError(ctx context.Context, e1 error
 	for _, e := range mmCaptureError.CaptureErrorMock.expectations {
 		if minimock.Equal(e.params, mm_params) {
 			mm_atomic.AddUint64(&e.Counter, 1)
-			return e.results.ep1
+			return
 		}
 	}
 
 	if mmCaptureError.CaptureErrorMock.defaultExpectation != nil {
 		mm_atomic.AddUint64(&mmCaptureError.CaptureErrorMock.defaultExpectation.Counter, 1)
 		mm_want := mmCaptureError.CaptureErrorMock.defaultExpectation.params
-		mm_got := ElasticAPMMockCaptureErrorParams{ctx, e1}
+		mm_got := ElasticAPMMockCaptureErrorParams{ctx, err}
 		if mm_want != nil && !minimock.Equal(*mm_want, mm_got) {
 			mmCaptureError.t.Errorf("ElasticAPMMock.CaptureError got unexpected parameters, want: %#v, got: %#v%s\n", *mm_want, mm_got, minimock.Diff(*mm_want, mm_got))
 		}
 
-		mm_results := mmCaptureError.CaptureErrorMock.defaultExpectation.results
-		if mm_results == nil {
-			mmCaptureError.t.Fatal("No results are set for the ElasticAPMMock.CaptureError")
-		}
-		return (*mm_results).ep1
+		return
+
 	}
 	if mmCaptureError.funcCaptureError != nil {
-		return mmCaptureError.funcCaptureError(ctx, e1)
+		mmCaptureError.funcCaptureError(ctx, err)
+		return
 	}
-	mmCaptureError.t.Fatalf("Unexpected call to ElasticAPMMock.CaptureError. %v %v", ctx, e1)
-	return
+	mmCaptureError.t.Fatalf("Unexpected call to ElasticAPMMock.CaptureError. %v %v", ctx, err)
+
 }
 
 // CaptureErrorAfterCounter returns a count of finished ElasticAPMMock.CaptureError invocations

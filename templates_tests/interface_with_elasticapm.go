@@ -19,7 +19,7 @@ type TestInterfaceAPMTracing struct {
 	startSpan    func(ctx context.Context, name, spanType string) (*apm.Span, context.Context)
 	endSpan      func(span *apm.Span)
 	setLabel     func(span *apm.Span, key string, value interface{})
-	captureError func(ctx context.Context, err error) *apm.Error
+	captureError func(ctx context.Context, err error)
 }
 
 // NewTestInterfaceAPMTracing returns an instance of the TestInterface decorated with go.elastic.co/apm/v2
@@ -33,7 +33,9 @@ func NewTestInterfaceAPMTracing(base TestInterface) TestInterfaceAPMTracing {
 		setLabel: func(span *apm.Span, key string, value interface{}) {
 			span.SpanData.Context.SetLabel(key, value)
 		},
-		captureError: apm.CaptureError,
+		captureError: func(ctx context.Context, err error) {
+			apm.CaptureError(ctx, err).Send()
+		},
 	}
 }
 
