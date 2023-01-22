@@ -4,6 +4,7 @@ import (
 )
 
 {{ $decorator := (or .Vars.DecoratorName (printf "%sAPMTracing" .Interface.Name)) }}
+{{ $decorator_option := (or .Vars.DecoratorName (printf "%sAPMTracingOption" .Interface.Name)) }}
 {{ $component := (or .Vars.ComponentName (printf "%s" (down .Interface.Name))) }}
 
 // {{$decorator}} implements {{.Interface.Type}} interface with all methods wrapped
@@ -16,22 +17,35 @@ type {{$decorator}} struct {
 	captureError func(ctx context.Context, err error)
 }
 
+type {{$decorator_option}} func (v *{{$decorator}})
+
+func {{$decorator}}WithUsingSetLabel() {{$decorator_option}} {
+	return func(v *{{$decorator}}) {
+		v.setLabel = func(span *apm.Span, key string, value interface{}) {
+			span.SpanData.Context.SetLabel(key, value)
+		}
+	}
+}
 
 // New{{$decorator}} returns an instance of the {{.Interface.Type}} decorated with go.elastic.co/apm/v2
-func New{{$decorator}}(base {{.Interface.Type}}) {{$decorator}} {
-    return {{$decorator}} {
+func New{{$decorator}}(base {{.Interface.Type}}, opts ...{{$decorator}}Option) {{$decorator}} {
+    r := {{$decorator}} {
         base: base,
-		startSpan: apm.StartSpan,
-		endSpan: func(span *apm.Span) {
-		    span.End()
-		},
-		setLabel: func(span *apm.Span, key string, value interface{}) {
-			span.SpanData.Context.SetLabel(key, value)
-		},
-		captureError: func(ctx context.Context, err error) {
-			apm.CaptureError(ctx, err).Send()
-		},
+  		startSpan: apm.StartSpan,
+  		endSpan: func(span *apm.Span) {
+  		    span.End()
+  		},
+  		setLabel: func(span *apm.Span, key string, value interface{}) {
+        },
+  		captureError: func(ctx context.Context, err error) {
+  			apm.CaptureError(ctx, err).Send()
+  		},
     }
+
+    for _, fn := range opts {
+        fn(&r)
+    }
+    return r
 }
 
 {{range $method := .Interface.Methods}}

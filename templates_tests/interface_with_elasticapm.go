@@ -22,21 +22,35 @@ type TestInterfaceAPMTracing struct {
 	captureError func(ctx context.Context, err error)
 }
 
+type TestInterfaceAPMTracingOption func(v *TestInterfaceAPMTracing)
+
+func TestInterfaceAPMTracingWithUsingSetLabel() TestInterfaceAPMTracingOption {
+	return func(v *TestInterfaceAPMTracing) {
+		v.setLabel = func(span *apm.Span, key string, value interface{}) {
+			span.SpanData.Context.SetLabel(key, value)
+		}
+	}
+}
+
 // NewTestInterfaceAPMTracing returns an instance of the TestInterface decorated with go.elastic.co/apm/v2
-func NewTestInterfaceAPMTracing(base TestInterface) TestInterfaceAPMTracing {
-	return TestInterfaceAPMTracing{
+func NewTestInterfaceAPMTracing(base TestInterface, opts ...TestInterfaceAPMTracingOption) TestInterfaceAPMTracing {
+	r := TestInterfaceAPMTracing{
 		base:      base,
 		startSpan: apm.StartSpan,
 		endSpan: func(span *apm.Span) {
 			span.End()
 		},
 		setLabel: func(span *apm.Span, key string, value interface{}) {
-			span.SpanData.Context.SetLabel(key, value)
 		},
 		captureError: func(ctx context.Context, err error) {
 			apm.CaptureError(ctx, err).Send()
 		},
 	}
+
+	for _, fn := range opts {
+		fn(&r)
+	}
+	return r
 }
 
 // ContextNoError implements TestInterface
