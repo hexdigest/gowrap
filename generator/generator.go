@@ -20,7 +20,7 @@ import (
 	"github.com/hexdigest/gowrap/printer"
 )
 
-//Generator generates decorators for the interface types
+// Generator generates decorators for the interface types
 type Generator struct {
 	Options
 
@@ -30,6 +30,8 @@ type Generator struct {
 	dstPackage     *packages.Package
 	methods        methodsList
 	interfaceType  string
+	genericsTypes  string
+	genericsParams string
 	localPrefix    string
 }
 
@@ -85,13 +87,15 @@ type TemplateInputInterface struct {
 	Name string
 	// Type of the interface, with package name qualifier (e.g. sort.Interface)
 	Type string
+	// Generics of the interface when using generics
+	Generics TemplateInputGenerics
 	// Methods name keyed map of method information
 	Methods map[string]Method
 }
 
 type methodsList map[string]Method
 
-//Options of the NewGenerator constructor
+// Options of the NewGenerator constructor
 type Options struct {
 	//InterfaceName is a name of interface type
 	InterfaceName string
@@ -131,7 +135,7 @@ type Options struct {
 var errEmptyInterface = errors.New("interface has no methods")
 var errUnexportedMethod = errors.New("unexported method")
 
-//NewGenerator returns Generator initialized with options
+// NewGenerator returns Generator initialized with options
 func NewGenerator(options Options) (*Generator, error) {
 	if options.Funcs == nil {
 		options.Funcs = make(template.FuncMap)
@@ -185,10 +189,11 @@ func NewGenerator(options Options) (*Generator, error) {
 		options.Imports = append(options.Imports, `"`+srcPackage.PkgPath+`"`)
 	}
 
-	methods, imports, err := findInterface(fs, srcPackage, srcPackageAST, options.InterfaceName)
+	types, methods, imports, err := findInterface(fs, srcPackage, srcPackageAST, options.InterfaceName, nil)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse interface declaration")
 	}
+	genericsTypes, genericsParams := types.buildVars()
 
 	if len(methods) == 0 {
 		return nil, errEmptyInterface
@@ -209,6 +214,8 @@ func NewGenerator(options Options) (*Generator, error) {
 		srcPackage:     srcPackage,
 		dstPackage:     dstPackage,
 		interfaceType:  interfaceType,
+		genericsTypes:  genericsTypes,
+		genericsParams: genericsParams,
 		methods:        methods,
 		localPrefix:    options.LocalPrefix,
 	}, nil
@@ -250,7 +257,7 @@ func makePackage(path string) (*packages.Package, error) {
 	}, nil
 }
 
-//Generate generates code using header and body templates
+// Generate generates code using header and body templates
 func (g Generator) Generate(w io.Writer) error {
 	buf := bytes.NewBuffer([]byte{})
 
@@ -266,7 +273,11 @@ func (g Generator) Generate(w io.Writer) error {
 
 	err = g.bodyTemplate.Execute(buf, TemplateInputs{
 		Interface: TemplateInputInterface{
-			Name:    g.Options.InterfaceName,
+			Name: g.Options.InterfaceName,
+			Generics: TemplateInputGenerics{
+				Types:  g.genericsTypes,
+				Params: g.genericsParams,
+			},
 			Type:    g.interfaceType,
 			Methods: g.methods,
 		},
@@ -290,40 +301,43 @@ func (g Generator) Generate(w io.Writer) error {
 var errInterfaceNotFound = errors.New("interface type declaration not found")
 
 // findInterface looks for the interface declaration in the given directory
-// and returns a list of the interface's methods and a list of imports from the file
+// and returns the generic params if exists, a list of the interface's methods, and a list of imports from the file
 // where interface type declaration was found
-func findInterface(fs *token.FileSet, currentPackage *packages.Package, p *ast.Package, interfaceName string) (methods methodsList, imports []*ast.ImportSpec, err error) {
-	var found bool
-	var types []*ast.TypeSpec
-	var it *ast.InterfaceType
-
+func findInterface(fs *token.FileSet, currentPackage *packages.Package, p *ast.Package, interfaceName string, genericParams genericsParams) (genericsTypes genericsTypes, methods methodsList, imports []*ast.ImportSpec, err error) {
 	//looking for the source interface declaration in all files in the dir
 	//while doing this we also store all found type declarations to check if some of the
 	//interface methods use unexported types
-	for _, f := range p.Files {
-		for _, ts := range typeSpecs(f) {
-			types = append(types, ts)
+	ts, imports, types := iterateFiles(p, interfaceName)
+	if ts == nil {
+		return nil, nil, nil, errors.Wrap(errInterfaceNotFound, interfaceName)
+	}
 
-			if i, ok := ts.Type.(*ast.InterfaceType); ok {
-				if ts.Name.Name == interfaceName && !found {
+	genericsTypes = genericsTypesBuild(ts)
+
+	if it, ok := ts.Type.(*ast.InterfaceType); ok {
+		methods, err = processInterface(fs, currentPackage, it, types, p.Name, imports, genericsTypes, genericParams)
+		if err != nil {
+			return nil, nil, nil, err
+		}
+	}
+
+	return genericsTypes, methods, imports, err
+}
+
+func iterateFiles(p *ast.Package, name string) (selectedType *ast.TypeSpec, imports []*ast.ImportSpec, types []*ast.TypeSpec) {
+	for _, f := range p.Files {
+		if f != nil {
+			for _, ts := range typeSpecs(f) {
+				types = append(types, ts)
+				if ts.Name.Name == name {
+					selectedType = ts
 					imports = f.Imports
-					it = i
-					found = true
+					return
 				}
 			}
 		}
 	}
-
-	if !found {
-		return nil, nil, errors.Wrap(errInterfaceNotFound, interfaceName)
-	}
-
-	methods, err = processInterface(fs, currentPackage, it, types, p.Name, imports)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	return methods, imports, err
+	return
 }
 
 func typeSpecs(f *ast.File) []*ast.TypeSpec {
@@ -342,12 +356,85 @@ func typeSpecs(f *ast.File) []*ast.TypeSpec {
 	return result
 }
 
-func processInterface(fs *token.FileSet, currentPackage *packages.Package, it *ast.InterfaceType, types []*ast.TypeSpec, typesPrefix string, imports []*ast.ImportSpec) (methods methodsList, err error) {
+func getEmbeddedMethods(t ast.Expr, fs *token.FileSet, currentPackage *packages.Package, types []*ast.TypeSpec, pr typePrinter, typesPrefix string, imports []*ast.ImportSpec, params genericsParams) (param genericsParam, methods methodsList, err error) {
+	switch v := t.(type) {
+	case *ast.SelectorExpr:
+		if x, ok := v.X.(*ast.Ident); ok && x != nil {
+			param.Name, err = pr.PrintType(x)
+			if err != nil {
+				return
+			}
+		}
+
+		methods, err = processSelector(fs, currentPackage, v, imports, params)
+		return
+
+	case *ast.Ident:
+		param.Name, err = pr.PrintType(v)
+		if err != nil {
+			return
+		}
+		methods, err = processIdent(fs, currentPackage, v, types, typesPrefix, imports, params)
+		return
+	}
+	return
+}
+
+func processEmbedded(t ast.Expr, fs *token.FileSet, currentPackage *packages.Package, types []*ast.TypeSpec, pr typePrinter, typesPrefix string, imports []*ast.ImportSpec, params genericsParams) (param genericsParam, embeddedMethods methodsList, err error) {
+	var x ast.Expr
+	var genericsParam bool
+
+	switch v := t.(type) {
+	case *ast.IndexExpr:
+		x = v.X
+		genericsParam = true
+
+		param, _, err = processEmbedded(v.Index, fs, currentPackage, types, pr, typesPrefix, imports, params)
+		if err != nil {
+			return
+		}
+		if param.Name != "" {
+			params = append(params, param)
+		}
+
+	case *ast.IndexListExpr:
+		x = v.X
+		genericsParam = true
+
+		if v.Indices != nil {
+			for _, index := range v.Indices {
+				param, _, err = processEmbedded(index, fs, currentPackage, types, pr, typesPrefix, imports, params)
+				if err != nil {
+					return
+				}
+				if param.Name != "" {
+					params = append(params, param)
+				}
+			}
+		}
+	default:
+		x = v
+	}
+
+	param, embeddedMethods, err = getEmbeddedMethods(x, fs, currentPackage, types, pr, typesPrefix, imports, params)
+	if err != nil {
+		return
+	}
+
+	if genericsParam {
+		param.Params = params
+	}
+	return
+}
+
+func processInterface(fs *token.FileSet, currentPackage *packages.Package, it *ast.InterfaceType, types []*ast.TypeSpec, typesPrefix string, imports []*ast.ImportSpec, genericsTypes genericsTypes, params genericsParams) (methods methodsList, err error) {
 	if it.Methods == nil {
 		return nil, nil
 	}
 
 	methods = make(methodsList, len(it.Methods.List))
+
+	pr := printer.New(fs, types, typesPrefix)
 
 	for _, field := range it.Methods.List {
 		var embeddedMethods methodsList
@@ -356,15 +443,15 @@ func processInterface(fs *token.FileSet, currentPackage *packages.Package, it *a
 		switch v := field.Type.(type) {
 		case *ast.FuncType:
 			var method *Method
-			method, err = NewMethod(field.Names[0].Name, field, printer.New(fs, types, typesPrefix))
+
+			method, err = NewMethod(field.Names[0].Name, field, pr, genericsTypes, params)
 			if err == nil {
 				methods[field.Names[0].Name] = *method
 				continue
 			}
-		case *ast.SelectorExpr:
-			embeddedMethods, err = processSelector(fs, currentPackage, v, imports)
-		case *ast.Ident:
-			embeddedMethods, err = processIdent(fs, currentPackage, v, types, typesPrefix, imports)
+
+		default:
+			_, embeddedMethods, err = processEmbedded(v, fs, currentPackage, types, pr, typesPrefix, imports, params)
 		}
 
 		if err != nil {
@@ -380,8 +467,8 @@ func processInterface(fs *token.FileSet, currentPackage *packages.Package, it *a
 	return methods, nil
 }
 
-func processSelector(fs *token.FileSet, currentPackage *packages.Package, se *ast.SelectorExpr, imports []*ast.ImportSpec) (methodsList, error) {
-	interfaceName := se.Sel.Name
+func processSelector(fs *token.FileSet, currentPackage *packages.Package, se *ast.SelectorExpr, imports []*ast.ImportSpec, params genericsParams) (methodsList, error) {
+	selectedName := se.Sel.Name
 	packageSelector := se.X.(*ast.Ident).Name
 
 	importPath, err := findImportPathForName(packageSelector, imports, currentPackage)
@@ -399,13 +486,13 @@ func processSelector(fs *token.FileSet, currentPackage *packages.Package, se *as
 		return nil, errors.Wrap(err, "failed to import package")
 	}
 
-	methods, _, err := findInterface(fs, p, astPkg, interfaceName)
+	_, methods, _, err := findInterface(fs, p, astPkg, selectedName, params)
 
 	return methods, err
 }
 
-//mergeMethods merges two methods list. Retains overlapping methods from the
-//parent list
+// mergeMethods merges two methods list. Retains overlapping methods from the
+// parent list
 func mergeMethods(methods, embeddedMethods methodsList) (methodsList, error) {
 	if methods == nil || embeddedMethods == nil {
 		return methods, nil
@@ -426,8 +513,9 @@ func mergeMethods(methods, embeddedMethods methodsList) (methodsList, error) {
 var errEmbeddedInterfaceNotFound = errors.New("embedded interface not found")
 var errNotAnInterface = errors.New("embedded type is not an interface")
 
-func processIdent(fs *token.FileSet, currentPackage *packages.Package, i *ast.Ident, types []*ast.TypeSpec, typesPrefix string, imports []*ast.ImportSpec) (methodsList, error) {
+func processIdent(fs *token.FileSet, currentPackage *packages.Package, i *ast.Ident, types []*ast.TypeSpec, typesPrefix string, imports []*ast.ImportSpec, params genericsParams) (methodsList, error) {
 	var embeddedInterface *ast.InterfaceType
+	var genericsTypes genericsTypes
 	for _, t := range types {
 		if t.Name.Name == i.Name {
 			var ok bool
@@ -435,15 +523,17 @@ func processIdent(fs *token.FileSet, currentPackage *packages.Package, i *ast.Id
 			if !ok {
 				return nil, errors.Wrap(errNotAnInterface, t.Name.Name)
 			}
+
+			genericsTypes = genericsTypesBuild(t)
 			break
 		}
 	}
 
 	if embeddedInterface == nil {
-		return nil, errors.Wrap(errEmbeddedInterfaceNotFound, i.Name)
+		return nil, nil
 	}
 
-	return processInterface(fs, currentPackage, embeddedInterface, types, typesPrefix, imports)
+	return processInterface(fs, currentPackage, embeddedInterface, types, typesPrefix, imports, genericsTypes, params)
 }
 
 var errUnknownSelector = errors.New("unknown selector")

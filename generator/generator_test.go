@@ -111,11 +111,12 @@ func Test_findImportPathForName(t *testing.T) {
 
 func Test_processIdent(t *testing.T) {
 	type args struct {
-		fs          *token.FileSet
-		i           *ast.Ident
-		types       []*ast.TypeSpec
-		typesPrefix string
-		imports     []*ast.ImportSpec
+		fs             *token.FileSet
+		i              *ast.Ident
+		types          []*ast.TypeSpec
+		typesPrefix    string
+		imports        []*ast.ImportSpec
+		genericsParams genericsParams
 	}
 	tests := []struct {
 		name string
@@ -162,7 +163,7 @@ func Test_processIdent(t *testing.T) {
 			mc := minimock.NewController(t)
 			defer mc.Wait(time.Second)
 
-			got1, err := processIdent(tt.args.fs, nil, tt.args.i, tt.args.types, tt.args.typesPrefix, tt.args.imports)
+			got1, err := processIdent(tt.args.fs, nil, tt.args.i, tt.args.types, tt.args.typesPrefix, tt.args.imports, tt.args.genericsParams)
 
 			assert.Equal(t, tt.want1, got1, "processIdent returned unexpected result")
 
@@ -254,10 +255,11 @@ func Test_mergeMethods(t *testing.T) {
 
 func Test_processSelector(t *testing.T) {
 	type args struct {
-		fs      *token.FileSet
-		cp      *packages.Package
-		se      *ast.SelectorExpr
-		imports []*ast.ImportSpec
+		fs             *token.FileSet
+		cp             *packages.Package
+		se             *ast.SelectorExpr
+		imports        []*ast.ImportSpec
+		genericsParams genericsParams
 	}
 	tests := []struct {
 		name string
@@ -300,7 +302,7 @@ func Test_processSelector(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got1, err := processSelector(tt.args.fs, tt.args.cp, tt.args.se, tt.args.imports)
+			got1, err := processSelector(tt.args.fs, tt.args.cp, tt.args.se, tt.args.imports, tt.args.genericsParams)
 
 			assert.Equal(t, tt.want1, got1, "processSelector returned unexpected result")
 
@@ -318,12 +320,14 @@ func Test_processSelector(t *testing.T) {
 
 func Test_processInterface(t *testing.T) {
 	type args struct {
-		fs          *token.FileSet
-		cp          *packages.Package
-		it          *ast.InterfaceType
-		types       []*ast.TypeSpec
-		typesPrefix string
-		imports     []*ast.ImportSpec
+		fs             *token.FileSet
+		cp             *packages.Package
+		it             *ast.InterfaceType
+		types          []*ast.TypeSpec
+		typesPrefix    string
+		imports        []*ast.ImportSpec
+		genericsTypes  genericsTypes
+		genericsParams genericsParams
 	}
 	tests := []struct {
 		name string
@@ -383,11 +387,25 @@ func Test_processInterface(t *testing.T) {
 			want1:   methodsList{},
 			wantErr: false,
 		},
+		{
+			name: "index list expression with identifier",
+			args: args{
+				fs: token.NewFileSet(),
+				it: &ast.InterfaceType{Methods: &ast.FieldList{List: []*ast.Field{
+					{
+						Type: &ast.IndexListExpr{X: &ast.Ident{Name: "Embedded"}},
+					},
+				}}},
+				types: []*ast.TypeSpec{{Name: &ast.Ident{Name: "Embedded"}, Type: &ast.InterfaceType{}}},
+			},
+			want1:   methodsList{},
+			wantErr: false,
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got1, err := processInterface(tt.args.fs, tt.args.cp, tt.args.it, tt.args.types, tt.args.typesPrefix, tt.args.imports)
+			got1, err := processInterface(tt.args.fs, tt.args.cp, tt.args.it, tt.args.types, tt.args.typesPrefix, tt.args.imports, tt.args.genericsTypes, tt.args.genericsParams)
 
 			assert.Equal(t, tt.want1, got1, "processInterface returned unexpected result")
 
@@ -418,9 +436,10 @@ func Test_typeSpecs(t *testing.T) {
 
 func Test_findInterface(t *testing.T) {
 	type args struct {
-		fs            *token.FileSet
-		p             *ast.Package
-		interfaceName string
+		fs             *token.FileSet
+		p              *ast.Package
+		interfaceName  string
+		genericsParams genericsParams
 	}
 	tests := []struct {
 		name string
@@ -459,7 +478,7 @@ func Test_findInterface(t *testing.T) {
 			mc := minimock.NewController(t)
 			defer mc.Wait(time.Second)
 
-			got1, _, err := findInterface(tt.args.fs, nil, tt.args.p, tt.args.interfaceName)
+			_, got1, _, err := findInterface(tt.args.fs, nil, tt.args.p, tt.args.interfaceName, tt.args.genericsParams)
 
 			assert.Equal(t, tt.want1, got1, "findInterface returned unexpected result")
 
