@@ -138,17 +138,6 @@ func Test_processIdent(t *testing.T) {
 			},
 		},
 		{
-			name: "embedded interface not found",
-			args: args{
-				i:     &ast.Ident{Name: "name"},
-				types: []*ast.TypeSpec{},
-			},
-			wantErr: true,
-			inspectErr: func(err error, t *testing.T) {
-				assert.Equal(t, errEmbeddedInterfaceNotFound, errors.Cause(err))
-			},
-		},
-		{
 			name: "embedded interface found",
 			args: args{
 				i:     &ast.Ident{Name: "name"},
@@ -355,19 +344,6 @@ func Test_processInterface(t *testing.T) {
 					{
 						Names: []*ast.Ident{{Name: "methodName"}},
 						Type:  &ast.SelectorExpr{X: &ast.Ident{Name: "unknown"}, Sel: &ast.Ident{Name: "Interface"}},
-					},
-				}}},
-			},
-			wantErr: true,
-		},
-		{
-			name: "identifier",
-			args: args{
-				fs: token.NewFileSet(),
-				it: &ast.InterfaceType{Methods: &ast.FieldList{List: []*ast.Field{
-					{
-						Names: []*ast.Ident{{Name: "methodName"}},
-						Type:  &ast.Ident{Name: "unknown"},
 					},
 				}}},
 			},

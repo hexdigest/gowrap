@@ -510,7 +510,6 @@ func mergeMethods(methods, embeddedMethods methodsList) (methodsList, error) {
 	return result, nil
 }
 
-var errEmbeddedInterfaceNotFound = errors.New("embedded interface not found")
 var errNotAnInterface = errors.New("embedded type is not an interface")
 
 func processIdent(fs *token.FileSet, currentPackage *packages.Package, i *ast.Ident, types []*ast.TypeSpec, typesPrefix string, imports []*ast.ImportSpec, params genericsParams) (methodsList, error) {
