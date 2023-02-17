@@ -430,7 +430,7 @@ func Test_findInterface(t *testing.T) {
 			args:    args{p: &ast.Package{}},
 			wantErr: true,
 			inspectErr: func(err error, t *testing.T) {
-				assert.Equal(t, errInterfaceNotFound, errors.Cause(err))
+				assert.Equal(t, errTargetNotFound, errors.Cause(err))
 			},
 		},
 		{
@@ -454,7 +454,7 @@ func Test_findInterface(t *testing.T) {
 			mc := minimock.NewController(t)
 			defer mc.Wait(time.Second)
 
-			_, got1, _, err := findInterface(tt.args.fs, nil, tt.args.p, tt.args.interfaceName, tt.args.genericsParams)
+			_, got1, _, err := findTarget(tt.args.fs, nil, tt.args.p, tt.args.interfaceName, tt.args.genericsParams)
 
 			assert.Equal(t, tt.want1, got1, "findInterface returned unexpected result")
 
