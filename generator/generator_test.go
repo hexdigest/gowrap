@@ -315,7 +315,7 @@ func Test_processInterface(t *testing.T) {
 		types          []*ast.TypeSpec
 		typesPrefix    string
 		imports        []*ast.ImportSpec
-		genericsTypes  genericsTypes
+		genericsTypes  genericTypes
 		genericsParams genericsParams
 	}
 	tests := []struct {

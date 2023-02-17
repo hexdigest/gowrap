@@ -21,14 +21,14 @@ type TemplateInputGenerics struct {
 	Params string
 }
 
-type genericsParams []genericsParam
+type genericParams []genericParam
 
-type genericsParam struct {
+type genericParam struct {
 	Name   string
-	Params genericsParams
+	Params genericParams
 }
 
-func (g genericsParam) String() string {
+func (g genericParam) String() string {
 	name := g.Name
 	var subParamNames []string
 	for _, subParam := range g.Params {
@@ -40,9 +40,9 @@ func (g genericsParam) String() string {
 	return name
 }
 
-type genericsTypes []genericsType
+type genericTypes []genericType
 
-type genericsType struct {
+type genericType struct {
 	Type  string
 	Names []string
 }
@@ -54,7 +54,7 @@ func genericsWithBracketsBuild(t string) string {
 	return t
 }
 
-func (g genericsTypes) buildVars() (string, string) {
+func (g genericTypes) buildVars() (string, string) {
 	var types, typesSep string
 	var params, paramsSep string
 
@@ -77,7 +77,7 @@ func (g genericsTypes) buildVars() (string, string) {
 	return genericsWithBracketsBuild(types), genericsWithBracketsBuild(params)
 }
 
-func genericsTypesBuild(ts *ast.TypeSpec) (types genericsTypes) {
+func genericTypesBuild(ts *ast.TypeSpec) (types genericTypes) {
 	if ts.TypeParams != nil {
 		for _, param := range ts.TypeParams.List {
 			if param != nil {
@@ -88,7 +88,7 @@ func genericsTypesBuild(ts *ast.TypeSpec) (types genericsTypes) {
 							paramNames = append(paramNames, name.Name)
 						}
 					}
-					types = append(types, genericsType{
+					types = append(types, genericType{
 						Type:  gpt.Name,
 						Names: paramNames,
 					})
@@ -99,16 +99,16 @@ func genericsTypesBuild(ts *ast.TypeSpec) (types genericsTypes) {
 	return
 }
 
-func genericsBuildParamString(typeStr string, genericsTypes genericsTypes, genericsParams genericsParams) string {
-	c := 0
-	for _, genType := range genericsTypes {
+func genericBuildParamString(typeStr string, genericTypes genericTypes, genericParams genericParams) string {
+	i := 0
+	for _, genType := range genericTypes {
 		for _, name := range genType.Names {
 			if name == typeStr {
-				if len(genericsParams) > c {
-					return genericsParams[c].String()
+				if len(genericParams) > i {
+					return genericParams[i].String()
 				}
 			}
-			c++
+			i++
 		}
 	}
 	return typeStr

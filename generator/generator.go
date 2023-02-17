@@ -303,7 +303,7 @@ var errInterfaceNotFound = errors.New("interface type declaration not found")
 // findInterface looks for the interface declaration in the given directory
 // and returns the generic params if exists, a list of the interface's methods, and a list of imports from the file
 // where interface type declaration was found
-func findInterface(fs *token.FileSet, currentPackage *packages.Package, p *ast.Package, interfaceName string, genericParams genericsParams) (genericsTypes genericsTypes, methods methodsList, imports []*ast.ImportSpec, err error) {
+func findInterface(fs *token.FileSet, currentPackage *packages.Package, p *ast.Package, interfaceName string, genericParams genericParams) (genericTypes genericTypes, methods methodsList, imports []*ast.ImportSpec, err error) {
 	//looking for the source interface declaration in all files in the dir
 	//while doing this we also store all found type declarations to check if some of the
 	//interface methods use unexported types
@@ -312,16 +312,16 @@ func findInterface(fs *token.FileSet, currentPackage *packages.Package, p *ast.P
 		return nil, nil, nil, errors.Wrap(errInterfaceNotFound, interfaceName)
 	}
 
-	genericsTypes = genericsTypesBuild(ts)
+	genericTypes = genericTypesBuild(ts)
 
 	if it, ok := ts.Type.(*ast.InterfaceType); ok {
-		methods, err = processInterface(fs, currentPackage, it, types, p.Name, imports, genericsTypes, genericParams)
+		methods, err = processInterface(fs, currentPackage, it, types, p.Name, imports, genericTypes, genericParams)
 		if err != nil {
 			return nil, nil, nil, err
 		}
 	}
 
-	return genericsTypes, methods, imports, err
+	return genericTypes, methods, imports, err
 }
 
 func iterateFiles(p *ast.Package, name string) (selectedType *ast.TypeSpec, imports []*ast.ImportSpec, types []*ast.TypeSpec) {
@@ -356,7 +356,7 @@ func typeSpecs(f *ast.File) []*ast.TypeSpec {
 	return result
 }
 
-func getEmbeddedMethods(t ast.Expr, fs *token.FileSet, currentPackage *packages.Package, types []*ast.TypeSpec, pr typePrinter, typesPrefix string, imports []*ast.ImportSpec, params genericsParams) (param genericsParam, methods methodsList, err error) {
+func getEmbeddedMethods(t ast.Expr, fs *token.FileSet, currentPackage *packages.Package, types []*ast.TypeSpec, pr typePrinter, typesPrefix string, imports []*ast.ImportSpec, params genericParams) (param genericParam, methods methodsList, err error) {
 	switch v := t.(type) {
 	case *ast.SelectorExpr:
 		if x, ok := v.X.(*ast.Ident); ok && x != nil {
@@ -380,35 +380,35 @@ func getEmbeddedMethods(t ast.Expr, fs *token.FileSet, currentPackage *packages.
 	return
 }
 
-func processEmbedded(t ast.Expr, fs *token.FileSet, currentPackage *packages.Package, types []*ast.TypeSpec, pr typePrinter, typesPrefix string, imports []*ast.ImportSpec, params genericsParams) (param genericsParam, embeddedMethods methodsList, err error) {
+func processEmbedded(t ast.Expr, fs *token.FileSet, currentPackage *packages.Package, types []*ast.TypeSpec, pr typePrinter, typesPrefix string, imports []*ast.ImportSpec, genericParams genericParams) (genericParam genericParam, embeddedMethods methodsList, err error) {
 	var x ast.Expr
-	var genericsParam bool
+	var hasGenericsParams bool
 
 	switch v := t.(type) {
 	case *ast.IndexExpr:
 		x = v.X
-		genericsParam = true
+		hasGenericsParams = true
 
-		param, _, err = processEmbedded(v.Index, fs, currentPackage, types, pr, typesPrefix, imports, params)
+		genericParam, _, err = processEmbedded(v.Index, fs, currentPackage, types, pr, typesPrefix, imports, genericParams)
 		if err != nil {
 			return
 		}
-		if param.Name != "" {
-			params = append(params, param)
+		if genericParam.Name != "" {
+			genericParams = append(genericParams, genericParam)
 		}
 
 	case *ast.IndexListExpr:
 		x = v.X
-		genericsParam = true
+		hasGenericsParams = true
 
 		if v.Indices != nil {
 			for _, index := range v.Indices {
-				param, _, err = processEmbedded(index, fs, currentPackage, types, pr, typesPrefix, imports, params)
+				genericParam, _, err = processEmbedded(index, fs, currentPackage, types, pr, typesPrefix, imports, genericParams)
 				if err != nil {
 					return
 				}
-				if param.Name != "" {
-					params = append(params, param)
+				if genericParam.Name != "" {
+					genericParams = append(genericParams, genericParam)
 				}
 			}
 		}
@@ -416,18 +416,18 @@ func processEmbedded(t ast.Expr, fs *token.FileSet, currentPackage *packages.Pac
 		x = v
 	}
 
-	param, embeddedMethods, err = getEmbeddedMethods(x, fs, currentPackage, types, pr, typesPrefix, imports, params)
+	genericParam, embeddedMethods, err = getEmbeddedMethods(x, fs, currentPackage, types, pr, typesPrefix, imports, genericParam.Params)
 	if err != nil {
 		return
 	}
 
-	if genericsParam {
-		param.Params = params
+	if hasGenericsParams {
+		genericParam.Params = genericParam.Params
 	}
 	return
 }
 
-func processInterface(fs *token.FileSet, currentPackage *packages.Package, it *ast.InterfaceType, types []*ast.TypeSpec, typesPrefix string, imports []*ast.ImportSpec, genericsTypes genericsTypes, params genericsParams) (methods methodsList, err error) {
+func processInterface(fs *token.FileSet, currentPackage *packages.Package, it *ast.InterfaceType, types []*ast.TypeSpec, typesPrefix string, imports []*ast.ImportSpec, genericsTypes genericTypes, genericParams genericParams) (methods methodsList, err error) {
 	if it.Methods == nil {
 		return nil, nil
 	}
@@ -444,14 +444,14 @@ func processInterface(fs *token.FileSet, currentPackage *packages.Package, it *a
 		case *ast.FuncType:
 			var method *Method
 
-			method, err = NewMethod(field.Names[0].Name, field, pr, genericsTypes, params)
+			method, err = NewMethod(field.Names[0].Name, field, pr, genericsTypes, genericParams)
 			if err == nil {
 				methods[field.Names[0].Name] = *method
 				continue
 			}
 
 		default:
-			_, embeddedMethods, err = processEmbedded(v, fs, currentPackage, types, pr, typesPrefix, imports, params)
+			_, embeddedMethods, err = processEmbedded(v, fs, currentPackage, types, pr, typesPrefix, imports, genericParams)
 		}
 
 		if err != nil {
@@ -467,7 +467,7 @@ func processInterface(fs *token.FileSet, currentPackage *packages.Package, it *a
 	return methods, nil
 }
 
-func processSelector(fs *token.FileSet, currentPackage *packages.Package, se *ast.SelectorExpr, imports []*ast.ImportSpec, params genericsParams) (methodsList, error) {
+func processSelector(fs *token.FileSet, currentPackage *packages.Package, se *ast.SelectorExpr, imports []*ast.ImportSpec, genericParams genericParams) (methodsList, error) {
 	selectedName := se.Sel.Name
 	packageSelector := se.X.(*ast.Ident).Name
 
@@ -486,7 +486,7 @@ func processSelector(fs *token.FileSet, currentPackage *packages.Package, se *as
 		return nil, errors.Wrap(err, "failed to import package")
 	}
 
-	_, methods, _, err := findInterface(fs, p, astPkg, selectedName, params)
+	_, methods, _, err := findInterface(fs, p, astPkg, selectedName, genericParams)
 
 	return methods, err
 }
@@ -512,9 +512,9 @@ func mergeMethods(methods, embeddedMethods methodsList) (methodsList, error) {
 
 var errNotAnInterface = errors.New("embedded type is not an interface")
 
-func processIdent(fs *token.FileSet, currentPackage *packages.Package, i *ast.Ident, types []*ast.TypeSpec, typesPrefix string, imports []*ast.ImportSpec, params genericsParams) (methodsList, error) {
+func processIdent(fs *token.FileSet, currentPackage *packages.Package, i *ast.Ident, types []*ast.TypeSpec, typesPrefix string, imports []*ast.ImportSpec, genericParams genericParams) (methodsList, error) {
 	var embeddedInterface *ast.InterfaceType
-	var genericsTypes genericsTypes
+	var genericsTypes genericTypes
 	for _, t := range types {
 		if t.Name.Name == i.Name {
 			var ok bool
@@ -523,7 +523,7 @@ func processIdent(fs *token.FileSet, currentPackage *packages.Package, i *ast.Id
 				return nil, errors.Wrap(errNotAnInterface, t.Name.Name)
 			}
 
-			genericsTypes = genericsTypesBuild(t)
+			genericsTypes = genericTypesBuild(t)
 			break
 		}
 	}
@@ -532,7 +532,7 @@ func processIdent(fs *token.FileSet, currentPackage *packages.Package, i *ast.Id
 		return nil, nil
 	}
 
-	return processInterface(fs, currentPackage, embeddedInterface, types, typesPrefix, imports, genericsTypes, params)
+	return processInterface(fs, currentPackage, embeddedInterface, types, typesPrefix, imports, genericsTypes, genericParams)
 }
 
 var errUnknownSelector = errors.New("unknown selector")
