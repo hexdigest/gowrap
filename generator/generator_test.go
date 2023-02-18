@@ -378,11 +378,31 @@ func Test_processInterface(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "index expression with identifier",
+			args: args{
+				it: &ast.InterfaceType{Methods: &ast.FieldList{List: []*ast.Field{
+					{
+						Type: &ast.IndexExpr{X: &ast.Ident{Name: "Embedded"}, Index: &ast.Ident{Name: "Embedded_2"}},
+					},
+				}}},
+				targetInput: targetProcessInput{
+					processInput: processInput{
+						fileSet: token.NewFileSet(),
+					},
+					types: []*ast.TypeSpec{{Name: &ast.Ident{Name: "Embedded"}, Type: &ast.InterfaceType{}}},
+				},
+			},
+			want1:   methodsList{},
+			wantErr: false,
+		},
+		{
 			name: "index list expression with identifier",
 			args: args{
 				it: &ast.InterfaceType{Methods: &ast.FieldList{List: []*ast.Field{
 					{
-						Type: &ast.IndexListExpr{X: &ast.Ident{Name: "Embedded"}},
+						Type: &ast.IndexListExpr{X: &ast.Ident{Name: "Embedded"}, Indices: []ast.Expr{
+							&ast.Ident{Name: "Embedded_2"},
+						}},
 					},
 				}}},
 				targetInput: targetProcessInput{
