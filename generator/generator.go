@@ -20,7 +20,7 @@ import (
 	"github.com/hexdigest/gowrap/printer"
 )
 
-//Generator generates decorators for the interface types
+// Generator generates decorators for the interface types
 type Generator struct {
 	Options
 
@@ -91,7 +91,7 @@ type TemplateInputInterface struct {
 
 type methodsList map[string]Method
 
-//Options of the NewGenerator constructor
+// Options of the NewGenerator constructor
 type Options struct {
 	//InterfaceName is a name of interface type
 	InterfaceName string
@@ -131,7 +131,7 @@ type Options struct {
 var errEmptyInterface = errors.New("interface has no methods")
 var errUnexportedMethod = errors.New("unexported method")
 
-//NewGenerator returns Generator initialized with options
+// NewGenerator returns Generator initialized with options
 func NewGenerator(options Options) (*Generator, error) {
 	if options.Funcs == nil {
 		options.Funcs = make(template.FuncMap)
@@ -250,7 +250,7 @@ func makePackage(path string) (*packages.Package, error) {
 	}, nil
 }
 
-//Generate generates code using header and body templates
+// Generate generates code using header and body templates
 func (g Generator) Generate(w io.Writer) error {
 	buf := bytes.NewBuffer([]byte{})
 
@@ -404,8 +404,8 @@ func processSelector(fs *token.FileSet, currentPackage *packages.Package, se *as
 	return methods, err
 }
 
-//mergeMethods merges two methods list. Retains overlapping methods from the
-//parent list
+// mergeMethods merges two methods list. Retains overlapping methods from the
+// parent list
 func mergeMethods(methods, embeddedMethods methodsList) (methodsList, error) {
 	if methods == nil || embeddedMethods == nil {
 		return methods, nil

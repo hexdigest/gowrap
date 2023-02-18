@@ -19,7 +19,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-//GenerateCommand implements Command interface
+// GenerateCommand implements Command interface
 type GenerateCommand struct {
 	BaseCommand
 
@@ -35,7 +35,7 @@ type GenerateCommand struct {
 	filepath fs
 }
 
-//NewGenerateCommand creates GenerateCommand
+// NewGenerateCommand creates GenerateCommand
 func NewGenerateCommand(l remoteTemplateLoader) *GenerateCommand {
 	gc := &GenerateCommand{
 		loader: loader{fileReader: ioutil.ReadFile, remoteLoader: l},
@@ -215,10 +215,10 @@ type varFlag struct {
 	value interface{}
 }
 
-//vars is a helper type that implements flag.Value to read multiple vars from the command line
+// vars is a helper type that implements flag.Value to read multiple vars from the command line
 type vars []varFlag
 
-//String implements flag.Value
+// String implements flag.Value
 func (v vars) String() string {
 	return fmt.Sprintf("%#v", v)
 }

@@ -10,13 +10,13 @@ import (
 
 type writeFileFunc func(filename string, data []byte, perm os.FileMode) error
 
-//remoteTemplateLoader returns loads template by an URL or a reference to the github repo
+// remoteTemplateLoader returns loads template by an URL or a reference to the github repo
 type remoteTemplateLoader interface {
 	List() ([]string, error)
 	Load(path string) (tmpl []byte, url string, err error)
 }
 
-//NewTemplateCommand creates TemplateCommand
+// NewTemplateCommand creates TemplateCommand
 func NewTemplateCommand(loader remoteTemplateLoader) *TemplateCommand {
 	return &TemplateCommand{
 		BaseCommand: BaseCommand{
@@ -36,7 +36,7 @@ Subcommands are:
 	}
 }
 
-//TemplateCommand implements Command interface
+// TemplateCommand implements Command interface
 type TemplateCommand struct {
 	BaseCommand
 	loader remoteTemplateLoader

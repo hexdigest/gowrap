@@ -17,7 +17,7 @@ func (v *ValidatableRequest) Validate() error {
 	return v.err
 }
 
-//TestInterface is used to test templates
+// TestInterface is used to test templates
 type InterfaceWithValidtableArg interface {
 	Method(ctx context.Context, r *ValidatableRequest) error
 }

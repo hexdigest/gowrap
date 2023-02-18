@@ -17,7 +17,7 @@ type MethodRequest struct {
 
 type MethodResponse struct{}
 
-//TestInterface is used to test templates
+// TestInterface is used to test templates
 type InterfaceWithTwirpError interface {
 	Method(ctx context.Context, r *MethodRequest) (*MethodResponse, error)
 }
