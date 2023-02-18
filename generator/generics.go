@@ -6,10 +6,10 @@ import (
 )
 
 const (
-	genericsSeparator = ", "
+	genericSeparator = ", "
 
-	genericsSquareBracketStart = "["
-	genericsSquareBracketEnd   = "]"
+	genericSquareBracketStart = "["
+	genericSquareBracketEnd   = "]"
 )
 
 // TemplateInputGenerics subset of generics interface information used for template generation
@@ -35,7 +35,7 @@ func (g genericParam) String() string {
 		subParamNames = append(subParamNames, subParam.String())
 	}
 	if len(g.Params) > 0 {
-		name += genericsSquareBracketStart + strings.Join(subParamNames, genericsSeparator) + genericsSquareBracketEnd
+		name += genericSquareBracketStart + strings.Join(subParamNames, genericSeparator) + genericSquareBracketEnd
 	}
 	return name
 }
@@ -47,9 +47,9 @@ type genericType struct {
 	Names []string
 }
 
-func genericsWithBracketsBuild(t string) string {
+func buildGenericsWithBrackets(t string) string {
 	if t != "" {
-		t = genericsSquareBracketStart + t + genericsSquareBracketEnd
+		t = genericSquareBracketStart + t + genericSquareBracketEnd
 	}
 	return t
 }
@@ -64,20 +64,20 @@ func (g genericTypes) buildVars() (string, string) {
 		for _, name := range genType.Names {
 			paramsByType += paramsByTypeSep + name
 			params += paramsSep + name
-			paramsSep = genericsSeparator
-			paramsByTypeSep = genericsSeparator
+			paramsSep = genericSeparator
+			paramsByTypeSep = genericSeparator
 		}
 
 		if paramsByType != "" {
 			types += typesSep + paramsByType + " " + genType.Type
-			typesSep = genericsSeparator
+			typesSep = genericSeparator
 		}
 	}
 
-	return genericsWithBracketsBuild(types), genericsWithBracketsBuild(params)
+	return buildGenericsWithBrackets(types), buildGenericsWithBrackets(params)
 }
 
-func genericTypesBuild(ts *ast.TypeSpec) (types genericTypes) {
+func buildGenericTypesFromSpec(ts *ast.TypeSpec) (types genericTypes) {
 	if ts.TypeParams != nil {
 		for _, param := range ts.TypeParams.List {
 			if param != nil {
@@ -99,7 +99,7 @@ func genericTypesBuild(ts *ast.TypeSpec) (types genericTypes) {
 	return
 }
 
-func genericBuildParamString(typeStr string, genericTypes genericTypes, genericParams genericParams) string {
+func buildGenericParamsString(typeStr string, genericTypes genericTypes, genericParams genericParams) string {
 	i := 0
 	for _, genType := range genericTypes {
 		for _, name := range genType.Names {

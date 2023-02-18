@@ -139,7 +139,7 @@ func NewParam(name string, fi *ast.Field, usedNames map[string]bool, printer typ
 		return nil, err
 	}
 
-	typeStr = genericBuildParamString(typeStr, genericTypes, genericParams)
+	typeStr = buildGenericParamsString(typeStr, genericTypes, genericParams)
 
 	_, variadic := typ.(*ast.Ellipsis)
 	p := &Param{

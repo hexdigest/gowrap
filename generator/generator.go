@@ -30,8 +30,8 @@ type Generator struct {
 	dstPackage     *packages.Package
 	methods        methodsList
 	interfaceType  string
-	genericsTypes  string
-	genericsParams string
+	genericTypes   string
+	genericParams  string
 	localPrefix    string
 }
 
@@ -135,17 +135,17 @@ type methodsList map[string]Method
 type processInput struct {
 	fileSet        *token.FileSet
 	currentPackage *packages.Package
-	pacakge        *ast.Package
+	astPackage     *ast.Package
 	targetName     string
 	genericParams  genericParams
 }
 
 type targetProcessInput struct {
 	processInput
-	types         []*ast.TypeSpec
-	typesPrefix   string
-	imports       []*ast.ImportSpec
-	genericsTypes genericTypes
+	types        []*ast.TypeSpec
+	typesPrefix  string
+	imports      []*ast.ImportSpec
+	genericTypes genericTypes
 }
 
 type processOutput struct {
@@ -214,13 +214,12 @@ func NewGenerator(options Options) (*Generator, error) {
 	output, err := findTarget(processInput{
 		fileSet:        fs,
 		currentPackage: srcPackage,
-		pacakge:        srcPackageAST,
+		astPackage:     srcPackageAST,
 		targetName:     options.InterfaceName,
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse interface declaration")
 	}
-	genericsTypes, genericsParams := output.genericTypes.buildVars()
 
 	if len(output.methods) == 0 {
 		return nil, errEmptyInterface
@@ -234,6 +233,8 @@ func NewGenerator(options Options) (*Generator, error) {
 
 	options.Imports = append(options.Imports, makeImports(output.imports)...)
 
+	genericTypes, genericParams := output.genericTypes.buildVars()
+
 	return &Generator{
 		Options:        options,
 		headerTemplate: headerTemplate,
@@ -241,8 +242,8 @@ func NewGenerator(options Options) (*Generator, error) {
 		srcPackage:     srcPackage,
 		dstPackage:     dstPackage,
 		interfaceType:  interfaceType,
-		genericsTypes:  genericsTypes,
-		genericsParams: genericsParams,
+		genericTypes:   genericTypes,
+		genericParams:  genericParams,
 		methods:        output.methods,
 		localPrefix:    options.LocalPrefix,
 	}, nil
@@ -302,8 +303,8 @@ func (g Generator) Generate(w io.Writer) error {
 		Interface: TemplateInputInterface{
 			Name: g.Options.InterfaceName,
 			Generics: TemplateInputGenerics{
-				Types:  g.genericsTypes,
-				Params: g.genericsParams,
+				Types:  g.genericTypes,
+				Params: g.genericParams,
 			},
 			Type:    g.interfaceType,
 			Methods: g.methods,
@@ -328,21 +329,21 @@ func (g Generator) Generate(w io.Writer) error {
 var errTargetNotFound = errors.New("target declaration not found")
 
 func findTarget(input processInput) (output processOutput, err error) {
-	ts, imports, types := iterateFiles(input.pacakge, input.targetName)
+	ts, imports, types := iterateFiles(input.astPackage, input.targetName)
 	if ts == nil {
 		return processOutput{}, errors.Wrap(errTargetNotFound, input.targetName)
 	}
 
 	output.imports = imports
-	output.genericTypes = genericTypesBuild(ts)
+	output.genericTypes = buildGenericTypesFromSpec(ts)
 
 	if it, ok := ts.Type.(*ast.InterfaceType); ok {
 		output.methods, err = processInterface(it, targetProcessInput{
-			processInput:  input,
-			types:         types,
-			typesPrefix:   input.pacakge.Name,
-			imports:       output.imports,
-			genericsTypes: output.genericTypes,
+			processInput: input,
+			types:        types,
+			typesPrefix:  input.astPackage.Name,
+			imports:      output.imports,
+			genericTypes: output.genericTypes,
 		})
 		if err != nil {
 			return processOutput{}, err
@@ -476,7 +477,7 @@ func processInterface(it *ast.InterfaceType, targetInput targetProcessInput) (me
 		case *ast.FuncType:
 			var method *Method
 
-			method, err = NewMethod(field.Names[0].Name, field, pr, targetInput.genericsTypes, targetInput.genericParams)
+			method, err = NewMethod(field.Names[0].Name, field, pr, targetInput.genericTypes, targetInput.genericParams)
 			if err == nil {
 				methods[field.Names[0].Name] = *method
 				continue
@@ -521,7 +522,7 @@ func processSelector(se *ast.SelectorExpr, input targetProcessInput) (methodsLis
 	output, err := findTarget(processInput{
 		fileSet:        input.fileSet,
 		currentPackage: p,
-		pacakge:        astPkg,
+		astPackage:     astPkg,
 		targetName:     selectedName,
 		genericParams:  input.genericParams,
 	})
@@ -561,7 +562,7 @@ func processIdent(i *ast.Ident, input targetProcessInput) (methodsList, error) {
 				return nil, errors.Wrap(errNotAnInterface, t.Name.Name)
 			}
 
-			genericsTypes = genericTypesBuild(t)
+			genericsTypes = buildGenericTypesFromSpec(t)
 			break
 		}
 	}
@@ -570,7 +571,7 @@ func processIdent(i *ast.Ident, input targetProcessInput) (methodsList, error) {
 		return nil, nil
 	}
 
-	input.genericsTypes = genericsTypes
+	input.genericTypes = genericsTypes
 	return processInterface(embeddedInterface, input)
 }
 
