@@ -24,13 +24,13 @@ type httpClient interface {
 	Do(*http.Request) (*http.Response, error)
 }
 
-//Loader fetches remote templates from the project's github page or any HTTPS URL
+// Loader fetches remote templates from the project's github page or any HTTPS URL
 type Loader struct {
 	client  httpClient
 	gitRoot func() (string, error)
 }
 
-//New returns Loader
+// New returns Loader
 func New(client httpClient) Loader {
 	if client == nil {
 		client = http.DefaultClient
@@ -39,8 +39,8 @@ func New(client httpClient) Loader {
 	return Loader{client: client, gitRoot: gitRootPath}
 }
 
-//Load returns template contents and template URL or error
-//path can be either any HTTPs URL or reference to the template on a project's github page
+// Load returns template contents and template URL or error
+// path can be either any HTTPs URL or reference to the template on a project's github page
 func (l Loader) Load(path string) (tmpl []byte, url string, err error) {
 	if strings.HasPrefix(path, "https://") || strings.HasPrefix(path, "http://") {
 		body, err := l.get(path)
@@ -67,7 +67,7 @@ func (l Loader) Load(path string) (tmpl []byte, url string, err error) {
 	return l.fetchFromGithub(path)
 }
 
-//List returns a list of template names from the project's github page
+// List returns a list of template names from the project's github page
 func (l Loader) List() ([]string, error) {
 	body, err := l.get(urlTree)
 	if err != nil {

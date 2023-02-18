@@ -32,22 +32,22 @@ type BaseCommand struct {
 	Help  string
 }
 
-//ShortDescription implements Command
+// ShortDescription implements Command
 func (b BaseCommand) ShortDescription() string {
 	return b.Short
 }
 
-//UsageLine implements Command
+// UsageLine implements Command
 func (b BaseCommand) UsageLine() string {
 	return b.Usage
 }
 
-//FlagSet implements Command
+// FlagSet implements Command
 func (b BaseCommand) FlagSet() *flag.FlagSet {
 	return b.Flags
 }
 
-//HelpMessage implements Command
+// HelpMessage implements Command
 func (b BaseCommand) HelpMessage(w io.Writer) error {
 	_, err := w.Write([]byte(b.Help))
 	return err
