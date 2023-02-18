@@ -386,24 +386,17 @@ func typeSpecs(f *ast.File) []*ast.TypeSpec {
 }
 
 func getEmbeddedMethods(t ast.Expr, pr typePrinter, input targetProcessInput) (param genericParam, methods methodsList, err error) {
+	param.Name, err = pr.PrintType(t)
+	if err != nil {
+		return
+	}
+
 	switch v := t.(type) {
 	case *ast.SelectorExpr:
-		if x, ok := v.X.(*ast.Ident); ok && x != nil {
-			param.Name, err = pr.PrintType(x)
-			if err != nil {
-				return
-			}
-		}
-
 		methods, err = processSelector(v, input)
 		return
 
 	case *ast.Ident:
-		param.Name, err = pr.PrintType(v)
-		if err != nil {
-			return
-		}
-
 		methods, err = processIdent(v, input)
 		return
 	}
