@@ -43,8 +43,6 @@ func (_d TestInterfaceWithDatadogTracing) ContextNoError(ctx context.Context, a1
 				"a1":  a1,
 				"a2":  a2}, map[string]interface{}{})
 		}
-		_span.Finish()
-
 	}()
 	_d.TestInterface.ContextNoError(ctx, a1, a2)
 	return
@@ -64,6 +62,8 @@ func (_d TestInterfaceWithDatadogTracing) F(ctx context.Context, a1 string, a2 .
 				"err":     err})
 		} else if err != nil {
 			_span.Finish(tracer.WithError(err))
+		} else {
+			_span.Finish()
 		}
 	}()
 	return _d.TestInterface.F(ctx, a1, a2...)

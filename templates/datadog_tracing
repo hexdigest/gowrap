@@ -33,9 +33,9 @@ func New{{$decorator}} (base {{.Interface.Type}}, instance string, spanDecorator
           _d._spanDecorator(_span, {{$method.ParamsMap}}, {{$method.ResultsMap}})
         }{{- if $method.ReturnsError}} else if err != nil {
           _span.Finish(tracer.WithError(err))
-        }{{ else }}
+        } else {
           _span.Finish()
-        {{end}}
+        }{{end}}
       }()
       {{$method.Pass (printf "_d.%s." $.Interface.Name) }}
     }
