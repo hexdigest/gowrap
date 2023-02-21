@@ -109,7 +109,7 @@ func (mmTracer *mOpentelemetryTracerProviderMockTracer) Return(t1 mm_trace.Trace
 	return mmTracer.mock
 }
 
-//Set uses given function f to mock the TracerProvider.Tracer method
+// Set uses given function f to mock the TracerProvider.Tracer method
 func (mmTracer *mOpentelemetryTracerProviderMockTracer) Set(f func(instrumentationName string, opts ...mm_trace.TracerOption) (t1 mm_trace.Tracer)) *OpentelemetryTracerProviderMock {
 	if mmTracer.defaultExpectation != nil {
 		mmTracer.mock.t.Fatalf("Default expectation is already set for the TracerProvider.Tracer method")
