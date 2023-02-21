@@ -18,7 +18,7 @@ With GoWrap you can easily add metrics, tracing, fallbacks, pools, and many othe
 ## Installation
 
 ```
-go get -u github.com/hexdigest/gowrap/cmd/gowrap
+go install github.com/hexdigest/gowrap/cmd/gowrap@latest
 ```
 
 ## Usage of gowrap
@@ -69,6 +69,7 @@ List of available templates:
   - [opencensus](https://github.com/hexdigest/gowrap/tree/master/templates/opencensus) instruments the source interface with opencensus spans
   - [opentelemetry](https://github.com/hexdigest/gowrap/tree/master/templates/opentelemetry) instruments the source interface with opentelemetry spans
   - [opentracing](https://github.com/hexdigest/gowrap/tree/master/templates/opentracing) instruments the source interface with opentracing spans
+  - [datadog\_tracing](https://github.com/hexdigest/gowrap/tree/master/templates/datadog_tracing) instruments the source interface with datadog spans
   - [prometheus](https://github.com/hexdigest/gowrap/tree/master/templates/prometheus) instruments the source interface with prometheus metrics
   - [ratelimit](https://github.com/hexdigest/gowrap/tree/master/templates/ratelimit) instruments the source interface with RPS limit and concurrent calls limit
   - [retry](https://github.com/hexdigest/gowrap/tree/master/templates/retry) instruments the source interface with retries

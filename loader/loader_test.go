@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	minimock "github.com/gojuno/minimock/v3"
+	"github.com/gojuno/minimock/v3"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 )

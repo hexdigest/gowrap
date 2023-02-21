@@ -15,3 +15,5 @@
 # Goreleaser artifacts
 /dist
 /.gh_token
+
+.idea

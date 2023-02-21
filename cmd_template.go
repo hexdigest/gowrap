@@ -72,9 +72,9 @@ func (gc *TemplateCommand) list(w io.Writer) error {
 		return errNoTemplatesFound
 	}
 
-	fmt.Fprintln(w, "List of available remote templates:")
+	_, _ = fmt.Fprintln(w, "List of available remote templates:")
 	for _, t := range templates {
-		fmt.Fprintf(w, "  %s\n", t)
+		_, _ = fmt.Fprintf(w, "  %s\n", t)
 	}
 
 	return nil
@@ -96,6 +96,6 @@ func (gc *TemplateCommand) fetch(w io.Writer, wf writeFileFunc, args []string) e
 		return err
 	}
 
-	fmt.Fprintf(w, "successfully copied from %s\n", url)
+	_, _ = fmt.Fprintf(w, "successfully copied from %s\n", url)
 	return nil
 }

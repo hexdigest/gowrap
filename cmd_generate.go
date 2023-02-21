@@ -13,9 +13,10 @@ import (
 	"unicode"
 
 	"github.com/Masterminds/sprig/v3"
+	"github.com/pkg/errors"
+
 	"github.com/hexdigest/gowrap/generator"
 	"github.com/hexdigest/gowrap/pkg"
-	"github.com/pkg/errors"
 )
 
 // GenerateCommand implements Command interface
