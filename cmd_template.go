@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 )
 
@@ -56,7 +55,7 @@ func (gc *TemplateCommand) Run(args []string, w io.Writer) error {
 	case "list":
 		return gc.list(w)
 	case "copy":
-		return gc.fetch(w, ioutil.WriteFile, args[1:])
+		return gc.fetch(w, os.WriteFile, args[1:])
 	}
 	return errUnknownSubcommand
 }

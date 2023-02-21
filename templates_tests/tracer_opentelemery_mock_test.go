@@ -112,7 +112,7 @@ func (mmStart *mOpentelemetryTracerMockStart) Return(c2 context.Context, s1 mm_t
 	return mmStart.mock
 }
 
-//Set uses given function f to mock the Tracer.Start method
+// Set uses given function f to mock the Tracer.Start method
 func (mmStart *mOpentelemetryTracerMockStart) Set(f func(ctx context.Context, spanName string, opts ...mm_trace.SpanStartOption) (c2 context.Context, s1 mm_trace.Span)) *OpentelemetryTracerMock {
 	if mmStart.defaultExpectation != nil {
 		mmStart.mock.t.Fatalf("Default expectation is already set for the Tracer.Start method")

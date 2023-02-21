@@ -5,7 +5,6 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -38,12 +37,12 @@ type GenerateCommand struct {
 // NewGenerateCommand creates GenerateCommand
 func NewGenerateCommand(l remoteTemplateLoader) *GenerateCommand {
 	gc := &GenerateCommand{
-		loader: loader{fileReader: ioutil.ReadFile, remoteLoader: l},
+		loader: loader{fileReader: os.ReadFile, remoteLoader: l},
 		filepath: fs{
 			Rel:       filepath.Rel,
 			Abs:       filepath.Abs,
 			Dir:       filepath.Dir,
-			WriteFile: ioutil.WriteFile,
+			WriteFile: os.WriteFile,
 		},
 	}
 

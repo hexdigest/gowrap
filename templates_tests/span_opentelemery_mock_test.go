@@ -175,7 +175,7 @@ func (mmAddEvent *mOpentelemetrySpanMockAddEvent) Return() *OpentelemetrySpanMoc
 	return mmAddEvent.mock
 }
 
-//Set uses given function f to mock the Span.AddEvent method
+// Set uses given function f to mock the Span.AddEvent method
 func (mmAddEvent *mOpentelemetrySpanMockAddEvent) Set(f func(name string, options ...mm_trace.EventOption)) *OpentelemetrySpanMock {
 	if mmAddEvent.defaultExpectation != nil {
 		mmAddEvent.mock.t.Fatalf("Default expectation is already set for the Span.AddEvent method")
@@ -362,7 +362,7 @@ func (mmEnd *mOpentelemetrySpanMockEnd) Return() *OpentelemetrySpanMock {
 	return mmEnd.mock
 }
 
-//Set uses given function f to mock the Span.End method
+// Set uses given function f to mock the Span.End method
 func (mmEnd *mOpentelemetrySpanMockEnd) Set(f func(options ...mm_trace.SpanEndOption)) *OpentelemetrySpanMock {
 	if mmEnd.defaultExpectation != nil {
 		mmEnd.mock.t.Fatalf("Default expectation is already set for the Span.End method")
@@ -539,7 +539,7 @@ func (mmIsRecording *mOpentelemetrySpanMockIsRecording) Return(b1 bool) *Opentel
 	return mmIsRecording.mock
 }
 
-//Set uses given function f to mock the Span.IsRecording method
+// Set uses given function f to mock the Span.IsRecording method
 func (mmIsRecording *mOpentelemetrySpanMockIsRecording) Set(f func() (b1 bool)) *OpentelemetrySpanMock {
 	if mmIsRecording.defaultExpectation != nil {
 		mmIsRecording.mock.t.Fatalf("Default expectation is already set for the Span.IsRecording method")
@@ -693,7 +693,7 @@ func (mmRecordError *mOpentelemetrySpanMockRecordError) Return() *OpentelemetryS
 	return mmRecordError.mock
 }
 
-//Set uses given function f to mock the Span.RecordError method
+// Set uses given function f to mock the Span.RecordError method
 func (mmRecordError *mOpentelemetrySpanMockRecordError) Set(f func(err error, options ...mm_trace.EventOption)) *OpentelemetrySpanMock {
 	if mmRecordError.defaultExpectation != nil {
 		mmRecordError.mock.t.Fatalf("Default expectation is already set for the Span.RecordError method")
@@ -880,7 +880,7 @@ func (mmSetAttributes *mOpentelemetrySpanMockSetAttributes) Return() *Openteleme
 	return mmSetAttributes.mock
 }
 
-//Set uses given function f to mock the Span.SetAttributes method
+// Set uses given function f to mock the Span.SetAttributes method
 func (mmSetAttributes *mOpentelemetrySpanMockSetAttributes) Set(f func(kv ...attribute.KeyValue)) *OpentelemetrySpanMock {
 	if mmSetAttributes.defaultExpectation != nil {
 		mmSetAttributes.mock.t.Fatalf("Default expectation is already set for the Span.SetAttributes method")
@@ -1067,7 +1067,7 @@ func (mmSetName *mOpentelemetrySpanMockSetName) Return() *OpentelemetrySpanMock 
 	return mmSetName.mock
 }
 
-//Set uses given function f to mock the Span.SetName method
+// Set uses given function f to mock the Span.SetName method
 func (mmSetName *mOpentelemetrySpanMockSetName) Set(f func(name string)) *OpentelemetrySpanMock {
 	if mmSetName.defaultExpectation != nil {
 		mmSetName.mock.t.Fatalf("Default expectation is already set for the Span.SetName method")
@@ -1255,7 +1255,7 @@ func (mmSetStatus *mOpentelemetrySpanMockSetStatus) Return() *OpentelemetrySpanM
 	return mmSetStatus.mock
 }
 
-//Set uses given function f to mock the Span.SetStatus method
+// Set uses given function f to mock the Span.SetStatus method
 func (mmSetStatus *mOpentelemetrySpanMockSetStatus) Set(f func(code codes.Code, description string)) *OpentelemetrySpanMock {
 	if mmSetStatus.defaultExpectation != nil {
 		mmSetStatus.mock.t.Fatalf("Default expectation is already set for the Span.SetStatus method")
@@ -1432,7 +1432,7 @@ func (mmSpanContext *mOpentelemetrySpanMockSpanContext) Return(s1 mm_trace.SpanC
 	return mmSpanContext.mock
 }
 
-//Set uses given function f to mock the Span.SpanContext method
+// Set uses given function f to mock the Span.SpanContext method
 func (mmSpanContext *mOpentelemetrySpanMockSpanContext) Set(f func() (s1 mm_trace.SpanContext)) *OpentelemetrySpanMock {
 	if mmSpanContext.defaultExpectation != nil {
 		mmSpanContext.mock.t.Fatalf("Default expectation is already set for the Span.SpanContext method")
@@ -1575,7 +1575,7 @@ func (mmTracerProvider *mOpentelemetrySpanMockTracerProvider) Return(t1 mm_trace
 	return mmTracerProvider.mock
 }
 
-//Set uses given function f to mock the Span.TracerProvider method
+// Set uses given function f to mock the Span.TracerProvider method
 func (mmTracerProvider *mOpentelemetrySpanMockTracerProvider) Set(f func() (t1 mm_trace.TracerProvider)) *OpentelemetrySpanMock {
 	if mmTracerProvider.defaultExpectation != nil {
 		mmTracerProvider.mock.t.Fatalf("Default expectation is already set for the Span.TracerProvider method")
