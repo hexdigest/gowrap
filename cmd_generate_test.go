@@ -1,16 +1,17 @@
 package gowrap
 
 import (
-	"io/ioutil"
+	"io"
 	"os"
 	"path/filepath"
 	"testing"
 	"time"
 
-	minimock "github.com/gojuno/minimock/v3"
-	"github.com/hexdigest/gowrap/generator"
+	"github.com/gojuno/minimock/v3"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/hexdigest/gowrap/generator"
 )
 
 func TestNewGenerateCommand(t *testing.T) {
@@ -169,7 +170,7 @@ func TestGenerateCommand_Run(t *testing.T) {
 			name: "parse args error",
 			init: func(t minimock.Tester) *GenerateCommand {
 				cmd := NewGenerateCommand(nil)
-				cmd.BaseCommand.FlagSet().SetOutput(ioutil.Discard)
+				cmd.BaseCommand.FlagSet().SetOutput(io.Discard)
 				return cmd
 			},
 			args:    []string{"-pp"},

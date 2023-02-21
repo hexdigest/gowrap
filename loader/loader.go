@@ -3,7 +3,7 @@ package loader
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -56,11 +56,11 @@ func (l Loader) Load(path string) (tmpl []byte, url string, err error) {
 				return tmpl, templatePath, err
 			}
 
-			body, err := ioutil.ReadFile(templatePath)
+			body, err := os.ReadFile(templatePath)
 			return body, templatePath, err
 		}
 
-		body, err := ioutil.ReadFile(templatePath)
+		body, err := os.ReadFile(templatePath)
 		return body, templatePath, err
 	}
 
@@ -114,7 +114,7 @@ func (l Loader) get(url string) (b []byte, err error) {
 		return nil, errors.Wrapf(errUnexpectedStatusCode, "%d", resp.StatusCode)
 	}
 
-	return ioutil.ReadAll(resp.Body)
+	return io.ReadAll(resp.Body)
 }
 
 func (l Loader) absGitPath(path string) (string, error) {

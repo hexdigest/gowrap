@@ -4,14 +4,13 @@ import (
 	"encoding/json"
 	"io"
 	"io/fs"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
 	"testing"
 	"time"
 
-	minimock "github.com/gojuno/minimock/v3"
+	"github.com/gojuno/minimock/v3"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 )
@@ -151,7 +150,7 @@ func TestLoader_List(t *testing.T) {
 		{
 			name: "unmarshal error",
 			init: func(t minimock.Tester) Loader {
-				r := &http.Response{StatusCode: http.StatusOK, Body: ioutil.NopCloser(strings.NewReader("{"))}
+				r := &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader("{"))}
 				return Loader{client: newHTTPClientMock(t).DoMock.Return(r, nil)}
 			},
 			want1:   nil,
@@ -164,7 +163,7 @@ func TestLoader_List(t *testing.T) {
 		{
 			name: "success",
 			init: func(t minimock.Tester) Loader {
-				r := &http.Response{StatusCode: http.StatusOK, Body: ioutil.NopCloser(strings.NewReader(`{
+				r := &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader(`{
 					"tree": [
 						{
 							"path": "templates/opentracing"
@@ -236,7 +235,7 @@ func TestLoader_get(t *testing.T) {
 		{
 			name: "unexpected status code",
 			init: func(t minimock.Tester) Loader {
-				r := &http.Response{StatusCode: http.StatusInternalServerError, Body: ioutil.NopCloser(strings.NewReader(""))}
+				r := &http.Response{StatusCode: http.StatusInternalServerError, Body: io.NopCloser(strings.NewReader(""))}
 				return Loader{client: newHTTPClientMock(t).DoMock.Return(r, nil)}
 			},
 			url:     "https://host",
@@ -322,7 +321,7 @@ func TestLoader_fetchFromGithub(t *testing.T) {
 		{
 			name: "unmarshal error",
 			init: func(t minimock.Tester) Loader {
-				r := &http.Response{StatusCode: http.StatusOK, Body: ioutil.NopCloser(strings.NewReader("{"))}
+				r := &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader("{"))}
 				return Loader{client: newHTTPClientMock(t).DoMock.Return(r, nil)}
 			},
 			wantErr: true,
@@ -334,7 +333,7 @@ func TestLoader_fetchFromGithub(t *testing.T) {
 		{
 			name: "no commits",
 			init: func(t minimock.Tester) Loader {
-				r := &http.Response{StatusCode: http.StatusOK, Body: ioutil.NopCloser(strings.NewReader("[]"))}
+				r := &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader("[]"))}
 				return Loader{client: newHTTPClientMock(t).DoMock.Return(r, nil)}
 			},
 			wantErr: true,
@@ -350,7 +349,7 @@ func TestLoader_fetchFromGithub(t *testing.T) {
 				client.DoFunc = func(r *http.Request) (*http.Response, error) {
 					if i == 0 {
 						i++
-						return &http.Response{StatusCode: http.StatusOK, Body: ioutil.NopCloser(strings.NewReader(`[{"SHA":"hash"}]`))}, nil
+						return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader(`[{"SHA":"hash"}]`))}, nil
 					}
 					return nil, clientError
 				}
@@ -371,10 +370,10 @@ func TestLoader_fetchFromGithub(t *testing.T) {
 				client.DoFunc = func(r *http.Request) (*http.Response, error) {
 					if i == 0 {
 						i++
-						return &http.Response{StatusCode: http.StatusOK, Body: ioutil.NopCloser(strings.NewReader(`[{"SHA":"hash"}]`))}, nil
+						return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader(`[{"SHA":"hash"}]`))}, nil
 					}
 
-					return &http.Response{StatusCode: http.StatusOK, Body: ioutil.NopCloser(strings.NewReader(`template body`))}, nil
+					return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader(`template body`))}, nil
 				}
 
 				return Loader{client: client}

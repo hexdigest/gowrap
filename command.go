@@ -3,7 +3,6 @@ package gowrap
 import (
 	"flag"
 	"io"
-	"io/ioutil"
 	"text/template"
 )
 
@@ -60,7 +59,7 @@ func RegisterCommand(name string, cmd Command) {
 	commands[name] = cmd
 	if fs := cmd.FlagSet(); fs != nil {
 		fs.Init("", flag.ContinueOnError)
-		fs.SetOutput(ioutil.Discard)
+		fs.SetOutput(io.Discard)
 	}
 }
 
