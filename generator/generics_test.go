@@ -87,7 +87,7 @@ func Test_buildGenericTypesFromSpec(t *testing.T) {
 		wantTypes genericTypes
 	}{
 		{
-			name: "build generic types any from spec",
+			name: "",
 			args: args{
 				ts: &ast.TypeSpec{
 					TypeParams: &ast.FieldList{
@@ -111,7 +111,7 @@ func Test_buildGenericTypesFromSpec(t *testing.T) {
 			},
 			wantTypes: genericTypes{
 				{
-					Type:  "any",
+					Type: "any",
 					Names: []string{"I", "O"},
 				},
 			},
