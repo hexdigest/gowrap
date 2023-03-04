@@ -111,8 +111,11 @@ func Test_findImportPathForName(t *testing.T) {
 
 func Test_processIdent(t *testing.T) {
 	type args struct {
-		i     *ast.Ident
-		input targetProcessInput
+		fs          *token.FileSet
+		i           *ast.Ident
+		types       []*ast.TypeSpec
+		typesPrefix string
+		imports     []*ast.ImportSpec
 	}
 	tests := []struct {
 		name string
@@ -125,10 +128,8 @@ func Test_processIdent(t *testing.T) {
 		{
 			name: "not an interface",
 			args: args{
-				i: &ast.Ident{Name: "name"},
-				input: targetProcessInput{
-					types: []*ast.TypeSpec{{Name: &ast.Ident{Name: "name"}, Type: &ast.StructType{}}},
-				},
+				i:     &ast.Ident{Name: "name"},
+				types: []*ast.TypeSpec{{Name: &ast.Ident{Name: "name"}, Type: &ast.StructType{}}},
 			},
 			wantErr: true,
 			inspectErr: func(err error, t *testing.T) {
@@ -136,12 +137,21 @@ func Test_processIdent(t *testing.T) {
 			},
 		},
 		{
+			name: "embedded interface not found",
+			args: args{
+				i:     &ast.Ident{Name: "name"},
+				types: []*ast.TypeSpec{},
+			},
+			wantErr: true,
+			inspectErr: func(err error, t *testing.T) {
+				assert.Equal(t, errEmbeddedInterfaceNotFound, errors.Cause(err))
+			},
+		},
+		{
 			name: "embedded interface found",
 			args: args{
-				i: &ast.Ident{Name: "name"},
-				input: targetProcessInput{
-					types: []*ast.TypeSpec{{Name: &ast.Ident{Name: "name"}, Type: &ast.InterfaceType{}}},
-				},
+				i:     &ast.Ident{Name: "name"},
+				types: []*ast.TypeSpec{{Name: &ast.Ident{Name: "name"}, Type: &ast.InterfaceType{}}},
 			},
 			wantErr: false,
 		},
@@ -152,7 +162,7 @@ func Test_processIdent(t *testing.T) {
 			mc := minimock.NewController(t)
 			defer mc.Wait(time.Second)
 
-			got1, err := processIdent(tt.args.i, tt.args.input)
+			got1, err := processIdent(tt.args.fs, nil, tt.args.i, tt.args.types, tt.args.typesPrefix, tt.args.imports)
 
 			assert.Equal(t, tt.want1, got1, "processIdent returned unexpected result")
 
@@ -244,8 +254,10 @@ func Test_mergeMethods(t *testing.T) {
 
 func Test_processSelector(t *testing.T) {
 	type args struct {
-		se    *ast.SelectorExpr
-		input targetProcessInput
+		fs      *token.FileSet
+		cp      *packages.Package
+		se      *ast.SelectorExpr
+		imports []*ast.ImportSpec
 	}
 	tests := []struct {
 		name string
@@ -259,47 +271,36 @@ func Test_processSelector(t *testing.T) {
 			name: "import with name not found",
 			args: args{
 				se: &ast.SelectorExpr{X: &ast.Ident{Name: "unknown"}, Sel: &ast.Ident{Name: "unknown"}},
-				input: targetProcessInput{
-					processInput: processInput{
-						currentPackage: &packages.Package{Imports: nil},
-					},
-				},
+				cp: &packages.Package{Imports: nil},
 			},
 			wantErr: true,
 		},
 		{
 			name: "import not found",
 			args: args{
-				se: &ast.SelectorExpr{X: &ast.Ident{Name: "unknownpackage"}, Sel: &ast.Ident{Name: "Unknown"}},
-				input: targetProcessInput{
-					processInput: processInput{
-						currentPackage: &packages.Package{Imports: nil},
-					},
-					imports: []*ast.ImportSpec{{Path: &ast.BasicLit{Value: "unknown_path"}}},
-				},
+				se:      &ast.SelectorExpr{X: &ast.Ident{Name: "unknownpackage"}, Sel: &ast.Ident{Name: "Unknown"}},
+				imports: []*ast.ImportSpec{{Path: &ast.BasicLit{Value: "unknown_path"}}},
+				cp:      &packages.Package{Imports: nil},
 			},
 			wantErr: true,
 		},
 		{
 			name: "import failed",
 			args: args{
-				se: &ast.SelectorExpr{X: &ast.Ident{Name: "io"}, Sel: &ast.Ident{Name: "UnknownInterface"}},
-				input: targetProcessInput{
-					processInput: processInput{
-						fileSet: token.NewFileSet(),
-						currentPackage: &packages.Package{Imports: map[string]*packages.Package{
-							"io": {},
-						}},
-					},
-					imports: []*ast.ImportSpec{{Path: &ast.BasicLit{Value: "io"}}},
-				},
+				se:      &ast.SelectorExpr{X: &ast.Ident{Name: "io"}, Sel: &ast.Ident{Name: "UnknownInterface"}},
+				imports: []*ast.ImportSpec{{Path: &ast.BasicLit{Value: "io"}}},
+				fs:      token.NewFileSet(),
+				cp: &packages.Package{Imports: map[string]*packages.Package{
+					"io": {},
+				}},
 			},
 			wantErr: true,
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got1, err := processSelector(tt.args.se, tt.args.input)
+			got1, err := processSelector(tt.args.fs, tt.args.cp, tt.args.se, tt.args.imports)
 
 			assert.Equal(t, tt.want1, got1, "processSelector returned unexpected result")
 
@@ -317,8 +318,12 @@ func Test_processSelector(t *testing.T) {
 
 func Test_processInterface(t *testing.T) {
 	type args struct {
+		fs          *token.FileSet
+		cp          *packages.Package
 		it          *ast.InterfaceType
-		targetInput targetProcessInput
+		types       []*ast.TypeSpec
+		typesPrefix string
+		imports     []*ast.ImportSpec
 	}
 	tests := []struct {
 		name string
@@ -331,12 +336,8 @@ func Test_processInterface(t *testing.T) {
 		{
 			name: "func type",
 			args: args{
+				fs: token.NewFileSet(),
 				it: &ast.InterfaceType{Methods: &ast.FieldList{List: []*ast.Field{{Names: []*ast.Ident{{Name: "methodName"}}, Type: &ast.FuncType{Params: &ast.FieldList{}}}}}},
-				targetInput: targetProcessInput{
-					processInput: processInput{
-						fileSet: token.NewFileSet(),
-					},
-				},
 			},
 			want1:   methodsList{"methodName": Method{Name: "methodName", Params: []Param{}}},
 			wantErr: false,
@@ -344,73 +345,40 @@ func Test_processInterface(t *testing.T) {
 		{
 			name: "selector expression",
 			args: args{
+				fs: token.NewFileSet(),
+				cp: &packages.Package{Imports: nil},
 				it: &ast.InterfaceType{Methods: &ast.FieldList{List: []*ast.Field{
 					{
 						Names: []*ast.Ident{{Name: "methodName"}},
 						Type:  &ast.SelectorExpr{X: &ast.Ident{Name: "unknown"}, Sel: &ast.Ident{Name: "Interface"}},
 					},
 				}}},
-				targetInput: targetProcessInput{
-					processInput: processInput{
-						fileSet:        token.NewFileSet(),
-						currentPackage: &packages.Package{Imports: nil},
+			},
+			wantErr: true,
+		},
+		{
+			name: "identifier",
+			args: args{
+				fs: token.NewFileSet(),
+				it: &ast.InterfaceType{Methods: &ast.FieldList{List: []*ast.Field{
+					{
+						Names: []*ast.Ident{{Name: "methodName"}},
+						Type:  &ast.Ident{Name: "unknown"},
 					},
-				},
+				}}},
 			},
 			wantErr: true,
 		},
 		{
 			name: "identifier with embedded methods",
 			args: args{
+				fs: token.NewFileSet(),
 				it: &ast.InterfaceType{Methods: &ast.FieldList{List: []*ast.Field{
 					{
 						Type: &ast.Ident{Name: "Embedded"},
 					},
 				}}},
-				targetInput: targetProcessInput{
-					processInput: processInput{
-						fileSet: token.NewFileSet(),
-					},
-					types: []*ast.TypeSpec{{Name: &ast.Ident{Name: "Embedded"}, Type: &ast.InterfaceType{}}},
-				},
-			},
-			want1:   methodsList{},
-			wantErr: false,
-		},
-		{
-			name: "index expression with identifier",
-			args: args{
-				it: &ast.InterfaceType{Methods: &ast.FieldList{List: []*ast.Field{
-					{
-						Type: &ast.IndexExpr{X: &ast.Ident{Name: "Embedded"}, Index: &ast.Ident{Name: "Embedded_2"}},
-					},
-				}}},
-				targetInput: targetProcessInput{
-					processInput: processInput{
-						fileSet: token.NewFileSet(),
-					},
-					types: []*ast.TypeSpec{{Name: &ast.Ident{Name: "Embedded"}, Type: &ast.InterfaceType{}}},
-				},
-			},
-			want1:   methodsList{},
-			wantErr: false,
-		},
-		{
-			name: "index list expression with identifier",
-			args: args{
-				it: &ast.InterfaceType{Methods: &ast.FieldList{List: []*ast.Field{
-					{
-						Type: &ast.IndexListExpr{X: &ast.Ident{Name: "Embedded"}, Indices: []ast.Expr{
-							&ast.Ident{Name: "Embedded_2"},
-						}},
-					},
-				}}},
-				targetInput: targetProcessInput{
-					processInput: processInput{
-						fileSet: token.NewFileSet(),
-					},
-					types: []*ast.TypeSpec{{Name: &ast.Ident{Name: "Embedded"}, Type: &ast.InterfaceType{}}},
-				},
+				types: []*ast.TypeSpec{{Name: &ast.Ident{Name: "Embedded"}, Type: &ast.InterfaceType{}}},
 			},
 			want1:   methodsList{},
 			wantErr: false,
@@ -419,7 +387,7 @@ func Test_processInterface(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got1, err := processInterface(tt.args.it, tt.args.targetInput)
+			got1, err := processInterface(tt.args.fs, tt.args.cp, tt.args.it, tt.args.types, tt.args.typesPrefix, tt.args.imports)
 
 			assert.Equal(t, tt.want1, got1, "processInterface returned unexpected result")
 
@@ -448,9 +416,11 @@ func Test_typeSpecs(t *testing.T) {
 	assert.Equal(t, expected, specs, "typeSpecs returned unexpected result")
 }
 
-func Test_findTarget(t *testing.T) {
+func Test_findInterface(t *testing.T) {
 	type args struct {
-		input processInput
+		fs            *token.FileSet
+		p             *ast.Package
+		interfaceName string
 	}
 	tests := []struct {
 		name string
@@ -461,30 +431,24 @@ func Test_findTarget(t *testing.T) {
 		inspectErr func(err error, t *testing.T)
 	}{
 		{
-			name: "not found",
-			args: args{
-				input: processInput{
-					astPackage: &ast.Package{},
-				},
-			},
+			name:    "not found",
+			args:    args{p: &ast.Package{}},
 			wantErr: true,
 			inspectErr: func(err error, t *testing.T) {
-				assert.Equal(t, errTargetNotFound, errors.Cause(err))
+				assert.Equal(t, errInterfaceNotFound, errors.Cause(err))
 			},
 		},
 		{
 			name: "found",
 			args: args{
-				input: processInput{
-					astPackage: &ast.Package{Files: map[string]*ast.File{
-						"file.go": {
-							Decls: []ast.Decl{&ast.GenDecl{Tok: token.TYPE, Specs: []ast.Spec{&ast.TypeSpec{
-								Name: &ast.Ident{Name: "Interface"},
-								Type: &ast.InterfaceType{},
-							}}}},
-						}}},
-					targetName: "Interface",
-				},
+				p: &ast.Package{Files: map[string]*ast.File{
+					"file.go": {
+						Decls: []ast.Decl{&ast.GenDecl{Tok: token.TYPE, Specs: []ast.Spec{&ast.TypeSpec{
+							Name: &ast.Ident{Name: "Interface"},
+							Type: &ast.InterfaceType{},
+						}}}},
+					}}},
+				interfaceName: "Interface",
 			},
 			wantErr: false,
 		},
@@ -495,18 +459,17 @@ func Test_findTarget(t *testing.T) {
 			mc := minimock.NewController(t)
 			defer mc.Wait(time.Second)
 
-			got1, err := findTarget(tt.args.input)
+			got1, _, err := findInterface(tt.args.fs, nil, tt.args.p, tt.args.interfaceName)
 
-			assert.Equal(t, tt.want1, got1.methods, "findInterface returned unexpected result")
+			assert.Equal(t, tt.want1, got1, "findInterface returned unexpected result")
 
 			if tt.wantErr {
 				if assert.Error(t, err) && tt.inspectErr != nil {
 					tt.inspectErr(err, t)
 				}
-				return
+			} else {
+				assert.NoError(t, err)
 			}
-
-			assert.NoError(t, err)
 		})
 	}
 }

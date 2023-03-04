@@ -66,7 +66,7 @@ func (p Param) Pass() string {
 }
 
 // NewMethod returns pointer to Signature struct or error
-func NewMethod(name string, fi *ast.Field, printer typePrinter, genericTypes genericTypes, genericParams genericParams) (*Method, error) {
+func NewMethod(name string, fi *ast.Field, printer typePrinter) (*Method, error) {
 	f, ok := fi.Type.(*ast.FuncType)
 	if !ok {
 		return nil, fmt.Errorf("%q is not a method", name)
@@ -105,11 +105,11 @@ func NewMethod(name string, fi *ast.Field, printer typePrinter, genericTypes gen
 
 	var err error
 
-	m.Params, err = makeParams(f.Params, usedNames, printer, genericTypes, genericParams)
+	m.Params, err = makeParams(f.Params, usedNames, printer)
 	if err != nil {
 		return nil, err
 	}
-	m.Results, err = makeParams(f.Results, usedNames, printer, genericTypes, genericParams)
+	m.Results, err = makeParams(f.Results, usedNames, printer)
 	if err != nil {
 		return nil, err
 	}
@@ -126,7 +126,7 @@ func NewMethod(name string, fi *ast.Field, printer typePrinter, genericTypes gen
 }
 
 // NewParam returns Param struct
-func NewParam(name string, fi *ast.Field, usedNames map[string]bool, printer typePrinter, genericTypes genericTypes, genericParams genericParams) (*Param, error) {
+func NewParam(name string, fi *ast.Field, usedNames map[string]bool, printer typePrinter) (*Param, error) {
 	typ := fi.Type
 	if name == "" || usedNames[name] {
 		name = genName(typePrefix(typ), 1, usedNames)
@@ -138,8 +138,6 @@ func NewParam(name string, fi *ast.Field, usedNames map[string]bool, printer typ
 	if err != nil {
 		return nil, err
 	}
-
-	typeStr = buildGenericParamsString(typeStr, genericTypes, genericParams)
 
 	_, variadic := typ.(*ast.Ellipsis)
 	p := &Param{
@@ -164,7 +162,7 @@ func NewParam(name string, fi *ast.Field, usedNames map[string]bool, printer typ
 	return p, nil
 }
 
-func makeParams(params *ast.FieldList, usedNames map[string]bool, printer typePrinter, genericTypes genericTypes, genericParams genericParams) (ParamsSlice, error) {
+func makeParams(params *ast.FieldList, usedNames map[string]bool, printer typePrinter) (ParamsSlice, error) {
 	if params == nil {
 		return nil, nil
 	}
@@ -174,14 +172,14 @@ func makeParams(params *ast.FieldList, usedNames map[string]bool, printer typePr
 		//for anonymous parameters we generate params and results names
 		//based on their type
 		if p.Names == nil {
-			param, err := NewParam("", p, usedNames, printer, genericTypes, genericParams)
+			param, err := NewParam("", p, usedNames, printer)
 			if err != nil {
 				return nil, err
 			}
 			result = append(result, *param)
 		} else {
 			for _, ident := range p.Names {
-				param, err := NewParam(ident.Name, p, usedNames, printer, genericTypes, genericParams)
+				param, err := NewParam(ident.Name, p, usedNames, printer)
 				if err != nil {
 					return nil, err
 				}
