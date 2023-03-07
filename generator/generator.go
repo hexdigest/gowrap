@@ -361,7 +361,7 @@ func iterateFiles(p *ast.Package, name string) (selectedType *ast.TypeSpec, impo
 				if ts.Name.Name == name {
 					selectedType = ts
 					imports = f.Imports
-					return
+					continue
 				}
 			}
 		}
