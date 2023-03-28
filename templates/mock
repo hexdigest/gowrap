@@ -1,0 +1,40 @@
+import (
+  "sync"
+)
+
+{{ $decorator := (or .Vars.DecoratorName (printf "Mock%s" .Interface.Name)) }}
+
+// {{$decorator}} implements {{.Interface.Type}} mock
+type {{$decorator}} struct {
+  {{- range $method := .Interface.Methods}}
+  MockFunc{{$method.Name}} func {{$method.Signature -}}
+  {{end}}
+
+  CalledMutex sync.Mutex // protects "NCalledMock..." counters
+
+  {{range $method := .Interface.Methods -}}
+  NCalledMock{{- $method.Name}} int
+  {{end}}    
+}
+
+// New{{$decorator}} is an mock implementation of the {{.Interface.Type}}
+func New{{$decorator}}() *{{$decorator}} {
+  return &{{$decorator}} {
+  {{range $method := .Interface.Methods -}}
+    MockFunc{{- $method.Name}} : func {{$method.Signature}} {
+      return
+    },
+  {{end}}
+  }
+}
+
+{{range $method := .Interface.Methods}}
+  // {{$method.Name}} mocks {{$.Interface.Type}}.{{$method.Name}}
+  func (m *{{$decorator}}) {{$method.Declaration}} {
+    m.CalledMutex.Lock()
+    m.NCalledMock{{$method.Name}}++
+    m.CalledMutex.Unlock()
+
+    {{ $method.Pass "m.MockFunc"}}
+  }
+{{end}}
