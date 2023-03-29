@@ -1,0 +1,31 @@
+import (
+  "sync"
+)
+
+{{ $decorator := (or .Vars.DecoratorName (printf "Interceptor%s" .Interface.Name)) }}
+
+// {{$decorator}} implements {{.Interface.Type}} interceptor
+type {{$decorator}} struct {
+  _base {{.Interface.Type}}
+
+  {{- range $method := .Interface.Methods}}
+  InterceptorFunc{{$method.Name}} func {{$method.Signature -}}
+  {{end}}   
+}
+
+// New{{$decorator}} is an interceptor implementation of the {{.Interface.Type}}
+func New{{$decorator}}(base {{.Interface.Type}}) *{{$decorator}} {
+  return &{{$decorator}} {
+    _base: base,
+  }
+}
+
+{{range $method := .Interface.Methods}}
+  // {{$method.Name}} intercepts {{$.Interface.Type}}.{{$method.Name}}
+  func (_d *{{$decorator}}) {{$method.Declaration}} {
+    if _d.InterceptorFunc{{$method.Name}} != nil {
+      {{ $method.Pass "_d.InterceptorFunc"}}
+    }
+    {{ $method.Pass "_d._base." }}
+  }
+{{end}}
