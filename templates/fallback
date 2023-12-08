@@ -23,6 +23,7 @@ func New{{$decorator}}(interval time.Duration, impls ...{{.Interface.Type}}) {{$
   func (_d {{$decorator}}) {{$method.Declaration}} {
       type _resultStruct {{$method.ResultsStruct}}
       var _ch = make(chan _resultStruct, 0)
+      var _next = make(chan struct{}, len(_d.implementations))
       {{if $method.ReturnsError}}var _errorsList []string{{end}}
       var _ticker = time.NewTicker(_d.interval)
       defer _ticker.Stop()
@@ -56,7 +57,10 @@ func New{{$decorator}}(interval time.Duration, impls ...{{.Interface.Type}}) {{$
           }(_d.implementations[_i])
 
           if _i < len(_d.implementations) - 1 {
-            <-_ticker.C
+            select {
+              case <-_next:
+              case <-_ticker.C:
+            }
           }
         }
       }()
@@ -69,6 +73,7 @@ func New{{$decorator}}(interval time.Duration, impls ...{{.Interface.Type}}) {{$
                   if _res.err == nil {
                     {{ $method.ReturnStruct "_res" }}
                   }
+                  _next <- struct{}{}
                   _errorsList = append(_errorsList, _res.err.Error())
                   if len(_errorsList) == len(_d.implementations) {
                     err =  fmt.Errorf(strings.Join(_errorsList, ";"))

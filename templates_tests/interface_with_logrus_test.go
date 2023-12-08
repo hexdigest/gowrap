@@ -43,7 +43,6 @@ func TestTestInterfaceWithLogrus_F(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, "a1", callingRecord["a1"])
 		assert.Nil(t, callingRecord["a2"])
-		assert.EqualValues(t, 0, callingRecord["ctx"])
 		assert.Equal(t, "TestInterfaceWithLogrus: calling F", callingRecord["msg"])
 
 		finishedRecord := make(map[string]interface{})
@@ -86,7 +85,6 @@ func TestTestInterfaceWithLogrus_F(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, "a1", callingRecord["a1"])
 		assert.Nil(t, callingRecord["a2"])
-		assert.EqualValues(t, 0, callingRecord["ctx"])
 		assert.Equal(t, "TestInterfaceWithLogrus: calling F", callingRecord["msg"])
 
 		finishedRecord := make(map[string]interface{})

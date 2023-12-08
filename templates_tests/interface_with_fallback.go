@@ -30,6 +30,7 @@ func (_d TestInterfaceWithFallback) Channels(chA chan bool, chB chan<- bool, cha
 	type _resultStruct struct {
 	}
 	var _ch = make(chan _resultStruct, 0)
+	var _next = make(chan struct{}, len(_d.implementations))
 
 	var _ticker = time.NewTicker(_d.interval)
 	defer _ticker.Stop()
@@ -47,7 +48,10 @@ func (_d TestInterfaceWithFallback) Channels(chA chan bool, chB chan<- bool, cha
 			}(_d.implementations[_i])
 
 			if _i < len(_d.implementations)-1 {
-				<-_ticker.C
+				select {
+				case <-_next:
+				case <-_ticker.C:
+				}
 			}
 		}
 	}()
@@ -62,6 +66,7 @@ func (_d TestInterfaceWithFallback) ContextNoError(ctx context.Context, a1 strin
 	type _resultStruct struct {
 	}
 	var _ch = make(chan _resultStruct, 0)
+	var _next = make(chan struct{}, len(_d.implementations))
 
 	var _ticker = time.NewTicker(_d.interval)
 	defer _ticker.Stop()
@@ -81,7 +86,10 @@ func (_d TestInterfaceWithFallback) ContextNoError(ctx context.Context, a1 strin
 			}(_d.implementations[_i])
 
 			if _i < len(_d.implementations)-1 {
-				<-_ticker.C
+				select {
+				case <-_next:
+				case <-_ticker.C:
+				}
 			}
 		}
 	}()
@@ -106,6 +114,7 @@ func (_d TestInterfaceWithFallback) F(ctx context.Context, a1 string, a2 ...stri
 		err     error
 	}
 	var _ch = make(chan _resultStruct, 0)
+	var _next = make(chan struct{}, len(_d.implementations))
 	var _errorsList []string
 	var _ticker = time.NewTicker(_d.interval)
 	defer _ticker.Stop()
@@ -128,7 +137,10 @@ func (_d TestInterfaceWithFallback) F(ctx context.Context, a1 string, a2 ...stri
 			}(_d.implementations[_i])
 
 			if _i < len(_d.implementations)-1 {
-				<-_ticker.C
+				select {
+				case <-_next:
+				case <-_ticker.C:
+				}
 			}
 		}
 	}()
@@ -139,6 +151,7 @@ func (_d TestInterfaceWithFallback) F(ctx context.Context, a1 string, a2 ...stri
 			if _res.err == nil {
 				return _res.result1, _res.result2, _res.err
 			}
+			_next <- struct{}{}
 			_errorsList = append(_errorsList, _res.err.Error())
 			if len(_errorsList) == len(_d.implementations) {
 				err = fmt.Errorf(strings.Join(_errorsList, ";"))
@@ -160,6 +173,7 @@ func (_d TestInterfaceWithFallback) NoError(s1 string) (s2 string) {
 		s2 string
 	}
 	var _ch = make(chan _resultStruct, 0)
+	var _next = make(chan struct{}, len(_d.implementations))
 
 	var _ticker = time.NewTicker(_d.interval)
 	defer _ticker.Stop()
@@ -177,7 +191,10 @@ func (_d TestInterfaceWithFallback) NoError(s1 string) (s2 string) {
 			}(_d.implementations[_i])
 
 			if _i < len(_d.implementations)-1 {
-				<-_ticker.C
+				select {
+				case <-_next:
+				case <-_ticker.C:
+				}
 			}
 		}
 	}()
@@ -192,6 +209,7 @@ func (_d TestInterfaceWithFallback) NoParamsOrResults() {
 	type _resultStruct struct {
 	}
 	var _ch = make(chan _resultStruct, 0)
+	var _next = make(chan struct{}, len(_d.implementations))
 
 	var _ticker = time.NewTicker(_d.interval)
 	defer _ticker.Stop()
@@ -209,7 +227,10 @@ func (_d TestInterfaceWithFallback) NoParamsOrResults() {
 			}(_d.implementations[_i])
 
 			if _i < len(_d.implementations)-1 {
-				<-_ticker.C
+				select {
+				case <-_next:
+				case <-_ticker.C:
+				}
 			}
 		}
 	}()
