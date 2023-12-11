@@ -128,6 +128,8 @@ type Options struct {
 	//LocalPrefix is a comma-separated string of import path prefixes, which, if set, instructs Process to sort the import
 	//paths with the given prefixes into another group after 3rd-party packages.
 	LocalPrefix string
+
+	IgnoreMethod []string
 }
 
 type methodsList map[string]Method
@@ -219,6 +221,10 @@ func NewGenerator(options Options) (*Generator, error) {
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse interface declaration")
+	}
+
+	for _, one := range options.IgnoreMethod {
+		delete(output.methods, one)
 	}
 
 	if len(output.methods) == 0 {
