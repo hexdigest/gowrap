@@ -16,7 +16,11 @@ With GoWrap you can easily add metrics, tracing, fallbacks, pools, and many othe
 ![demo](https://github.com/hexdigest/gowrap/blob/master/gowrap.gif)
 
 ## Installation
-
+### CLI
+```
+go install github.com/hexdigest/gowrap/cmd/gowrap@latest
+```
+### As module
 ```
 go get -u github.com/hexdigest/gowrap/cmd/gowrap
 ```
