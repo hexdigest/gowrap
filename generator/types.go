@@ -279,6 +279,20 @@ func (m Method) ParamsStruct() string {
 	return "struct{\n" + strings.Join(ss, "\n ") + "}"
 }
 
+// ParamPtrsStruct returns a struct type with pointer fields corresponding
+// to the method params
+func (m Method) ParamPtrsStruct() string {
+	ss := []string{}
+	for _, p := range m.Params {
+		if p.Variadic {
+			ss = append(ss, p.Name+" *"+strings.Replace(p.Type, "...", "[]", 1))
+		} else {
+			ss = append(ss, p.Name+" *"+p.Type)
+		}
+	}
+	return "struct{\n" + strings.Join(ss, "\n ") + "}"
+}
+
 // ResultsStruct returns a struct type with fields corresponding
 // to the method results
 func (m Method) ResultsStruct() string {
