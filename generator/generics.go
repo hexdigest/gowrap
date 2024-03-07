@@ -77,22 +77,40 @@ func (g genericTypes) buildVars() (string, string) {
 	return buildGenericsWithBrackets(types), buildGenericsWithBrackets(params)
 }
 
-func buildGenericTypesFromSpec(ts *ast.TypeSpec) (types genericTypes) {
+func buildGenericTypesFromSpec(ts *ast.TypeSpec, allTypes []*ast.TypeSpec, typesPrefix string) (types genericTypes) {
 	if ts.TypeParams != nil {
 		for _, param := range ts.TypeParams.List {
 			if param != nil {
-				if gpt, ok := param.Type.(*ast.Ident); ok {
-					var paramNames []string
-					for _, name := range param.Names {
-						if name != nil {
-							paramNames = append(paramNames, name.Name)
+				var typeIdentifier string
+				switch t := param.Type.(type) {
+				case *ast.Ident:
+					prefix := ""
+					if typesPrefix != "" {
+						for _, at := range allTypes {
+							if at.Name.Name == t.Name {
+								prefix = typesPrefix + "."
+								break
+							}
 						}
 					}
-					types = append(types, genericType{
-						Type:  gpt.Name,
-						Names: paramNames,
-					})
+
+					typeIdentifier = prefix + t.Name
+				case *ast.SelectorExpr:
+					typeIdentifier = t.X.(*ast.Ident).Name + "." + t.Sel.Name
+				default:
+					panic("unsupported generic type")
 				}
+
+				var paramNames []string
+				for _, name := range param.Names {
+					if name != nil {
+						paramNames = append(paramNames, name.Name)
+					}
+				}
+				types = append(types, genericType{
+					Type:  typeIdentifier,
+					Names: paramNames,
+				})
 			}
 		}
 	}

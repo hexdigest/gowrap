@@ -79,7 +79,9 @@ func Test_genericTypes_buildVars(t *testing.T) {
 
 func Test_buildGenericTypesFromSpec(t *testing.T) {
 	type args struct {
-		ts *ast.TypeSpec
+		ts          *ast.TypeSpec
+		allTypes    []*ast.TypeSpec
+		typesPrefix string
 	}
 	tests := []struct {
 		name      string
@@ -116,10 +118,120 @@ func Test_buildGenericTypesFromSpec(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "build generic types foo.Bar from spec",
+			args: args{
+				ts: &ast.TypeSpec{
+					TypeParams: &ast.FieldList{
+						List: []*ast.Field{
+							{
+								Type: &ast.SelectorExpr{
+									X: &ast.Ident{
+										Name: "foo",
+									},
+									Sel: &ast.Ident{
+										Name: "Bar",
+									},
+								},
+								Names: []*ast.Ident{
+									{
+										Name: "I",
+									},
+									{
+										Name: "O",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			wantTypes: genericTypes{
+				{
+					Type:  "foo.Bar",
+					Names: []string{"I", "O"},
+				},
+			},
+		},
+		{
+			name: "build generic types Bar from spec without types prefix",
+			args: args{
+				ts: &ast.TypeSpec{
+					TypeParams: &ast.FieldList{
+						List: []*ast.Field{
+							{
+								Type: &ast.Ident{
+									Name: "Bar",
+								},
+								Names: []*ast.Ident{
+									{
+										Name: "I",
+									},
+									{
+										Name: "O",
+									},
+								},
+							},
+						},
+					},
+				},
+				allTypes: []*ast.TypeSpec{
+					{
+						Name: &ast.Ident{
+							Name: "Bar",
+						},
+					},
+				},
+			},
+			wantTypes: genericTypes{
+				{
+					Type:  "Bar",
+					Names: []string{"I", "O"},
+				},
+			},
+		},
+		{
+			name: "build generic types Bar from spec with types prefix",
+			args: args{
+				ts: &ast.TypeSpec{
+					TypeParams: &ast.FieldList{
+						List: []*ast.Field{
+							{
+								Type: &ast.Ident{
+									Name: "Bar",
+								},
+								Names: []*ast.Ident{
+									{
+										Name: "I",
+									},
+									{
+										Name: "O",
+									},
+								},
+							},
+						},
+					},
+				},
+				allTypes: []*ast.TypeSpec{
+					{
+						Name: &ast.Ident{
+							Name: "Bar",
+						},
+					},
+				},
+				typesPrefix: "prefix",
+			},
+			wantTypes: genericTypes{
+				{
+					Type:  "prefix.Bar",
+					Names: []string{"I", "O"},
+				},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if gotTypes := buildGenericTypesFromSpec(tt.args.ts); !reflect.DeepEqual(gotTypes, tt.wantTypes) {
+			if gotTypes := buildGenericTypesFromSpec(tt.args.ts, tt.args.allTypes, tt.args.typesPrefix); !reflect.DeepEqual(gotTypes, tt.wantTypes) {
 				t.Errorf("buildGenericTypesFromSpec() = %v, want %v", gotTypes, tt.wantTypes)
 			}
 		})
