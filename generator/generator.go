@@ -335,7 +335,7 @@ func findTarget(input processInput) (output processOutput, err error) {
 	}
 
 	output.imports = imports
-	output.genericTypes = buildGenericTypesFromSpec(ts)
+	output.genericTypes = buildGenericTypesFromSpec(ts, types, input.astPackage.Name)
 
 	if it, ok := ts.Type.(*ast.InterfaceType); ok {
 		output.methods, err = processInterface(it, targetProcessInput{
@@ -555,7 +555,7 @@ func processIdent(i *ast.Ident, input targetProcessInput) (methodsList, error) {
 				return nil, errors.Wrap(errNotAnInterface, t.Name.Name)
 			}
 
-			genericsTypes = buildGenericTypesFromSpec(t)
+			genericsTypes = buildGenericTypesFromSpec(t, input.types, input.typesPrefix)
 			break
 		}
 	}
