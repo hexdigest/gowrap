@@ -5,7 +5,6 @@ go 1.17
 require (
 	github.com/gojuno/minimock/v3 v3.0.10
 	github.com/golangci/golangci-lint v1.51.1
-	github.com/goreleaser/goreleaser v0.169.0
 )
 
 require (

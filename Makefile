@@ -2,6 +2,14 @@ export GOBIN := $(PWD)/bin
 export PATH := $(GOBIN):$(PATH)
 export GOFLAGS := -mod=mod
 
+GORELEASER_VERSION := "v1.25.0"
+
+UNAME_S := $(shell uname -s)
+UNAME_P := $(shell uname -p)
+UNAME_M := $(shell uname -m)
+
+GORELEASER_URL := "https://github.com/goreleaser/goreleaser/releases/download/$(GORELEASER_VERSION)/goreleaser_$(UNAME_S)_$(UNAME_P).tar.gz"
+
 ./bin:
 	mkdir ./bin
 
@@ -12,7 +20,9 @@ export GOFLAGS := -mod=mod
 	go install -modfile tools/go.mod github.com/golangci/golangci-lint/cmd/golangci-lint
 
 ./bin/goreleaser:
-	go install -modfile tools/go.mod github.com/goreleaser/goreleaser
+	curl -L $(GORELEASER_URL) -o ./bin/goreleaser.tar.gz
+	@tar -xvf ./bin/goreleaser.tar.gz -C ./bin
+	@touch ./bin/goreleaser
 
 ./bin/minimock: ./bin
 	go install -modfile tools/go.mod github.com/gojuno/minimock/v3/cmd/minimock
@@ -31,15 +41,15 @@ generate: ./bin/gowrap ./bin/minimock
 
 .PHONY:
 tidy:
-	go mod tidy -compat=1.17
-	cd tools && go mod tidy -compat=1.17
+	go mod tidy
+	cd tools && go mod tidy
 
 .PHONY:
 all: ./bin/gowrap generate lint test
 
 .PHONY:
 release: ./bin/goreleaser
-	goreleaser release
+	GITHUB_TOKEN=`cat .gh_token` goreleaser release
 
 .PHONY:
 build: ./bin/goreleaser
