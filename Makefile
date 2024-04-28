@@ -33,7 +33,7 @@ lint: ./bin/golangci-lint
 
 .PHONY:
 test:
-	 go test -race ./...
+	 go test -race -v ./...
 
 .PHONY:
 generate: ./bin/gowrap ./bin/minimock

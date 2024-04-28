@@ -2,6 +2,7 @@ package generator
 
 import (
 	"go/ast"
+	"go/token"
 	"reflect"
 	"testing"
 )
@@ -225,6 +226,140 @@ func Test_buildGenericTypesFromSpec(t *testing.T) {
 				{
 					Type:  "prefix.Bar",
 					Names: []string{"I", "O"},
+				},
+			},
+		},
+		{
+			name: "build generic types with type approximation",
+			args: args{
+				ts: &ast.TypeSpec{
+					TypeParams: &ast.FieldList{
+						List: []*ast.Field{
+							{
+								Type: &ast.UnaryExpr{
+									Op: token.TILDE,
+									X: &ast.Ident{
+										Name: "float64",
+									},
+								},
+								Names: []*ast.Ident{
+									{
+										Name: "T",
+									},
+								},
+							},
+						},
+					},
+				},
+				allTypes: []*ast.TypeSpec{
+					{
+						Name: &ast.Ident{
+							Name: "Bar",
+						},
+					},
+				},
+				typesPrefix: "prefix",
+			},
+			wantTypes: genericTypes{
+				{
+					Type:  "~float64",
+					Names: []string{"T"},
+				},
+			},
+		},
+		{
+			name: "build generic types from union",
+			args: args{
+				ts: &ast.TypeSpec{
+					TypeParams: &ast.FieldList{
+						List: []*ast.Field{
+							{
+								Type: &ast.BinaryExpr{
+									X: &ast.BinaryExpr{
+										X: &ast.Ident{
+											Name: "int",
+										},
+										Op: token.OR,
+										Y: &ast.SelectorExpr{
+											X: &ast.Ident{
+												Name: "pkg",
+											},
+											Sel: &ast.Ident{
+												Name: "Baz",
+											},
+										},
+									},
+									Op: token.OR,
+									Y: &ast.Ident{
+										Name: "Bar",
+									},
+								},
+								Names: []*ast.Ident{
+									{
+										Name: "B",
+									},
+								},
+							},
+						},
+					},
+				},
+				allTypes: []*ast.TypeSpec{
+					{
+						Name: &ast.Ident{
+							Name: "Bar",
+						},
+					},
+				},
+				typesPrefix: "prefix",
+			},
+			wantTypes: genericTypes{
+				{
+					Type:  "int | pkg.Baz | prefix.Bar",
+					Names: []string{"B"},
+				},
+			},
+		},
+		{
+			name: "build generic types from union with type approximation",
+			args: args{
+				ts: &ast.TypeSpec{
+					TypeParams: &ast.FieldList{
+						List: []*ast.Field{
+							{
+								Type: &ast.BinaryExpr{
+									X: &ast.Ident{
+										Name: "Bar",
+									},
+									Op: token.OR,
+									Y: &ast.UnaryExpr{
+										X: &ast.Ident{
+											Name: "float32",
+										},
+										Op: token.TILDE,
+									},
+								},
+								Names: []*ast.Ident{
+									{
+										Name: "T",
+									},
+								},
+							},
+						},
+					},
+				},
+				allTypes: []*ast.TypeSpec{
+					{
+						Name: &ast.Ident{
+							Name: "Bar",
+						},
+					},
+				},
+				typesPrefix: "prefix",
+			},
+			wantTypes: genericTypes{
+				{
+					Type:  "prefix.Bar | ~float32",
+					Names: []string{"T"},
 				},
 			},
 		},
