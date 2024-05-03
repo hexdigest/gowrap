@@ -2,6 +2,7 @@ package generator
 
 import (
 	"go/ast"
+	"go/token"
 	"strings"
 )
 
@@ -78,42 +79,75 @@ func (g genericTypes) buildVars() (string, string) {
 }
 
 func buildGenericTypesFromSpec(ts *ast.TypeSpec, allTypes []*ast.TypeSpec, typesPrefix string) (types genericTypes) {
-	if ts.TypeParams != nil {
-		for _, param := range ts.TypeParams.List {
-			if param != nil {
-				var typeIdentifier string
-				switch t := param.Type.(type) {
-				case *ast.Ident:
-					prefix := ""
-					if typesPrefix != "" {
-						for _, at := range allTypes {
-							if at.Name.Name == t.Name {
-								prefix = typesPrefix + "."
-								break
-							}
-						}
-					}
+	if ts.TypeParams == nil {
+		return
+	}
 
-					typeIdentifier = prefix + t.Name
-				case *ast.SelectorExpr:
-					typeIdentifier = t.X.(*ast.Ident).Name + "." + t.Sel.Name
-				default:
-					panic("unsupported generic type")
-				}
+	for _, param := range ts.TypeParams.List {
+		if param == nil {
+			continue
+		}
 
-				var paramNames []string
-				for _, name := range param.Names {
-					if name != nil {
-						paramNames = append(paramNames, name.Name)
-					}
-				}
-				types = append(types, genericType{
-					Type:  typeIdentifier,
-					Names: paramNames,
-				})
+		typeIdentifier := parseGenericType(param.Type, allTypes, typesPrefix)
+
+		var paramNames []string
+		for _, name := range param.Names {
+			if name != nil {
+				paramNames = append(paramNames, name.Name)
 			}
 		}
+		types = append(types, genericType{
+			Type:  typeIdentifier,
+			Names: paramNames,
+		})
 	}
+
+	return
+}
+
+func parseBinaryExpr(expr *ast.BinaryExpr, allTypes []*ast.TypeSpec, typesPrefix string) string {
+	if expr.Op != token.OR {
+		return ""
+	}
+
+	leftPart := parseGenericType(expr.X, allTypes, typesPrefix)
+	rightPart := parseGenericType(expr.Y, allTypes, typesPrefix)
+
+	return leftPart + " | " + rightPart
+}
+
+func parseGenericType(exprPart ast.Expr, allTypes []*ast.TypeSpec, typesPrefix string) (part string) {
+	switch expr := exprPart.(type) {
+	case *ast.Ident:
+		prefix := getPrefix(expr, allTypes, typesPrefix)
+		part = prefix + expr.Name
+	case *ast.SelectorExpr:
+		part = expr.X.(*ast.Ident).Name + "." + expr.Sel.Name
+	case *ast.UnaryExpr:
+		if expr.Op == token.TILDE {
+			if id, ok := expr.X.(*ast.Ident); ok {
+				part = "~" + id.Name
+			}
+		}
+	case *ast.BinaryExpr:
+		part = parseBinaryExpr(expr, allTypes, typesPrefix)
+	}
+
+	return
+}
+
+func getPrefix(t *ast.Ident, allTypes []*ast.TypeSpec, typesPrefix string) (prefix string) {
+	if typesPrefix == "" {
+		return
+	}
+
+	for _, at := range allTypes {
+		if at.Name.Name == t.Name {
+			prefix = typesPrefix + "."
+			break
+		}
+	}
+
 	return
 }
 
