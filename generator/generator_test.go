@@ -488,6 +488,139 @@ func Test_findTarget(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name: "found interface alias",
+			args: args{
+				input: processInput{
+					astPackage: &ast.Package{
+						Files: map[string]*ast.File{
+							"file.go": {
+								Decls: []ast.Decl{&ast.GenDecl{Tok: token.TYPE, Specs: []ast.Spec{&ast.TypeSpec{
+									Name: &ast.Ident{Name: "InterfaceAlias"},
+									Type: &ast.Ident{
+										Name: "Interface",
+										Obj: &ast.Object{
+											Decl: &ast.TypeSpec{
+												Type: &ast.InterfaceType{},
+											},
+										},
+									},
+								}}}},
+							}},
+					},
+					targetName: "InterfaceAlias",
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "found interface alias on exported type",
+			args: args{
+				input: processInput{
+					astPackage: &ast.Package{
+						Files: map[string]*ast.File{
+							"file.go": {
+								Decls: []ast.Decl{&ast.GenDecl{Tok: token.TYPE, Specs: []ast.Spec{&ast.TypeSpec{
+									Name: &ast.Ident{Name: "InterfaceAlias"},
+									Type: &ast.SelectorExpr{
+										X: &ast.Ident{
+											Name: "io",
+										},
+										Sel: &ast.Ident{
+											Name: "Reader",
+										},
+									},
+								}}}},
+								Imports: []*ast.ImportSpec{{
+									Path: &ast.BasicLit{
+										Value: "io",
+									},
+								}},
+							}},
+					},
+					targetName: "InterfaceAlias",
+				},
+			},
+			want1: methodsList{
+				"Read": Method{
+					Name: "Read",
+					Params: ParamsSlice{
+						{
+							Name: "p",
+							Type: "[]byte",
+						},
+					},
+					Results: ParamsSlice{
+						{
+							Name: "n",
+							Type: "int",
+						},
+						{
+							Name: "err",
+							Type: "error",
+						},
+					},
+					ReturnsError: true,
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "found interface alias on exported type with named package",
+			args: args{
+				input: processInput{
+					astPackage: &ast.Package{
+						Files: map[string]*ast.File{
+							"file.go": {
+								Decls: []ast.Decl{&ast.GenDecl{Tok: token.TYPE, Specs: []ast.Spec{&ast.TypeSpec{
+									Name: &ast.Ident{Name: "InterfaceAlias"},
+									Type: &ast.SelectorExpr{
+										X: &ast.Ident{
+											Name: "io_name",
+										},
+										Sel: &ast.Ident{
+											Name: "Reader",
+										},
+									},
+								}}}},
+								Imports: []*ast.ImportSpec{
+									{
+										Name: &ast.Ident{
+											Name: "io_name",
+										},
+										Path: &ast.BasicLit{
+											Value: "io",
+										},
+									}},
+							}},
+					},
+					targetName: "InterfaceAlias",
+				},
+			},
+			want1: methodsList{
+				"Read": Method{
+					Name: "Read",
+					Params: ParamsSlice{
+						{
+							Name: "p",
+							Type: "[]byte",
+						},
+					},
+					Results: ParamsSlice{
+						{
+							Name: "n",
+							Type: "int",
+						},
+						{
+							Name: "err",
+							Type: "error",
+						},
+					},
+					ReturnsError: true,
+				},
+			},
+			wantErr: false,
+		},
 	}
 
 	for _, tt := range tests {

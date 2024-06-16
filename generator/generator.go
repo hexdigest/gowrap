@@ -406,7 +406,7 @@ func findSourcePackage(ident *ast.Ident, imports []*ast.ImportSpec) string {
 	for _, imp := range imports {
 		cleanPath := strings.Trim(imp.Path.Value, "\"")
 		if imp.Name != nil {
-			if imp.Name.Name == ident.Name {
+			if ident.Name == imp.Name.Name {
 				return cleanPath
 			}
 
