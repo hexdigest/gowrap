@@ -336,21 +336,90 @@ func findTarget(input processInput) (output processOutput, err error) {
 
 	output.imports = imports
 	output.genericTypes = buildGenericTypesFromSpec(ts, types, input.astPackage.Name)
+	output.methods, err = findMethods(ts, targetProcessInput{
+		processInput: input,
+		types:        types,
+		typesPrefix:  input.astPackage.Name,
+		imports:      output.imports,
+		genericTypes: output.genericTypes,
+	})
+	if err != nil {
+		return processOutput{}, err
+	}
 
-	if it, ok := ts.Type.(*ast.InterfaceType); ok {
-		output.methods, err = processInterface(it, targetProcessInput{
-			processInput: input,
-			types:        types,
-			typesPrefix:  input.astPackage.Name,
-			imports:      output.imports,
-			genericTypes: output.genericTypes,
-		})
+	return
+}
+
+func findMethods(selectedType *ast.TypeSpec, input targetProcessInput) (methods methodsList, err error) {
+	switch t := selectedType.Type.(type) {
+	case *ast.InterfaceType:
+		methods, err = processInterface(t, input)
 		if err != nil {
-			return processOutput{}, err
+			return methodsList{}, err
+		}
+	case *ast.SelectorExpr:
+		ident, ok := t.X.(*ast.Ident)
+		if !ok {
+			return
+		}
+		srcPackagePath := findSourcePackage(ident, input.imports)
+
+		return getMethods(t, srcPackagePath)
+	case *ast.Ident:
+		if t.Obj == nil {
+			return
+		}
+		if ts, ok := t.Obj.Decl.(*ast.TypeSpec); ok {
+			return findMethods(ts, input)
 		}
 	}
 
 	return
+}
+
+func getMethods(sel *ast.SelectorExpr, srcPackagePath string) (methods methodsList, err error) {
+	srcPkg, err := pkg.Load(srcPackagePath)
+	if err != nil {
+		return nil, errors.Wrapf(err, "cant load %s package", srcPackagePath)
+	}
+
+	fs := token.NewFileSet()
+	srcAst, err := pkg.AST(fs, srcPkg)
+	if err != nil {
+		return nil, errors.Wrapf(err, "cant ast %s package", srcPackagePath)
+	}
+
+	out, err := findTarget(processInput{
+		fileSet:        fs,
+		currentPackage: srcPkg,
+		astPackage:     srcAst,
+		targetName:     sel.Sel.Name,
+	})
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to find target in %s package", srcPackagePath)
+	}
+
+	return out.methods, nil
+}
+
+func findSourcePackage(ident *ast.Ident, imports []*ast.ImportSpec) string {
+	for _, imp := range imports {
+		cleanPath := strings.Trim(imp.Path.Value, "\"")
+		if imp.Name != nil {
+			if ident.Name == imp.Name.Name {
+				return cleanPath
+			}
+
+			continue
+		}
+
+		slash := strings.LastIndex(cleanPath, "/")
+		if ident.Name == cleanPath[slash+1:] {
+			return cleanPath
+		}
+	}
+
+	return ""
 }
 
 func iterateFiles(p *ast.Package, name string) (selectedType *ast.TypeSpec, imports []*ast.ImportSpec, types []*ast.TypeSpec) {
