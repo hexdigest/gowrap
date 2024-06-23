@@ -5,7 +5,7 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
-	"path/filepath"
+	"path"
 
 	"golang.org/x/tools/go/packages"
 )
@@ -54,5 +54,5 @@ func Dir(p *packages.Package) string {
 		return p.PkgPath
 	}
 
-	return filepath.Dir(files[0])
+	return path.Dir(files[0])
 }

@@ -3,13 +3,12 @@ package generator
 import (
 	"bytes"
 	"fmt"
-	"path/filepath"
-	"sort"
-	"strings"
-
 	"go/ast"
 	"go/token"
 	"io"
+	"path"
+	"sort"
+	"strings"
 	"text/template"
 
 	"github.com/pkg/errors"
@@ -95,38 +94,38 @@ type TemplateInputInterface struct {
 
 // Options of the NewGenerator constructor
 type Options struct {
-	//InterfaceName is a name of interface type
+	// InterfaceName is a name of interface type
 	InterfaceName string
 
-	//Imports from the file with interface definition
+	// Imports from the file with interface definition
 	Imports []string
 
-	//SourcePackage is an import path or a relative path of the package that contains the source interface
+	// SourcePackage is an import path or a relative path of the package that contains the source interface
 	SourcePackage string
 
-	//SourcePackageAlias is an import selector defauls is source package name
+	// SourcePackageAlias is an import selector defauls is source package name
 	SourcePackageAlias string
 
-	//OutputFile name which is used to detect destination package name and also to fix imports in the resulting source
+	// OutputFile name which is used to detect destination package name and also to fix imports in the resulting source
 	OutputFile string
 
-	//HeaderTemplate is used to generate package clause and comment over the generated source
+	// HeaderTemplate is used to generate package clause and comment over the generated source
 	HeaderTemplate string
 
-	//BodyTemplate generates import section, decorator constructor and methods
+	// BodyTemplate generates import section, decorator constructor and methods
 	BodyTemplate string
 
-	//Vars additional vars that are passed to the templates from the command line
+	// Vars additional vars that are passed to the templates from the command line
 	Vars map[string]interface{}
 
-	//HeaderVars header specific variables
+	// HeaderVars header specific variables
 	HeaderVars map[string]interface{}
 
-	//Funcs is a map of helper functions that can be used within a template
+	// Funcs is a map of helper functions that can be used within a template
 	Funcs template.FuncMap
 
-	//LocalPrefix is a comma-separated string of import path prefixes, which, if set, instructs Process to sort the import
-	//paths with the given prefixes into another group after 3rd-party packages.
+	// LocalPrefix is a comma-separated string of import path prefixes, which, if set, instructs Process to sort the import
+	// paths with the given prefixes into another group after 3rd-party packages.
 	LocalPrefix string
 }
 
@@ -154,8 +153,10 @@ type processOutput struct {
 	imports      []*ast.ImportSpec
 }
 
-var errEmptyInterface = errors.New("interface has no methods")
-var errUnexportedMethod = errors.New("unexported method")
+var (
+	errEmptyInterface   = errors.New("interface has no methods")
+	errUnexportedMethod = errors.New("unexported method")
+)
 
 // NewGenerator returns Generator initialized with options
 func NewGenerator(options Options) (*Generator, error) {
@@ -184,7 +185,7 @@ func NewGenerator(options Options) (*Generator, error) {
 		return nil, errors.Wrap(err, "failed to load source package")
 	}
 
-	dstPackagePath := filepath.Dir(options.OutputFile)
+	dstPackagePath := path.Dir(options.OutputFile)
 	if !strings.HasPrefix(dstPackagePath, "/") && !strings.HasPrefix(dstPackagePath, "./") {
 		dstPackagePath = "./" + dstPackagePath
 	}
@@ -265,7 +266,7 @@ func makeImports(imports []*ast.ImportSpec) []string {
 func loadDestinationPackage(path string) (*packages.Package, error) {
 	dstPackage, err := pkg.Load(path)
 	if err != nil {
-		//using directory name as a package name
+		// using directory name as a package name
 		dstPackage, err = makePackage(path)
 	}
 
@@ -274,9 +275,9 @@ func loadDestinationPackage(path string) (*packages.Package, error) {
 
 var errNoPackageName = errors.New("failed to determine the destination package name")
 
-func makePackage(path string) (*packages.Package, error) {
-	name := filepath.Base(path)
-	if name == string(filepath.Separator) || name == "." {
+func makePackage(packagpath string) (*packages.Package, error) {
+	name := path.Base(packagpath)
+	if name == string("/") || name == "." {
 		return nil, errNoPackageName
 	}
 

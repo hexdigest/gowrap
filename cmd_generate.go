@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -46,7 +47,7 @@ func NewGenerateCommand(l remoteTemplateLoader) *GenerateCommand {
 		},
 	}
 
-	//this flagset loads flags values to the command fields
+	// this flagset loads flags values to the command fields
 	fs := &flag.FlagSet{}
 	fs.BoolVar(&gc.noGenerate, "g", false, "don't put //go:generate instruction to the generated code")
 	fs.StringVar(&gc.interfaceName, "i", "", `the source interface name, i.e. "Reader"`)
@@ -129,7 +130,7 @@ func (gc *GenerateCommand) getOptions() (*generator.Options, error) {
 		HeaderTemplate: headerTemplate,
 		HeaderVars: map[string]interface{}{
 			"DisableGoGenerate": gc.noGenerate,
-			"OutputFileName":    filepath.Base(gc.outputFile),
+			"OutputFileName":    path.Base(gc.outputFile),
 			"VarsArgs":          varsToArgs(gc.vars),
 		},
 		Vars:        gc.vars.toMap(),
@@ -289,8 +290,10 @@ func downFirst(s string) string {
 	return ""
 }
 
-var matchFirstCap = regexp.MustCompile("(.)([A-Z][a-z]+)")
-var matchAllCap = regexp.MustCompile("([a-z0-9])([A-Z])")
+var (
+	matchFirstCap = regexp.MustCompile("(.)([A-Z][a-z]+)")
+	matchAllCap   = regexp.MustCompile("([a-z0-9])([A-Z])")
+)
 
 func toSnakeCase(str string) string {
 	result := matchFirstCap.ReplaceAllString(str, "${1}_${2}")
