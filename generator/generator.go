@@ -204,11 +204,16 @@ func NewGenerator(options Options) (*Generator, error) {
 		interfaceType = options.InterfaceName
 		srcPackageAST.Name = ""
 	} else {
+		_, imps, _ := iterateFiles(srcPackageAST, options.InterfaceName)
+		srcPackageAlias := getSrcPackageAlias(imps, srcPackage.PkgPath)
+
 		if options.SourcePackageAlias != "" {
 			srcPackageAST.Name = options.SourcePackageAlias
+		} else if srcPackageAlias != "" {
+			srcPackageAST.Name = srcPackageAlias
 		}
 
-		options.Imports = append(options.Imports, `"`+srcPackage.PkgPath+`"`)
+		options.Imports = append(options.Imports, srcPackageAlias+` "`+srcPackage.PkgPath+`"`)
 	}
 
 	output, err := findTarget(processInput{
@@ -247,6 +252,32 @@ func NewGenerator(options Options) (*Generator, error) {
 		methods:        output.methods,
 		localPrefix:    options.LocalPrefix,
 	}, nil
+}
+
+func getLastImportPart(srcPackageImport string) string {
+	srcPackageImport = strings.Trim(srcPackageImport, " \"")
+	idx := strings.LastIndex(srcPackageImport, "/")
+	if idx < 0 {
+		return srcPackageImport
+	}
+	return srcPackageImport[idx+1:]
+}
+
+func getSrcPackageAlias(imports []*ast.ImportSpec, srcPackageImport string) string {
+	var srcPackageImportAlias string
+	for _, imp := range imports {
+		if imp.Name != nil {
+			continue
+		}
+
+		lastSrcPackagePart := getLastImportPart(srcPackageImport)
+		lastImpPart := getLastImportPart(imp.Path.Value)
+		if lastImpPart == lastSrcPackagePart {
+			srcPackageImportAlias = "__" + lastSrcPackagePart
+		}
+	}
+
+	return srcPackageImportAlias
 }
 
 func makeImports(imports []*ast.ImportSpec) []string {
