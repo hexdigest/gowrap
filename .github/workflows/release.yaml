@@ -1,0 +1,21 @@
+---
+name: Release
+on:
+  push:
+    tags: [v*]
+permissions:
+  contents: write # To create releases
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4.1.1
+      - uses: actions/setup-go@v5.0.0
+        with:
+          go-version-file: go.mod
+      - uses: goreleaser/goreleaser-action@v5.0.0
+        with:
+          version: v1.23.0
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
