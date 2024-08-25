@@ -906,3 +906,61 @@ func TestNewGenerator(t *testing.T) {
 		assert.NotNil(t, g)
 	})
 }
+
+func Test_getSrcPackageAlias(t *testing.T) {
+	tests := []struct {
+		name             string
+		imports          []*ast.ImportSpec
+		srcPackageImport string
+		want             string
+	}{
+		{
+			name: "no last part match, alias is empty",
+			imports: []*ast.ImportSpec{
+				{
+					Path: &ast.BasicLit{Value: "github.com/pkg/something"},
+				},
+				{
+					Path: &ast.BasicLit{Value: "github.com/pkg/other"},
+					Name: ast.NewIdent("other_name"),
+				},
+			},
+			srcPackageImport: "github.com/pkg/something/no_mach",
+			want:             "",
+		},
+		{
+			name: "last part match with other last part, alias is not empty",
+			imports: []*ast.ImportSpec{
+				{
+					Path: &ast.BasicLit{Value: "github.com/pkg/something"},
+				},
+				{
+					Path: &ast.BasicLit{Value: "github.com/pkg/other"},
+					Name: ast.NewIdent("other_name"),
+				},
+			},
+			srcPackageImport: "github.com/pkg/other_pkg/something",
+			want:             "__something",
+		},
+		{
+			name: "last part match with other alias, alias is not empty",
+			imports: []*ast.ImportSpec{
+				{
+					Path: &ast.BasicLit{Value: "github.com/pkg/something"},
+				},
+				{
+					Path: &ast.BasicLit{Value: "github.com/pkg/other"},
+					Name: ast.NewIdent("other_name"),
+				},
+			},
+			srcPackageImport: "github.com/pkg/other_pkg/other_name",
+			want:             "__other_name",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := getSrcPackageAlias(tt.imports, tt.srcPackageImport)
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
