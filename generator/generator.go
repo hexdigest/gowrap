@@ -13,6 +13,8 @@ import (
 	"text/template"
 
 	"github.com/pkg/errors"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"golang.org/x/tools/go/packages"
 	"golang.org/x/tools/imports"
 
@@ -199,16 +201,19 @@ func NewGenerator(options Options) (*Generator, error) {
 		return nil, errors.Wrap(err, "failed to parse source package")
 	}
 
-	interfaceType := srcPackage.Name + "." + options.InterfaceName
+	var interfaceType string
 	if srcPackage.PkgPath == dstPackage.PkgPath {
 		interfaceType = options.InterfaceName
 		srcPackageAST.Name = ""
 	} else {
 		if options.SourcePackageAlias != "" {
 			srcPackageAST.Name = options.SourcePackageAlias
+		} else {
+			srcPackageAST.Name = "_source" + cases.Title(language.Und, cases.NoLower).String(srcPackageAST.Name)
 		}
 
-		options.Imports = append(options.Imports, `"`+srcPackage.PkgPath+`"`)
+		interfaceType = srcPackageAST.Name + "." + options.InterfaceName
+		options.Imports = append(options.Imports, srcPackageAST.Name+` "`+srcPackage.PkgPath+`"`)
 	}
 
 	output, err := findTarget(processInput{
@@ -251,12 +256,12 @@ func NewGenerator(options Options) (*Generator, error) {
 
 func makeImports(imports []*ast.ImportSpec) []string {
 	result := make([]string, len(imports))
-	for _, i := range imports {
+	for i, im := range imports {
 		var name string
-		if i.Name != nil {
-			name = i.Name.Name
+		if im.Name != nil {
+			name = im.Name.Name
 		}
-		result = append(result, name+" "+i.Path.Value)
+		result[i] = name + " " + im.Path.Value
 	}
 
 	return result
