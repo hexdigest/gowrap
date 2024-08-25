@@ -15,3 +15,4 @@
 # Goreleaser artifacts
 /dist
 /.gh_token
+/gowrap
