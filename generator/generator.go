@@ -264,20 +264,22 @@ func getLastImportPart(srcPackageImport string) string {
 }
 
 func getSrcPackageAlias(imports []*ast.ImportSpec, srcPackageImport string) string {
-	var srcPackageImportAlias string
+	lastSrcPackagePart := getLastImportPart(srcPackageImport)
+
 	for _, imp := range imports {
+		var partToCompare string
 		if imp.Name != nil {
-			continue
+			partToCompare = imp.Name.Name
+		} else {
+			partToCompare = getLastImportPart(imp.Path.Value)
 		}
 
-		lastSrcPackagePart := getLastImportPart(srcPackageImport)
-		lastImpPart := getLastImportPart(imp.Path.Value)
-		if lastImpPart == lastSrcPackagePart {
-			srcPackageImportAlias = "__" + lastSrcPackagePart
+		if partToCompare == lastSrcPackagePart {
+			return "__" + lastSrcPackagePart
 		}
 	}
 
-	return srcPackageImportAlias
+	return ""
 }
 
 func makeImports(imports []*ast.ImportSpec) []string {
