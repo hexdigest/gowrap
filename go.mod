@@ -7,6 +7,7 @@ require (
 	github.com/gojuno/minimock/v3 v3.0.10
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.8.4
+	golang.org/x/text v0.3.7
 	golang.org/x/tools v0.1.12
 )
 
