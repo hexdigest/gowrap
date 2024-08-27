@@ -3,7 +3,7 @@ package gowrap
 import (
 	"io"
 	"os"
-	"path/filepath"
+	"path"
 	"testing"
 	"time"
 
@@ -18,18 +18,18 @@ func TestNewGenerateCommand(t *testing.T) {
 }
 
 func Test_loader_Load(t *testing.T) {
-	var unexpectedErr = errors.New("unexpected error")
+	unexpectedErr := errors.New("unexpected error")
 
 	tests := []struct {
 		name    string
 		init    func(t minimock.Tester) loader
-		inspect func(r loader, t *testing.T) //inspects loader after execution of Load
+		inspect func(r loader, t *testing.T) // inspects loader after execution of Load
 
 		template   string
 		want1      []byte
 		want2      string
 		wantErr    bool
-		inspectErr func(err error, t *testing.T) //use for more precise error evaluation
+		inspectErr func(err error, t *testing.T) // use for more precise error evaluation
 	}{
 		{
 			name: "file read error",
@@ -100,13 +100,12 @@ func Test_loader_Load(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 			}
-
 		})
 	}
 }
 
 func TestGenerateCommand_getOptions(t *testing.T) {
-	var absError = errors.New("abs error")
+	absError := errors.New("abs error")
 
 	tests := []struct {
 		name string
@@ -114,9 +113,8 @@ func TestGenerateCommand_getOptions(t *testing.T) {
 
 		want1      *generator.Options
 		wantErr    bool
-		inspectErr func(err error, t *testing.T) //use for more precise error evaluation
+		inspectErr func(err error, t *testing.T) // use for more precise error evaluation
 	}{
-
 		{
 			name: "unexisting output path",
 			init: func(t minimock.Tester) *GenerateCommand {
@@ -149,7 +147,6 @@ func TestGenerateCommand_getOptions(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 			}
-
 		})
 	}
 }
@@ -158,12 +155,12 @@ func TestGenerateCommand_Run(t *testing.T) {
 	tests := []struct {
 		name    string
 		init    func(t minimock.Tester) *GenerateCommand
-		inspect func(r *GenerateCommand, t *testing.T) //inspects *GenerateCommand after execution of Run
+		inspect func(r *GenerateCommand, t *testing.T) // inspects *GenerateCommand after execution of Run
 
 		args []string
 
 		wantErr    bool
-		inspectErr func(err error, t *testing.T) //use for more precise error evaluation
+		inspectErr func(err error, t *testing.T) // use for more precise error evaluation
 	}{
 		{
 			name: "parse args error",
@@ -244,7 +241,7 @@ func TestGenerateCommand_Run(t *testing.T) {
 )`), "local/file", nil)
 
 				cmd.filepath.WriteFile = func(filename string, data []byte, perm os.FileMode) error {
-					cmd.outputFile = filepath.Join(t.TempDir(), cmd.outputFile)
+					cmd.outputFile = path.Join(t.TempDir(), cmd.outputFile)
 					return os.WriteFile(cmd.outputFile, data, perm)
 				}
 				return cmd
@@ -289,7 +286,6 @@ func TestGenerateCommand_Run(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 			}
-
 		})
 	}
 }
@@ -352,7 +348,7 @@ func TestVars_toMap(t *testing.T) {
 func TestVars_Set(t *testing.T) {
 	tests := []struct {
 		name    string
-		inspect func(r vars, t *testing.T) //inspects vars after execution of Set
+		inspect func(r vars, t *testing.T) // inspects vars after execution of Set
 		s       string
 	}{
 		{

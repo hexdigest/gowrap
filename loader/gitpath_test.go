@@ -1,7 +1,7 @@
 package loader
 
 import (
-	"path/filepath"
+	"path"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -24,7 +24,7 @@ func Test_gitRootPath(t *testing.T) {
 			got, err := gitRootPath()
 			require.NoError(t, err)
 
-			assert.Equal(t, tt.want, filepath.Base(got))
+			assert.Equal(t, tt.want, path.Base(got))
 		})
 	}
 }
