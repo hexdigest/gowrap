@@ -43,6 +43,7 @@ generate: ./bin/gowrap ./bin/minimock
 tidy:
 	go mod tidy
 	cd tools && go mod tidy
+	cd templates_tests && go mod tidy
 
 .PHONY:
 all: ./bin/gowrap generate lint test

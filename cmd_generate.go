@@ -307,5 +307,8 @@ package {{.Package.Name}}
 {{if (not .Options.HeaderVars.DisableGoGenerate)}}
 //{{"go:generate"}} gowrap gen -p {{.SourcePackage.PkgPath}} -i {{.Options.InterfaceName}} -t {{.Options.HeaderVars.Template}} -o {{.Options.HeaderVars.OutputFileName}}{{.Options.HeaderVars.VarsArgs}} -l "{{.Options.LocalPrefix}}"
 {{end}}
-
+import(
+{{range $import := .Options.Imports}}{{$import}}
+	{{end}}
+)
 `
