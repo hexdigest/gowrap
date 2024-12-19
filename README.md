@@ -6,6 +6,7 @@
 [![GoDoc](https://godoc.org/github.com/hexdigest/gowrap?status.svg)](http://godoc.org/github.com/hexdigest/gowrap)
 [![Awesome](https://cdn.rawgit.com/sindresorhus/awesome/d7305f38d29fed78fa85652e3a63e154dd8e8829/media/badge.svg)](https://github.com/avelino/awesome-go#generation-and-generics)
 [![Release](https://img.shields.io/github/release/hexdigest/gowrap.svg)](https://github.com/hexdigest/gowrap/releases/latest)
+[![go-recipes](https://raw.githubusercontent.com/nikolaydubina/go-recipes/main/badge.svg?raw=true)](https://github.com/nikolaydubina/go-recipes)
 
 GoWrap is a command line tool that generates decorators for Go interface types using simple templates.
 With GoWrap you can easily add metrics, tracing, fallbacks, pools, and many other features into your existing code in a few seconds.
