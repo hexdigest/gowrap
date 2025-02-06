@@ -111,8 +111,9 @@ func Test_findImportPathForName(t *testing.T) {
 
 func Test_processIdent(t *testing.T) {
 	type args struct {
-		i     *ast.Ident
-		input targetProcessInput
+		i                   *ast.Ident
+		input               targetProcessInput
+		toCheckForInterface bool
 	}
 	tests := []struct {
 		name string
@@ -129,11 +130,23 @@ func Test_processIdent(t *testing.T) {
 				input: targetProcessInput{
 					types: []*ast.TypeSpec{{Name: &ast.Ident{Name: "name"}, Type: &ast.StructType{}}},
 				},
+				toCheckForInterface: true,
 			},
 			wantErr: true,
 			inspectErr: func(err error, t *testing.T) {
 				assert.Equal(t, errNotAnInterface, errors.Cause(err))
 			},
+		},
+		{
+			name: "not an interface but no need to check",
+			args: args{
+				i: &ast.Ident{Name: "name"},
+				input: targetProcessInput{
+					types: []*ast.TypeSpec{{Name: &ast.Ident{Name: "name"}, Type: &ast.StructType{}}},
+				},
+				toCheckForInterface: false,
+			},
+			wantErr: false,
 		},
 		{
 			name: "embedded interface found",
@@ -142,6 +155,7 @@ func Test_processIdent(t *testing.T) {
 				input: targetProcessInput{
 					types: []*ast.TypeSpec{{Name: &ast.Ident{Name: "name"}, Type: &ast.InterfaceType{}}},
 				},
+				toCheckForInterface: true,
 			},
 			wantErr: false,
 		},
@@ -152,7 +166,7 @@ func Test_processIdent(t *testing.T) {
 			mc := minimock.NewController(t)
 			defer mc.Wait(time.Second)
 
-			got1, err := processIdent(tt.args.i, tt.args.input)
+			got1, err := processIdent(tt.args.i, tt.args.input, tt.args.toCheckForInterface)
 
 			assert.Equal(t, tt.want1, got1, "processIdent returned unexpected result")
 
@@ -905,62 +919,4 @@ func TestNewGenerator(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotNil(t, g)
 	})
-}
-
-func Test_getSrcPackageAlias(t *testing.T) {
-	tests := []struct {
-		name             string
-		imports          []*ast.ImportSpec
-		srcPackageImport string
-		want             string
-	}{
-		{
-			name: "no last part match, alias is empty",
-			imports: []*ast.ImportSpec{
-				{
-					Path: &ast.BasicLit{Value: "github.com/pkg/something"},
-				},
-				{
-					Path: &ast.BasicLit{Value: "github.com/pkg/other"},
-					Name: ast.NewIdent("other_name"),
-				},
-			},
-			srcPackageImport: "github.com/pkg/something/no_mach",
-			want:             "",
-		},
-		{
-			name: "last part match with other last part, alias is not empty",
-			imports: []*ast.ImportSpec{
-				{
-					Path: &ast.BasicLit{Value: "github.com/pkg/something"},
-				},
-				{
-					Path: &ast.BasicLit{Value: "github.com/pkg/other"},
-					Name: ast.NewIdent("other_name"),
-				},
-			},
-			srcPackageImport: "github.com/pkg/other_pkg/something",
-			want:             "__something",
-		},
-		{
-			name: "last part match with other alias, alias is not empty",
-			imports: []*ast.ImportSpec{
-				{
-					Path: &ast.BasicLit{Value: "github.com/pkg/something"},
-				},
-				{
-					Path: &ast.BasicLit{Value: "github.com/pkg/other"},
-					Name: ast.NewIdent("other_name"),
-				},
-			},
-			srcPackageImport: "github.com/pkg/other_pkg/other_name",
-			want:             "__other_name",
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := getSrcPackageAlias(tt.imports, tt.srcPackageImport)
-			assert.Equal(t, tt.want, got)
-		})
-	}
 }

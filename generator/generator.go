@@ -459,7 +459,7 @@ func typeSpecs(f *ast.File) []*ast.TypeSpec {
 	return result
 }
 
-func getEmbeddedMethods(t ast.Expr, pr typePrinter, input targetProcessInput) (param genericParam, methods methodsList, err error) {
+func getEmbeddedMethods(t ast.Expr, pr typePrinter, input targetProcessInput, toCheckIfEmbeddedIsInterface bool) (param genericParam, methods methodsList, err error) {
 	param.Name, err = pr.PrintType(t)
 	if err != nil {
 		return
@@ -471,13 +471,13 @@ func getEmbeddedMethods(t ast.Expr, pr typePrinter, input targetProcessInput) (p
 		return
 
 	case *ast.Ident:
-		methods, err = processIdent(v, input)
+		methods, err = processIdent(v, input, toCheckIfEmbeddedIsInterface)
 		return
 	}
 	return
 }
 
-func processEmbedded(t ast.Expr, pr typePrinter, input targetProcessInput) (genericParam genericParam, embeddedMethods methodsList, err error) {
+func processEmbedded(t ast.Expr, pr typePrinter, input targetProcessInput, toCheckIfEmbeddedIsInterface bool) (genericParam genericParam, embeddedMethods methodsList, err error) {
 	var x ast.Expr
 	var hasGenericsParams bool
 	var genericParams genericParams
@@ -487,7 +487,7 @@ func processEmbedded(t ast.Expr, pr typePrinter, input targetProcessInput) (gene
 		x = v.X
 		hasGenericsParams = true
 
-		genericParam, _, err = processEmbedded(v.Index, pr, input)
+		genericParam, _, err = processEmbedded(v.Index, pr, input, false)
 		if err != nil {
 			return
 		}
@@ -501,7 +501,7 @@ func processEmbedded(t ast.Expr, pr typePrinter, input targetProcessInput) (gene
 
 		if v.Indices != nil {
 			for _, index := range v.Indices {
-				genericParam, _, err = processEmbedded(index, pr, input)
+				genericParam, _, err = processEmbedded(index, pr, input, false)
 				if err != nil {
 					return
 				}
@@ -515,7 +515,7 @@ func processEmbedded(t ast.Expr, pr typePrinter, input targetProcessInput) (gene
 	}
 
 	input.genericParams = genericParams
-	genericParam, embeddedMethods, err = getEmbeddedMethods(x, pr, input)
+	genericParam, embeddedMethods, err = getEmbeddedMethods(x, pr, input, toCheckIfEmbeddedIsInterface)
 	if err != nil {
 		return
 	}
@@ -551,7 +551,7 @@ func processInterface(it *ast.InterfaceType, targetInput targetProcessInput) (me
 			}
 
 		default:
-			_, embeddedMethods, err = processEmbedded(v, pr, targetInput)
+			_, embeddedMethods, err = processEmbedded(v, pr, targetInput, true)
 		}
 
 		if err != nil {
@@ -618,19 +618,23 @@ func mergeMethods(methods, embeddedMethods methodsList) (methodsList, error) {
 
 var errNotAnInterface = errors.New("embedded type is not an interface")
 
-func processIdent(i *ast.Ident, input targetProcessInput) (methodsList, error) {
+func processIdent(i *ast.Ident, input targetProcessInput, toCheckForInterface bool) (methodsList, error) {
 	var embeddedInterface *ast.InterfaceType
 	var genericsTypes genericTypes
 	for _, t := range input.types {
 		if t.Name.Name == i.Name {
 			var ok bool
 			embeddedInterface, ok = t.Type.(*ast.InterfaceType)
-			if !ok {
-				return nil, errors.Wrap(errNotAnInterface, t.Name.Name)
+			if ok {
+				genericsTypes = buildGenericTypesFromSpec(t, input.types, input.typesPrefix)
+				break
 			}
 
-			genericsTypes = buildGenericTypesFromSpec(t, input.types, input.typesPrefix)
-			break
+			if !toCheckForInterface {
+				break
+			}
+
+			return nil, errors.Wrap(errNotAnInterface, t.Name.Name)
 		}
 	}
 
