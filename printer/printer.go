@@ -67,6 +67,10 @@ func (p *Printer) PrintType(node ast.Node) (string, error) {
 		return p.printStruct(t)
 	case *ast.Ident:
 		return p.printIdent(t)
+	case *ast.IndexExpr:
+		return p.printGeneric(t)
+	case *ast.IndexListExpr:
+		return p.printGenericList(t)
 	}
 
 	err := printer.Fprint(p.buf, p.fs, node)
@@ -149,6 +153,43 @@ func (p *Printer) printIdent(i *ast.Ident) (string, error) {
 
 	err := printer.Fprint(p.buf, p.fs, i)
 	return p.buf.String(), err
+}
+
+func (p *Printer) printGeneric(pt *ast.IndexExpr) (string, error) {
+	t, err := p.PrintType(pt.X)
+	if err != nil {
+		return "", err
+	}
+
+	generic, err := p.PrintType(pt.Index)
+	if err != nil {
+		return "", err
+	}
+
+	return t + "[" + generic + "]", nil
+}
+
+func (p *Printer) printGenericList(pt *ast.IndexListExpr) (string, error) {
+	t, err := p.PrintType(pt.X)
+	if err != nil {
+		return "", err
+	}
+
+	baseStr := t + "["
+	for i, expr := range pt.Indices {
+		generic, err := p.PrintType(expr)
+		if err != nil {
+			return "", err
+		}
+
+		if i == len(pt.Indices)-1 {
+			baseStr = baseStr + generic + "]"
+		} else {
+			baseStr = baseStr + generic + ", "
+		}
+	}
+
+	return baseStr, nil
 }
 
 func (p *Printer) printPointer(pt *ast.StarExpr) (string, error) {
