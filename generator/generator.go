@@ -459,7 +459,7 @@ func typeSpecs(f *ast.File) []*ast.TypeSpec {
 	return result
 }
 
-func getEmbeddedMethods(t ast.Expr, pr typePrinter, input targetProcessInput, toCheckIfEmbeddedIsInterface bool) (param genericParam, methods methodsList, err error) {
+func getEmbeddedMethods(t ast.Expr, pr typePrinter, input targetProcessInput, checkInterface bool) (param genericParam, methods methodsList, err error) {
 	param.Name, err = pr.PrintType(t)
 	if err != nil {
 		return
@@ -471,13 +471,13 @@ func getEmbeddedMethods(t ast.Expr, pr typePrinter, input targetProcessInput, to
 		return
 
 	case *ast.Ident:
-		methods, err = processIdent(v, input, toCheckIfEmbeddedIsInterface)
+		methods, err = processIdent(v, input, checkInterface)
 		return
 	}
 	return
 }
 
-func processEmbedded(t ast.Expr, pr typePrinter, input targetProcessInput, toCheckIfEmbeddedIsInterface bool) (genericParam genericParam, embeddedMethods methodsList, err error) {
+func processEmbedded(t ast.Expr, pr typePrinter, input targetProcessInput, checkInterface bool) (genericParam genericParam, embeddedMethods methodsList, err error) {
 	var x ast.Expr
 	var hasGenericsParams bool
 	var genericParams genericParams
@@ -486,7 +486,11 @@ func processEmbedded(t ast.Expr, pr typePrinter, input targetProcessInput, toChe
 	case *ast.IndexExpr:
 		x = v.X
 		hasGenericsParams = true
-
+		//	Don't check if embedded interface's generic params are also interfaces, e.g. given the interface:
+		//		type SomeInterface {
+		//	      EmbeddedGenericInterface[Bar]
+		//		}
+		//	we won't be checking if Bar is also an interface
 		genericParam, _, err = processEmbedded(v.Index, pr, input, false)
 		if err != nil {
 			return
@@ -501,6 +505,11 @@ func processEmbedded(t ast.Expr, pr typePrinter, input targetProcessInput, toChe
 
 		if v.Indices != nil {
 			for _, index := range v.Indices {
+				//	Don't check if embedded interface's generic params are also interfaces, e.g. given the interface:
+				//		type SomeInterface {
+				//	      EmbeddedGenericInterface[Bar]
+				//		}
+				//	we won't be checking if Bar is also an interface
 				genericParam, _, err = processEmbedded(index, pr, input, false)
 				if err != nil {
 					return
@@ -515,7 +524,7 @@ func processEmbedded(t ast.Expr, pr typePrinter, input targetProcessInput, toChe
 	}
 
 	input.genericParams = genericParams
-	genericParam, embeddedMethods, err = getEmbeddedMethods(x, pr, input, toCheckIfEmbeddedIsInterface)
+	genericParam, embeddedMethods, err = getEmbeddedMethods(x, pr, input, checkInterface)
 	if err != nil {
 		return
 	}
@@ -618,7 +627,7 @@ func mergeMethods(methods, embeddedMethods methodsList) (methodsList, error) {
 
 var errNotAnInterface = errors.New("embedded type is not an interface")
 
-func processIdent(i *ast.Ident, input targetProcessInput, toCheckForInterface bool) (methodsList, error) {
+func processIdent(i *ast.Ident, input targetProcessInput, checkInterface bool) (methodsList, error) {
 	var embeddedInterface *ast.InterfaceType
 	var genericsTypes genericTypes
 	for _, t := range input.types {
@@ -630,7 +639,7 @@ func processIdent(i *ast.Ident, input targetProcessInput, toCheckForInterface bo
 				break
 			}
 
-			if !toCheckForInterface {
+			if !checkInterface {
 				break
 			}
 
