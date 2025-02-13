@@ -776,6 +776,199 @@ func TestPrinter_printIdent(t *testing.T) {
 	}
 }
 
+func TestPrinter_printGeneric(t *testing.T) {
+	tests := []struct {
+		name    string
+		init    func(t minimock.Tester) *Printer
+		inspect func(r *Printer, t *testing.T)
+
+		indexExpr *ast.IndexExpr
+
+		want1      string
+		wantErr    bool
+		inspectErr func(err error, t *testing.T)
+	}{
+		{
+			name: "success",
+			indexExpr: &ast.IndexExpr{
+				X: &ast.Ident{
+					Name: "Bar",
+				},
+				Index: &ast.Ident{
+					Name: "Baz",
+				},
+			},
+			init: func(t minimock.Tester) *Printer {
+				return &Printer{
+					typesPrefix: "prefix",
+					fs:          token.NewFileSet(),
+					buf:         bytes.NewBuffer([]byte{}),
+					types:       []*ast.TypeSpec{{Name: &ast.Ident{Name: "Bar"}}, {Name: &ast.Ident{Name: "Baz"}}},
+				}
+			},
+			want1:   "prefix.Bar[prefix.Baz]",
+			wantErr: false,
+		},
+		{
+			name: "success, generic from other package",
+			indexExpr: &ast.IndexExpr{
+				X: &ast.Ident{
+					Name: "Bar",
+				},
+				Index: &ast.SelectorExpr{
+					X: &ast.Ident{
+						Name: "otherpkg",
+					},
+					Sel: &ast.Ident{
+						Name: "Baz",
+					},
+				},
+			},
+			init: func(t minimock.Tester) *Printer {
+				return &Printer{
+					typesPrefix: "prefix",
+					fs:          token.NewFileSet(),
+					buf:         bytes.NewBuffer([]byte{}),
+					types:       []*ast.TypeSpec{{Name: &ast.Ident{Name: "Bar"}}},
+				}
+			},
+			want1:   "prefix.Bar[otherpkg.Baz]",
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mc := minimock.NewController(t)
+			defer mc.Wait(time.Second)
+
+			receiver := tt.init(mc)
+
+			got1, err := receiver.printGeneric(tt.indexExpr)
+
+			if tt.inspect != nil {
+				tt.inspect(receiver, t)
+			}
+
+			assert.Equal(t, tt.want1, got1, "Printer.printGeneric returned unexpected result")
+
+			if tt.wantErr {
+				if assert.Error(t, err) && tt.inspectErr != nil {
+					tt.inspectErr(err, t)
+				}
+			} else {
+				assert.NoError(t, err)
+			}
+
+		})
+	}
+}
+
+func TestPrinter_printGenericList(t *testing.T) {
+	tests := []struct {
+		name    string
+		init    func(t minimock.Tester) *Printer
+		inspect func(r *Printer, t *testing.T)
+
+		indexListExpr *ast.IndexListExpr
+
+		want1      string
+		wantErr    bool
+		inspectErr func(err error, t *testing.T)
+	}{
+		{
+			name: "success",
+			indexListExpr: &ast.IndexListExpr{
+				X: &ast.Ident{
+					Name: "Bar",
+				},
+				Indices: []ast.Expr{
+					&ast.Ident{
+						Name: "Baz",
+					},
+					&ast.Ident{
+						Name: "Bak",
+					},
+				},
+			},
+			init: func(t minimock.Tester) *Printer {
+				return &Printer{
+					typesPrefix: "prefix",
+					fs:          token.NewFileSet(),
+					buf:         bytes.NewBuffer([]byte{}),
+					types: []*ast.TypeSpec{
+						{Name: &ast.Ident{Name: "Bar"}},
+						{Name: &ast.Ident{Name: "Baz"}},
+						{Name: &ast.Ident{Name: "Bak"}},
+					},
+				}
+			},
+			want1:   "prefix.Bar[prefix.Baz, prefix.Bak]",
+			wantErr: false,
+		},
+		{
+			name: "success, generic from other package",
+			indexListExpr: &ast.IndexListExpr{
+				X: &ast.Ident{
+					Name: "Bar",
+				},
+				Indices: []ast.Expr{
+					&ast.Ident{
+						Name: "Baz",
+					},
+					&ast.SelectorExpr{
+						X: &ast.Ident{
+							Name: "otherpkg",
+						},
+						Sel: &ast.Ident{
+							Name: "Bak",
+						},
+					},
+				},
+			},
+			init: func(t minimock.Tester) *Printer {
+				return &Printer{
+					typesPrefix: "prefix",
+					fs:          token.NewFileSet(),
+					buf:         bytes.NewBuffer([]byte{}),
+					types: []*ast.TypeSpec{
+						{Name: &ast.Ident{Name: "Bar"}},
+						{Name: &ast.Ident{Name: "Baz"}},
+					},
+				}
+			},
+			want1:   "prefix.Bar[prefix.Baz, otherpkg.Bak]",
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mc := minimock.NewController(t)
+			defer mc.Wait(time.Second)
+
+			receiver := tt.init(mc)
+
+			got1, err := receiver.printGenericList(tt.indexListExpr)
+
+			if tt.inspect != nil {
+				tt.inspect(receiver, t)
+			}
+
+			assert.Equal(t, tt.want1, got1, "Printer.printGenericList returned unexpected result")
+
+			if tt.wantErr {
+				if assert.Error(t, err) && tt.inspectErr != nil {
+					tt.inspectErr(err, t)
+				}
+			} else {
+				assert.NoError(t, err)
+			}
+
+		})
+	}
+}
+
 func TestPrinter_PrintType(t *testing.T) {
 	tests := []struct {
 		name    string
@@ -875,6 +1068,36 @@ func TestPrinter_PrintType(t *testing.T) {
 				}
 			},
 			want1: "package.Identifier",
+		},
+		{
+			name: "generic type",
+			node: &ast.IndexExpr{X: &ast.Ident{Name: "Bar"}, Index: &ast.Ident{Name: "string"}},
+			init: func(t minimock.Tester) *Printer {
+				return &Printer{
+					fs:    token.NewFileSet(),
+					buf:   bytes.NewBuffer([]byte{}),
+					types: []*ast.TypeSpec{{Name: &ast.Ident{Name: "Bar"}}},
+				}
+			},
+			want1: "Bar[string]",
+		},
+		{
+			name: "generic list type",
+			node: &ast.IndexListExpr{
+				X: &ast.Ident{Name: "Bar"},
+				Indices: []ast.Expr{
+					&ast.Ident{Name: "string"},
+					&ast.Ident{Name: "int"},
+				},
+			},
+			init: func(t minimock.Tester) *Printer {
+				return &Printer{
+					fs:    token.NewFileSet(),
+					buf:   bytes.NewBuffer([]byte{}),
+					types: []*ast.TypeSpec{{Name: &ast.Ident{Name: "Bar"}}},
+				}
+			},
+			want1: "Bar[string, int]",
 		},
 	}
 

@@ -111,8 +111,9 @@ func Test_findImportPathForName(t *testing.T) {
 
 func Test_processIdent(t *testing.T) {
 	type args struct {
-		i     *ast.Ident
-		input targetProcessInput
+		i                   *ast.Ident
+		input               targetProcessInput
+		toCheckForInterface bool
 	}
 	tests := []struct {
 		name string
@@ -129,11 +130,23 @@ func Test_processIdent(t *testing.T) {
 				input: targetProcessInput{
 					types: []*ast.TypeSpec{{Name: &ast.Ident{Name: "name"}, Type: &ast.StructType{}}},
 				},
+				toCheckForInterface: true,
 			},
 			wantErr: true,
 			inspectErr: func(err error, t *testing.T) {
 				assert.Equal(t, errNotAnInterface, errors.Cause(err))
 			},
+		},
+		{
+			name: "not an interface but no need to check",
+			args: args{
+				i: &ast.Ident{Name: "name"},
+				input: targetProcessInput{
+					types: []*ast.TypeSpec{{Name: &ast.Ident{Name: "name"}, Type: &ast.StructType{}}},
+				},
+				toCheckForInterface: false,
+			},
+			wantErr: false,
 		},
 		{
 			name: "embedded interface found",
@@ -142,6 +155,7 @@ func Test_processIdent(t *testing.T) {
 				input: targetProcessInput{
 					types: []*ast.TypeSpec{{Name: &ast.Ident{Name: "name"}, Type: &ast.InterfaceType{}}},
 				},
+				toCheckForInterface: true,
 			},
 			wantErr: false,
 		},
@@ -152,7 +166,7 @@ func Test_processIdent(t *testing.T) {
 			mc := minimock.NewController(t)
 			defer mc.Wait(time.Second)
 
-			got1, err := processIdent(tt.args.i, tt.args.input)
+			got1, err := processIdent(tt.args.i, tt.args.input, tt.args.toCheckForInterface)
 
 			assert.Equal(t, tt.want1, got1, "processIdent returned unexpected result")
 
