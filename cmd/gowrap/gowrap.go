@@ -71,7 +71,7 @@ func help(args []string, w io.Writer) error {
 
 	command := gowrap.GetCommand(args[0])
 	if command == nil {
-		return fmt.Errorf(fmt.Sprintf("gowrap: unknown command %q\nRun 'gowrap help' for usage", args[0]))
+		return fmt.Errorf("gowrap: unknown command %q\nRun 'gowrap help' for usage", args[0])
 	}
 
 	if _, err := fmt.Fprintf(w, "Usage: gowrap %s %s\n", args[0], command.UsageLine()); err != nil {
