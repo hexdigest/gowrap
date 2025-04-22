@@ -6,7 +6,6 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -123,7 +122,7 @@ func (l Loader) absGitPath(path string) (string, error) {
 		return "", err
 	}
 
-	return filepath.Join(gitRoot, path), nil
+	return path.Join(gitRoot, path), nil
 }
 
 var errTemplateNotFound = errors.New("remote template not found")
