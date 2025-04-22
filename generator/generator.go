@@ -130,6 +130,9 @@ type Options struct {
 	//LocalPrefix is a comma-separated string of import path prefixes, which, if set, instructs Process to sort the import
 	//paths with the given prefixes into another group after 3rd-party packages.
 	LocalPrefix string
+
+	//IgnoreUnexported skip generation of unexported methods instead of return an error
+	IgnoreUnexported bool
 }
 
 type methodsList map[string]Method
@@ -230,9 +233,14 @@ func NewGenerator(options Options) (*Generator, error) {
 		return nil, errEmptyInterface
 	}
 
-	for _, m := range output.methods {
-		if srcPackageAST.Name != "" && []rune(m.Name)[0] == []rune(strings.ToLower(m.Name))[0] {
+	for n, m := range output.methods {
+		unexported := srcPackageAST.Name != "" && []rune(m.Name)[0] == []rune(strings.ToLower(m.Name))[0]
+		if !options.IgnoreUnexported && unexported {
 			return nil, errors.Wrap(errUnexportedMethod, m.Name)
+		}
+
+		if unexported {
+			delete(output.methods, n)
 		}
 	}
 

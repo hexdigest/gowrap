@@ -22,13 +22,14 @@ import (
 type GenerateCommand struct {
 	BaseCommand
 
-	interfaceName string
-	template      string
-	outputFile    string
-	sourcePkg     string
-	noGenerate    bool
-	vars          vars
-	localPrefix   string
+	interfaceName    string
+	template         string
+	outputFile       string
+	sourcePkg        string
+	noGenerate       bool
+	vars             vars
+	localPrefix      string
+	ignoreUnexported bool
 
 	loader   templateLoader
 	filepath fs
@@ -56,6 +57,7 @@ func NewGenerateCommand(l remoteTemplateLoader) *GenerateCommand {
 		"run `gowrap template list` for details")
 	fs.Var(&gc.vars, "v", "a key-value pair to parametrize the template,\narguments without an equal sign are treated as a bool values,\ni.e. -v foo=bar -v disableChecks")
 	fs.StringVar(&gc.localPrefix, "l", "", "put imports beginning with this string after 3rd-party packages; comma-separated list")
+	fs.BoolVar(&gc.ignoreUnexported, "u", false, "ignore unexported methods")
 
 	gc.BaseCommand = BaseCommand{
 		Short: "generate decorators",
@@ -132,8 +134,9 @@ func (gc *GenerateCommand) getOptions() (*generator.Options, error) {
 			"OutputFileName":    filepath.Base(gc.outputFile),
 			"VarsArgs":          varsToArgs(gc.vars),
 		},
-		Vars:        gc.vars.toMap(),
-		LocalPrefix: gc.localPrefix,
+		Vars:             gc.vars.toMap(),
+		LocalPrefix:      gc.localPrefix,
+		IgnoreUnexported: gc.ignoreUnexported,
 	}
 
 	outputFileDir, err := gc.filepath.Abs(gc.filepath.Dir(gc.outputFile))
