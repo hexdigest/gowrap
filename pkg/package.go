@@ -12,6 +12,11 @@ import (
 
 var errPackageNotFound = errors.New("package not found")
 
+type Package struct {
+	Name  string
+	Files map[string]*ast.File
+}
+
 // Load loads package by its import path
 func Load(path string) (*packages.Package, error) {
 	cfg := &packages.Config{Mode: packages.NeedName | packages.NeedFiles | packages.NeedCompiledGoFiles | packages.NeedImports | packages.NeedDeps}
@@ -32,7 +37,7 @@ func Load(path string) (*packages.Package, error) {
 }
 
 // AST returns package's abstract syntax tree
-func AST(fs *token.FileSet, p *packages.Package) (*ast.Package, error) {
+func AST(fs *token.FileSet, p *packages.Package) (*Package, error) {
 	dir := Dir(p)
 
 	pkgs, err := parser.ParseDir(fs, dir, nil, parser.DeclarationErrors|parser.ParseComments)
@@ -41,10 +46,13 @@ func AST(fs *token.FileSet, p *packages.Package) (*ast.Package, error) {
 	}
 
 	if ap, ok := pkgs[p.Name]; ok {
-		return ap, nil
+		return &Package{
+			Name:  p.Name,
+			Files: ap.Files,
+		}, nil
 	}
 
-	return &ast.Package{Name: p.Name}, nil
+	return &Package{Name: p.Name}, nil
 }
 
 // Dir returns absolute path of the package in a filesystem
