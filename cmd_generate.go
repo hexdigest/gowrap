@@ -13,9 +13,10 @@ import (
 	"unicode"
 
 	"github.com/Masterminds/sprig/v3"
+	"github.com/pkg/errors"
+
 	"github.com/hexdigest/gowrap/generator"
 	"github.com/hexdigest/gowrap/pkg"
-	"github.com/pkg/errors"
 )
 
 // GenerateCommand implements Command interface
@@ -154,6 +155,7 @@ func (gc *GenerateCommand) getOptions() (*generator.Options, error) {
 	}
 
 	options.SourcePackage = sourcePackage.PkgPath
+	options.SourcePackageInstance = sourcePackage // Pass the loaded package
 	options.BodyTemplate, options.HeaderVars["Template"], err = gc.loadTemplate(outputFileDir)
 
 	return &options, err

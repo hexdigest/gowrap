@@ -3,13 +3,12 @@ package generator
 import (
 	"bytes"
 	"fmt"
-	"path/filepath"
-	"sort"
-	"strings"
-
 	"go/ast"
 	"go/token"
 	"io"
+	"path/filepath"
+	"sort"
+	"strings"
 	"text/template"
 
 	"github.com/pkg/errors"
@@ -106,6 +105,9 @@ type Options struct {
 	//SourcePackage is an import path or a relative path of the package that contains the source interface
 	SourcePackage string
 
+	//SourcePackageInstance is the already loaded package (optional)
+	SourcePackageInstance *packages.Package
+
 	//SourcePackageAlias is an import selector defauls is source package name
 	SourcePackageAlias string
 
@@ -184,9 +186,15 @@ func NewGenerator(options Options) (*Generator, error) {
 
 	fs := token.NewFileSet()
 
-	srcPackage, err := pkg.Load(options.SourcePackage)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to load source package")
+	var srcPackage *packages.Package
+	// Use the preloaded package if available, only load if not
+	if options.SourcePackageInstance != nil {
+		srcPackage = options.SourcePackageInstance
+	} else {
+		srcPackage, err = pkg.Load(options.SourcePackage)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to load source package")
+		}
 	}
 
 	dstPackagePath := filepath.Dir(options.OutputFile)
