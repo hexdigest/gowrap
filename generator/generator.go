@@ -139,7 +139,7 @@ type methodsList map[string]Method
 type processInput struct {
 	fileSet        *token.FileSet
 	currentPackage *packages.Package
-	astPackage     *ast.Package
+	astPackage     *pkg.Package
 	targetName     string
 	genericParams  genericParams
 }
@@ -435,7 +435,7 @@ func findSourcePackage(ident *ast.Ident, imports []*ast.ImportSpec) string {
 	return ""
 }
 
-func iterateFiles(p *ast.Package, name string) (selectedType *ast.TypeSpec, imports []*ast.ImportSpec, types []*ast.TypeSpec) {
+func iterateFiles(p *pkg.Package, name string) (selectedType *ast.TypeSpec, imports []*ast.ImportSpec, types []*ast.TypeSpec) {
 	for _, f := range p.Files {
 		if f != nil {
 			for _, ts := range typeSpecs(f) {
@@ -452,7 +452,7 @@ func iterateFiles(p *ast.Package, name string) (selectedType *ast.TypeSpec, impo
 }
 
 func typeSpecs(f *ast.File) []*ast.TypeSpec {
-	result := []*ast.TypeSpec{}
+	var result []*ast.TypeSpec
 
 	for _, decl := range f.Decls {
 		if gd, ok := decl.(*ast.GenDecl); ok && gd.Tok == token.TYPE {

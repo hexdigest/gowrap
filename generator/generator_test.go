@@ -9,11 +9,13 @@ import (
 	"text/template"
 	"time"
 
-	minimock "github.com/gojuno/minimock/v3"
+	"github.com/gojuno/minimock/v3"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/tools/go/packages"
+
+	"github.com/hexdigest/gowrap/pkg"
 )
 
 func Test_unquote(t *testing.T) {
@@ -478,7 +480,7 @@ func Test_findTarget(t *testing.T) {
 			name: "not found",
 			args: args{
 				input: processInput{
-					astPackage: &ast.Package{},
+					astPackage: &pkg.Package{},
 				},
 			},
 			wantErr: true,
@@ -490,7 +492,7 @@ func Test_findTarget(t *testing.T) {
 			name: "found",
 			args: args{
 				input: processInput{
-					astPackage: &ast.Package{Files: map[string]*ast.File{
+					astPackage: &pkg.Package{Files: map[string]*ast.File{
 						"file.go": {
 							Decls: []ast.Decl{&ast.GenDecl{Tok: token.TYPE, Specs: []ast.Spec{&ast.TypeSpec{
 								Name: &ast.Ident{Name: "Interface"},
@@ -506,13 +508,14 @@ func Test_findTarget(t *testing.T) {
 			name: "found interface alias",
 			args: args{
 				input: processInput{
-					astPackage: &ast.Package{
+					astPackage: &pkg.Package{
 						Files: map[string]*ast.File{
 							"file.go": {
 								Decls: []ast.Decl{&ast.GenDecl{Tok: token.TYPE, Specs: []ast.Spec{&ast.TypeSpec{
 									Name: &ast.Ident{Name: "InterfaceAlias"},
 									Type: &ast.Ident{
 										Name: "Interface",
+										//nolint:staticcheck // SA1019, this is an internal object that is still used by ast library.
 										Obj: &ast.Object{
 											Decl: &ast.TypeSpec{
 												Type: &ast.InterfaceType{},
@@ -531,7 +534,7 @@ func Test_findTarget(t *testing.T) {
 			name: "found interface alias on exported type",
 			args: args{
 				input: processInput{
-					astPackage: &ast.Package{
+					astPackage: &pkg.Package{
 						Files: map[string]*ast.File{
 							"file.go": {
 								Decls: []ast.Decl{&ast.GenDecl{Tok: token.TYPE, Specs: []ast.Spec{&ast.TypeSpec{
@@ -583,7 +586,7 @@ func Test_findTarget(t *testing.T) {
 			name: "found interface alias on exported type with named package",
 			args: args{
 				input: processInput{
-					astPackage: &ast.Package{
+					astPackage: &pkg.Package{
 						Files: map[string]*ast.File{
 							"file.go": {
 								Decls: []ast.Decl{&ast.GenDecl{Tok: token.TYPE, Specs: []ast.Spec{&ast.TypeSpec{
