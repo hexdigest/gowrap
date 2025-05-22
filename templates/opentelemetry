@@ -3,7 +3,7 @@ import (
 
     "go.opentelemetry.io/otel"
     "go.opentelemetry.io/otel/attribute"
-    "go.opentelemetry.io/otel/codes"
+    _codes "go.opentelemetry.io/otel/codes"
     "go.opentelemetry.io/otel/trace"
 )
 
@@ -41,7 +41,7 @@ func (_d {{$decorator}}) {{$method.Declaration}} {
       _d._spanDecorator(_span, {{$method.ParamsMap}}, {{$method.ResultsMap}})
     }{{- if $method.ReturnsError}} else if err != nil {
       _span.RecordError(err)
-      _span.SetStatus(codes.Error, err.Error())
+      _span.SetStatus(_codes.Error, err.Error())
       _span.SetAttributes(
         attribute.String("event", "error"),
         attribute.String("message", err.Error()),
