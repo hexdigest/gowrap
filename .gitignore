@@ -16,3 +16,6 @@
 /dist
 /.gh_token
 /gowrap
+
+# Editors
+.idea

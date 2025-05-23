@@ -1,14 +1,16 @@
 import (
     "context"
 
+    _codes "go.opentelemetry.io/otel/codes"
     "go.opentelemetry.io/otel"
     "go.opentelemetry.io/otel/attribute"
     "go.opentelemetry.io/otel/trace"
 )
 
 {{ $decorator := (or .Vars.DecoratorName (printf "%sWithTracing" .Interface.Name)) }}
+{{ $spanNameType := (or .Vars.SpanNamePrefix .Interface.Name) }}
 
-// {{$decorator}} implements {{.Interface.Type}} interface instrumented with opentracing spans
+// {{$decorator}} implements {{.Interface.Name}} interface instrumented with open telemetry spans
 type {{$decorator}} struct {
   {{.Interface.Type}}
   _instance string
@@ -31,14 +33,15 @@ func New{{$decorator}} (base {{.Interface.Type}}, instance string, spanDecorator
 
 {{range $method := .Interface.Methods}}
   {{if $method.AcceptsContext}}
-    // {{$method.Name}} implements {{$.Interface.Type}}
+    // {{$method.Name}} implements {{$.Interface.Name}}
 func (_d {{$decorator}}) {{$method.Declaration}} {
-  ctx, _span := otel.Tracer(_d._instance).Start(ctx, "{{$.Interface.Type}}.{{$method.Name}}")
+  ctx, _span := otel.Tracer(_d._instance).Start(ctx, "{{$spanNameType}}.{{$method.Name}}")
   defer func() {
     if _d._spanDecorator != nil {
       _d._spanDecorator(_span, {{$method.ParamsMap}}, {{$method.ResultsMap}})
     }{{- if $method.ReturnsError}} else if err != nil {
       _span.RecordError(err)
+      _span.SetStatus(_codes.Error, err.Error())
       _span.SetAttributes(
         attribute.String("event", "error"),
         attribute.String("message", err.Error()),
