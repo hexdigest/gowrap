@@ -11,15 +11,15 @@ import (
 {{ $spanNameType := (or .Vars.SpanNamePrefix .Interface.Name) }}
 
 // {{$decorator}} implements {{.Interface.Name}} interface instrumented with open telemetry spans
-type {{$decorator}} struct {
-  {{.Interface.Type}}
+type {{$decorator}}{{.Interface.Generics.Types}} struct {
+  {{.Interface.Type}}{{.Interface.Generics.Params}}
   _instance string
   _spanDecorator func(span trace.Span, params, results map[string]interface{})
 }
 
-// New{{$decorator}} returns {{$decorator}}
-func New{{$decorator}} (base {{.Interface.Type}}, instance string, spanDecorator ...func(span trace.Span, params, results map[string]interface{})) {{$decorator}} {
-  d := {{$decorator}} {
+// New{{$decorator}} returns {{$decorator}}{{.Interface.Generics.Params}}
+func New{{$decorator}}{{$.Interface.Generics.Types}} (base {{.Interface.Type}}{{.Interface.Generics.Params}}, instance string, spanDecorator ...func(span trace.Span, params, results map[string]interface{})) {{$decorator}}{{.Interface.Generics.Params}} {
+  d := {{$decorator}}{{.Interface.Generics.Params}} {
     {{.Interface.Name}}: base,
     _instance: instance,
   }
@@ -34,7 +34,7 @@ func New{{$decorator}} (base {{.Interface.Type}}, instance string, spanDecorator
 {{range $method := .Interface.Methods}}
   {{if $method.AcceptsContext}}
     // {{$method.Name}} implements {{$.Interface.Name}}
-func (_d {{$decorator}}) {{$method.Declaration}} {
+func (_d {{$decorator}}{{$.Interface.Generics.Params}}) {{$method.Declaration}} {
   ctx, _span := otel.Tracer(_d._instance).Start(ctx, "{{$spanNameType}}.{{$method.Name}}")
   defer func() {
     if _d._spanDecorator != nil {
