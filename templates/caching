@@ -1,0 +1,83 @@
+import (
+	"fmt"
+	"sync"
+	"time"
+	"github.com/patrickmn/go-cache"
+)
+
+{{ $decorator := (or .Vars.DecoratorName (printf "%sWithCaching" .Interface.Name)) }}
+
+// {{$decorator}} implements {{.Interface.Type}} instrumented with caching
+type {{$decorator}} struct {
+	{{.Interface.Type}}
+	_cache *cache.Cache
+	_mutex sync.RWMutex
+}
+
+// New{{$decorator}} creates a new instance with caching enabled
+func New{{$decorator}}(base {{.Interface.Type}}, defaultExpiration, cleanupInterval time.Duration) *{{$decorator}} {
+	return &{{$decorator}}{
+		{{.Interface.Name}}: base,
+		_cache: cache.New(defaultExpiration, cleanupInterval),
+	}
+}
+
+{{range $method := .Interface.Methods}}
+	// {{$method.Name}} implements {{$.Interface.Type}}
+	func (_d *{{$decorator}}) {{$method.Declaration}} {
+		{{- if and $method.HasResults (not $method.ReturnsError)}}
+			_key := "{{$method.Name}}"
+			{{- range $param := $method.Params}}
+			_key += fmt.Sprintf(":%v", {{$param.Name}})
+			{{- end}}
+
+			_d._mutex.RLock()
+			if _cached, _found := _d._cache.Get(_key); _found {
+				_d._mutex.RUnlock()
+				return _cached.({{(index $method.Results 0).Type}})
+			}
+			_d._mutex.RUnlock()
+
+			{{$method.ResultsNames}} = _d.{{$.Interface.Name}}.{{$method.Call}}
+
+			_d._mutex.Lock()
+			_d._cache.Set(_key, {{(index $method.Results 0).Name}}, cache.DefaultExpiration)
+			_d._mutex.Unlock()
+
+			return
+		{{- else if and $method.HasResults $method.ReturnsError}}
+			_key := "{{$method.Name}}"
+			{{- range $param := $method.Params}}
+			_key += fmt.Sprintf(":%v", {{$param.Name}})
+			{{- end}}
+
+			_d._mutex.RLock()
+			if _cached, _found := _d._cache.Get(_key); _found {
+				_d._mutex.RUnlock()
+				_result := _cached.([]interface{})
+				{{- range $i, $result := $method.Results}}
+				{{- if ne $result.Name "err"}}
+				{{$result.Name}} = _result[{{$i}}].({{$result.Type}})
+				{{- else}}
+				{{$result.Name}} = nil
+				{{- end}}
+				{{- end}}
+				return
+			}
+			_d._mutex.RUnlock()
+
+			{{$method.ResultsNames}} = _d.{{$.Interface.Name}}.{{$method.Call}}
+
+			if err == nil {
+				_d._mutex.Lock()
+				_d._cache.Set(_key, []interface{}{ {{- range $i, $result := $method.Results}}{{if $i}}, {{end}}{{if ne $result.Name "err"}}{{$result.Name}}{{else}}nil{{end}}{{end}} }, cache.DefaultExpiration)
+				_d._mutex.Unlock()
+			}
+
+			return
+		{{- else}}
+			_d.{{$.Interface.Name}}.{{$method.Call}}
+			return
+		{{- end}}
+	}
+{{end}}
