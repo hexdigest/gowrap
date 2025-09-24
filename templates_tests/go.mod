@@ -1,16 +1,19 @@
 module github.com/hexdigest/gowrap/templates_tests
 
-go 1.22
+go 1.23.0
+
+toolchain go1.24.2
 
 require (
 	github.com/gojuno/minimock/v3 v3.3.14
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/prometheus/client_golang v1.20.2
 	github.com/sirupsen/logrus v1.9.3
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 	github.com/twitchtv/twirp v8.1.3+incompatible
 	go.elastic.co/apm/v2 v2.6.0
 	go.opencensus.io v0.24.0
+	go.opentelemetry.io/otel v1.36.0
 	google.golang.org/grpc v1.65.0
 )
 
