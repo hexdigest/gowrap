@@ -678,7 +678,7 @@ func findImportPathForName(name string, imports []*ast.ImportSpec, currentPackag
 		}
 	}
 
-	return "", errors.Wrapf(errUnknownSelector, name)
+	return "", errors.Wrap(errUnknownSelector, name)
 }
 
 func unquote(s string) string {
