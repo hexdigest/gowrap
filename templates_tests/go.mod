@@ -1,6 +1,6 @@
 module github.com/hexdigest/gowrap/templates_tests
 
-go 1.22
+go 1.24.0
 
 require (
 	github.com/gojuno/minimock/v3 v3.3.14
@@ -11,7 +11,7 @@ require (
 	github.com/twitchtv/twirp v8.1.3+incompatible
 	go.elastic.co/apm/v2 v2.6.0
 	go.opencensus.io v0.24.0
-	google.golang.org/grpc v1.65.0
+	google.golang.org/grpc v1.79.3
 )
 
 require (
@@ -30,10 +30,9 @@ require (
 	github.com/prometheus/common v0.55.0 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect
 	go.elastic.co/fastjson v1.1.0 // indirect
-	golang.org/x/net v0.28.0 // indirect
-	golang.org/x/sys v0.24.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240814211410-ddb44dafa142 // indirect
-	google.golang.org/protobuf v1.34.2 // indirect
+	golang.org/x/sys v0.39.0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20251202230838-ff82c1b0f217 // indirect
+	google.golang.org/protobuf v1.36.10 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	howett.net/plist v0.0.0-20181124034731-591f970eefbb // indirect
 )
