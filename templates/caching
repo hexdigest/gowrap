@@ -28,7 +28,7 @@ func New{{$decorator}}(base {{.Interface.Type}}, defaultExpiration, cleanupInter
 		{{- if and $method.HasResults (not $method.ReturnsError)}}
 			_key := "{{$method.Name}}"
 			{{- range $param := $method.Params}}
-			_key += fmt.Sprintf(":%v", {{$param.Name}})
+			_key += fmt.Sprintf(":%#v", {{$param.Name}})
 			{{- end}}
 
 			_d._mutex.RLock()
@@ -48,7 +48,7 @@ func New{{$decorator}}(base {{.Interface.Type}}, defaultExpiration, cleanupInter
 		{{- else if and $method.HasResults $method.ReturnsError}}
 			_key := "{{$method.Name}}"
 			{{- range $param := $method.Params}}
-			_key += fmt.Sprintf(":%v", {{$param.Name}})
+			_key += fmt.Sprintf(":%#v", {{$param.Name}})
 			{{- end}}
 
 			_d._mutex.RLock()
