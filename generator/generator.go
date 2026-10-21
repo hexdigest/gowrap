@@ -331,18 +331,12 @@ func (g Generator) Generate(w io.Writer) error {
 		return err
 	}
 
-	imports.LocalPrefix = g.localPrefix
-	processedSource, err := imports.Process(g.Options.OutputFile, buf.Bytes(), nil)
+	// Header and body templates can both emit the source imports. Deduplicate
+	// identical bindings before goimports resolves and groups the final imports.
+	fileSet := token.NewFileSet()
+	file, err := parser.ParseFile(fileSet, g.Options.OutputFile, buf.Bytes(), parser.ParseComments|parser.SkipObjectResolution)
 	if err != nil {
 		return errors.Wrapf(err, "failed to format generated code:\n%s", buf)
-	}
-
-	// Header and body templates can both emit the source imports. goimports
-	// keeps duplicate aliased imports, so remove only identical bindings.
-	fileSet := token.NewFileSet()
-	file, err := parser.ParseFile(fileSet, g.Options.OutputFile, processedSource, parser.ParseComments)
-	if err != nil {
-		return errors.Wrap(err, "failed to parse generated code")
 	}
 	changed, err := removeDuplicateImports(file)
 	if err != nil {
@@ -353,7 +347,12 @@ func (g Generator) Generate(w io.Writer) error {
 		if err := format.Node(buf, fileSet, file); err != nil {
 			return errors.Wrap(err, "failed to format deduplicated imports")
 		}
-		processedSource = buf.Bytes()
+	}
+
+	imports.LocalPrefix = g.localPrefix
+	processedSource, err := imports.Process(g.Options.OutputFile, buf.Bytes(), nil)
+	if err != nil {
+		return errors.Wrapf(err, "failed to format generated code:\n%s", buf)
 	}
 
 	_, err = w.Write(processedSource)
