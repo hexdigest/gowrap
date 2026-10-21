@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"fmt"
 	"go/ast"
+	"go/format"
+	"go/parser"
 	"go/token"
 	"io"
 	"path/filepath"
@@ -327,6 +329,24 @@ func (g Generator) Generate(w io.Writer) error {
 	})
 	if err != nil {
 		return err
+	}
+
+	// Header and body templates can both emit the source imports. Deduplicate
+	// identical bindings before goimports resolves and groups the final imports.
+	fileSet := token.NewFileSet()
+	file, err := parser.ParseFile(fileSet, g.Options.OutputFile, buf.Bytes(), parser.ParseComments|parser.SkipObjectResolution)
+	if err != nil {
+		return errors.Wrapf(err, "failed to format generated code:\n%s", buf)
+	}
+	changed, err := removeDuplicateImports(file)
+	if err != nil {
+		return errors.Wrap(err, "failed to deduplicate imports")
+	}
+	if changed {
+		buf.Reset()
+		if err := format.Node(buf, fileSet, file); err != nil {
+			return errors.Wrap(err, "failed to format deduplicated imports")
+		}
 	}
 
 	imports.LocalPrefix = g.localPrefix
